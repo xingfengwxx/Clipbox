@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clipbox · 方向 01 · 仪器清单</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+:root{
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#CFD1CE;}
+body{font-family:var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+button{font-family:inherit}
+@keyframes breathe{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ============ board ============ */
+.b1{width:1440px;margin:0 auto;background:#E2E4E1;position:relative;overflow:hidden;color:#1B1812;}
+.b1:before{content:"";position:absolute;inset:0;background-image:linear-gradient(90deg,rgba(92,98,94,.10) 1px,transparent 1px),linear-gradient(rgba(92,98,94,.10) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;}
+.b1-in{position:relative;padding:0 48px 34px;}
+.b1-top{display:flex;align-items:center;justify-content:space-between;height:46px;border-bottom:1px solid #B8BCB6;font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:#5F5A4A;}
+.b1-logo{display:flex;align-items:center;gap:8px;color:#1B1812;font-weight:600;letter-spacing:.18em;}
+.b1-head{display:grid;grid-template-columns:1fr 356px;gap:72px;padding:50px 0 40px;}
+.b1-kicker{font:10px var(--mono);letter-spacing:.16em;color:#8A7F63;display:flex;align-items:center;gap:10px;}
+.b1-kicker:before{content:"";width:22px;height:1px;background:#C2521A;}
+.b1-title{font-size:62px;line-height:1.06;letter-spacing:-.035em;font-weight:600;margin-top:18px;}
+.b1-sub{margin-top:18px;max-width:560px;font-size:14.5px;line-height:1.75;color:#57503F;}
+.b1-principles{border-top:1px solid #B3B7B1;align-self:end;padding-top:16px;display:flex;flex-direction:column;gap:14px;}
+.b1-p{display:grid;grid-template-columns:30px 1fr;gap:10px;font-size:12.5px;line-height:1.6;color:#3E392C;}
+.b1-p b{font:10px var(--mono);color:#C2521A;letter-spacing:.08em;padding-top:2px;}
+.b1-spec{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid #B3B7B1;border-bottom:1px solid #B8B19D;}
+.b1-sp{padding:11px 16px;border-right:1px solid #CBCFC9;font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:#5F5A4A;display:flex;align-items:center;gap:8px;}
+.b1-sp:last-child{border-right:0}
+.b1-sp i{width:13px;height:13px;border:1px solid rgba(0,0,0,.16);display:inline-block;flex:none}
+.b1-sp b{font-weight:600;color:#1B1812}
+.b1-sp span{margin-left:auto;color:#8A8474;font-size:9.5px}
+.b1-ruler{height:30px;margin-top:22px;position:relative;border-bottom:1px solid #A8ADA7;background-image:repeating-linear-gradient(90deg,#A8ADA7 0 1px,transparent 1px 48px);background-repeat:no-repeat;background-size:100% 7px;background-position:0 22px;}
+.b1-ruler span{position:absolute;top:0;font:8.5px var(--mono);letter-spacing:.16em;color:#7C7460}
+.b1-ruler span.r{right:0}
+.b1-bench{display:flex;align-items:flex-end;gap:20px;padding-top:40px;}
+.b1-hero{flex:none}
+.b1-stripcol{flex:1;display:flex;flex-direction:column;gap:24px;justify-content:flex-end;min-width:0}
+.b1-states{width:100%;border-top:1px solid #B3B7B1;padding-top:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:7px 18px;font:9px var(--mono);letter-spacing:.03em;color:#6B634F;}
+.b1-states div{display:flex;gap:8px;white-space:nowrap;overflow:hidden}
+.b1-states b{color:#C2521A;font-weight:500;letter-spacing:.1em;flex:none}
+.b1-strip{display:flex;align-items:flex-end;gap:18px;flex:1;justify-content:flex-end;min-width:0}
+.b1-item{display:flex;flex-direction:column;min-width:0}
+.b1-cap{margin-top:11px;border-top:1px solid #ADA692;padding-top:6px;display:flex;justify-content:space-between;gap:8px;font:9px var(--mono);letter-spacing:.05em;color:#6B634F;white-space:nowrap;overflow:hidden}
+.b1-cap b{font-weight:600;color:#1B1812;letter-spacing:.08em}
+.b1-cap em{font-style:normal;color:#8A8474;font-size:8.5px}
+.b1-foot{display:grid;grid-template-columns:auto auto 1fr;gap:28px;align-items:start;margin-top:50px;padding-top:26px;border-top:1px solid #B3B7B1;}
+.b1-fitem{display:flex;flex-direction:column;min-width:0}
+.b1-note{border-left:1px solid #B8B19D;padding-left:22px;font-size:12px;line-height:1.7;color:#57503F;display:flex;flex-direction:column;gap:11px;align-self:stretch;}
+.b1-note b{font:9px var(--mono);letter-spacing:.12em;color:#C2521A;display:block;margin-bottom:2px}
+.b1-share-tabs{display:flex;gap:0;margin-bottom:8px;border:1px solid #ADA692;width:max-content}
+.b1-share-tabs button{border:0;border-right:1px solid #ADA692;background:transparent;padding:5px 12px;font:9px var(--mono);letter-spacing:.08em;color:#6B634F;cursor:pointer}
+.b1-share-tabs button:last-child{border-right:0}
+.b1-share-tabs button.on{background:#1B1812;color:#E9E5DA}
+.b1-end{margin-top:28px;padding-top:12px;border-top:1px solid #B3B7B1;display:flex;justify-content:space-between;font:9px var(--mono);letter-spacing:.1em;color:#7C7460}
+
+/* ============ phone shell tokens ============ */
+.ph1{
+  --bg:#F3F0E8;--panel:#FBF9F3;--panel2:#EAE6DA;
+  --ink:#191712;--ink2:#6A6558;--ink3:#96907F;
+  --line:#D6D0C0;--line2:#E3DED0;
+  --accent:#C2521A;--accent2:#8F3A10;
+  --ok:#2F6B45;--warn:#A8731C;--danger:#A83A2A;
+  position:relative;height:100%;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font-family:var(--sans);
+}
+.ph1[data-dark="1"]{
+  --bg:#17150F;--panel:#1E1B14;--panel2:#262218;
+  --ink:#EDE9DC;--ink2:#A49E8D;--ink3:#6F6A5D;
+  --line:#38342A;--line2:#2A2620;
+  --accent:#E06A35;--accent2:#F08A55;
+  --ok:#6FBF8C;--warn:#D9A44E;--danger:#E0705C;
+}
+.ph1 .p-main{flex:1;min-height:0;display:flex;flex-direction:column;}
+.ph1 .p-head{flex:none;padding:13px 16px 12px;border-bottom:1px solid var(--line);background:var(--bg);}
+.ph1 .p-status{display:flex;align-items:center;gap:6px;font:500 9.5px/1 var(--mono);letter-spacing:.06em;color:var(--ink2);}
+.ph1 .p-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);animation:breathe 2.6s ease-in-out infinite;flex:none}
+.ph1 .p-synccount{margin-left:auto;color:var(--ink3);letter-spacing:.04em}
+.ph1 .p-title-row{display:flex;align-items:baseline;justify-content:space-between;margin-top:9px}
+.ph1 .p-title{font-size:25px;font-weight:600;letter-spacing:-.02em;line-height:1.1}
+.ph1 .p-count{font:9px var(--mono);color:var(--ink3);letter-spacing:.1em}
+.ph1 .p-search{display:flex;align-items:center;gap:8px;margin-top:11px;border:1px solid var(--line);background:var(--panel);border-radius:4px;padding:0 10px;height:37px;color:var(--ink2)}
+.ph1 .p-search input{flex:1;border:0;background:transparent;outline:0;font:13px var(--sans);color:var(--ink);min-width:0}
+.ph1 .p-search input::placeholder{color:var(--ink3)}
+.ph1 .p-slash{font:9.5px var(--mono);color:var(--ink3);border:1px solid var(--line);border-radius:3px;padding:1px 4px;flex:none}
+.ph1 .p-scroll,.ph1 .p-page,.ph1 .p-tools,.ph1 .p-detail{flex:1;min-height:0;overflow-y:auto}
+.ph1 .p-page{padding:0 16px 20px}
+.ph1 .p-tools{padding:0 16px 16px}
+
+/* composer */
+.ph1 .p-comp{margin:13px 16px 4px;border:1px solid var(--ink);background:var(--panel);}
+.ph1 .p-comp-top{display:flex;justify-content:space-between;gap:8px;padding:6px 10px;border-bottom:1px solid var(--line);font:9px var(--mono);letter-spacing:.08em;color:var(--ink2);}
+.ph1 .p-comp textarea{display:block;width:100%;min-height:62px;max-height:120px;border:0;background:transparent;resize:none;outline:0;padding:9px 10px;font:14px/1.55 var(--sans);color:var(--ink)}
+.ph1 .p-comp textarea::placeholder{color:var(--ink3)}
+.ph1 .p-comp-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;border-top:1px solid var(--line);}
+.ph1 .p-bytes{font:9.5px var(--mono);color:var(--ink2);letter-spacing:.02em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ph1 .p-bytes.warn{color:var(--warn)}
+.ph1 .p-bytes.over{color:var(--danger)}
+.ph1 .p-send{font:10.5px var(--mono);letter-spacing:.1em;padding:7px 15px;border:0;background:var(--accent);color:#FFF8F0;border-radius:3px;cursor:pointer;flex:none}
+.ph1 .p-send:disabled{background:var(--panel2);color:var(--ink3);cursor:default}
+
+/* list */
+.ph1 .p-group{display:flex;align-items:center;gap:8px;padding:12px 16px 7px;font:9px var(--mono);letter-spacing:.12em;color:var(--ink3);}
+.ph1 .p-group:after{content:"";flex:1;height:1px;background:var(--line)}
+.ph1 .p-row{padding:10px 16px 8px;border-bottom:1px solid var(--line2)}
+.ph1 .p-meta{display:flex;align-items:center;gap:6px;font:9.5px var(--mono);color:var(--ink2);letter-spacing:.02em;white-space:nowrap;overflow:hidden}
+.ph1 .p-dev{overflow:hidden;text-overflow:ellipsis}
+.ph1 .p-time{margin-left:auto;color:var(--ink3);flex:none}
+.ph1 .p-text{margin:5px 0 7px;font-size:14px;line-height:1.55;color:var(--ink);white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.ph1 .p-rowfoot{display:flex;align-items:center;gap:8px}
+.ph1 .p-badge{font:8.5px var(--mono);letter-spacing:.05em;padding:2px 5px;border:1px solid var(--line);color:var(--ink2);border-radius:2px;flex:none}
+.ph1 .p-badge.fail{color:var(--danger);border-color:var(--danger)}
+.ph1 .p-badge.local{color:var(--warn);border-color:var(--warn)}
+.ph1 .p-rowfoot .p-bytes{color:var(--ink3)}
+.ph1 .p-acts{margin-left:auto;display:flex;gap:0}
+.ph1 .p-act{width:31px;height:30px;display:grid;place-items:center;border:0;background:transparent;color:var(--ink2);cursor:pointer;border-radius:3px}
+.ph1 .p-act:hover{background:var(--panel2);color:var(--ink)}
+.ph1 .p-act.on{color:var(--accent)}
+.ph1 .p-empty{padding:44px 24px;text-align:center}
+.ph1 .p-empty-t{font-size:13.5px;color:var(--ink);font-weight:500}
+.ph1 .p-empty-s{font-size:11.5px;color:var(--ink3);margin-top:6px;line-height:1.5}
+.ph1 .p-end{text-align:center;font:8.5px var(--mono);letter-spacing:.12em;color:var(--ink3);padding:16px 0 20px}
+
+/* nav */
+.ph1 .p-nav{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--ink);height:57px;flex:none;background:var(--bg)}
+.ph1 .p-tab{border:0;border-right:1px solid var(--line);background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--ink3)}
+.ph1 .p-tab:last-child{border-right:0}
+.ph1 .p-tab .idx{font:8px var(--mono);letter-spacing:.1em}
+.ph1 .p-tab .lbl{font-size:11.5px}
+.ph1 .p-tab.on{color:var(--ink);box-shadow:inset 0 2px 0 var(--accent);background:var(--panel)}
+
+/* form bits */
+.ph1 .p-field{margin-top:15px}
+.ph1 .p-label{font:9px var(--mono);letter-spacing:.1em;color:var(--ink2);display:flex;justify-content:space-between}
+.ph1 .p-input{width:100%;height:43px;border:1px solid var(--line);background:var(--panel);border-radius:3px;padding:0 12px;font:14px var(--sans);color:var(--ink);outline:0;margin-top:5px}
+.ph1 .p-input:focus{border-color:var(--ink)}
+.ph1 .p-code{font:600 21px/1 var(--mono);letter-spacing:.36em;text-align:center;padding-left:.36em}
+.ph1 .p-btn{height:45px;width:100%;border:0;border-radius:3px;background:var(--ink);color:var(--bg);font-size:13.5px;font-weight:500;cursor:pointer;margin-top:18px}
+.ph1 .p-btn:disabled{opacity:.45;cursor:default}
+.ph1 .p-err{margin-top:12px;border:1px solid var(--danger);color:var(--danger);padding:9px 11px;font-size:11.5px;line-height:1.55;border-radius:3px;display:flex;gap:8px;align-items:flex-start}
+.ph1 .p-err b{font:9px var(--mono);letter-spacing:.06em;flex:none;padding-top:2px}
+.ph1 .p-note{font-size:11px;line-height:1.6;color:var(--ink3);margin-top:13px}
+.ph1 .p-hint{font-size:11.5px;line-height:1.6;color:var(--ink2);margin-top:8px}
+.ph1 .p-backbtn{display:inline-flex;align-items:center;gap:5px;border:0;background:none;color:var(--ink2);font:9px var(--mono);letter-spacing:.08em;padding:0 0 10px;cursor:pointer}
+
+/* settings */
+.ph1 .p-sec{margin-top:15px;border-top:1px solid var(--line)}
+.ph1 .p-seclbl{font:8.5px var(--mono);letter-spacing:.12em;color:var(--ink3);padding:9px 0 1px}
+.ph1 .p-srow{display:flex;align-items:center;gap:10px;min-height:50px;border-bottom:1px solid var(--line2);color:var(--ink)}
+.ph1 button.p-srow{width:100%;background:none;border-left:0;border-right:0;border-top:0;text-align:left;padding:0;cursor:pointer;font:inherit}
+.ph1 .p-srow .k{font-size:13.5px;flex:none}
+.ph1 .p-srow .v{margin-left:auto;font:10px var(--mono);color:var(--ink3);text-align:right}
+.ph1 .p-srow .v.danger{color:var(--danger)}
+.ph1 .p-srow .chev{color:var(--ink3);font-size:11px;flex:none}
+.ph1 .p-sw{width:40px;height:22px;border:1px solid var(--ink);border-radius:3px;background:var(--panel);position:relative;cursor:pointer;flex:none;margin-left:auto}
+.ph1 .p-sw i{position:absolute;top:2px;left:2px;width:16px;height:16px;background:var(--ink3);border-radius:2px;transition:all .15s}
+.ph1 .p-sw.on i{left:20px;background:var(--accent)}
+.ph1 .p-sw.on{border-color:var(--accent)}
+.ph1 .p-seg{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:3px;overflow:hidden;margin:4px 0 10px}
+.ph1 .p-seg button{height:35px;border:0;border-right:1px solid var(--line);background:var(--panel);font-size:11.5px;color:var(--ink2);cursor:pointer}
+.ph1 .p-seg button:last-child{border-right:0}
+.ph1 .p-seg button.on{background:var(--ink);color:var(--bg)}
+
+/* tools */
+.ph1 .p-tool{display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);background:none;border-left:0;border-right:0;border-top:0;text-align:left;cursor:pointer;color:var(--ink);width:100%}
+.ph1 .p-tool .no{font:9px var(--mono);color:var(--accent);letter-spacing:.05em}
+.ph1 .p-tool .nm{font-size:13.5px;display:block}
+.ph1 .p-tool .ds{font:9px var(--mono);color:var(--ink3);margin-top:2px;letter-spacing:.02em;display:block}
+.ph1 .p-tool .tag{font:8.5px var(--mono);color:var(--ink3);border:1px solid var(--line);padding:2px 5px;border-radius:2px}
+.ph1 .p-detail{padding:0 16px 14px;display:flex;flex-direction:column}
+.ph1 .p-io{width:100%;border:1px solid var(--line);background:var(--panel);border-radius:3px;padding:9px 10px;font:12px/1.6 var(--mono);color:var(--ink);min-height:74px;max-height:120px;resize:none;outline:0;margin-top:10px}
+.ph1 .p-out{margin-top:9px;flex:1;min-height:90px;overflow:auto;border:1px solid var(--line);background:var(--panel2);padding:9px 10px;font:11.5px/1.6 var(--mono);white-space:pre-wrap;word-break:break-word;border-radius:3px;color:var(--ink)}
+.ph1 .p-actions{display:flex;gap:7px;margin-top:9px}
+.ph1 .p-mini{flex:1;height:37px;border:1px solid var(--line);background:var(--panel);font-size:11.5px;border-radius:3px;cursor:pointer;color:var(--ink)}
+.ph1 .p-mini.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ph1 .p-mini:disabled{opacity:.4;cursor:default}
+
+/* modal / sheet */
+.ph1 .p-veil{position:absolute;inset:0;background:rgba(20,18,12,.42);z-index:40;display:flex;align-items:center;justify-content:center;padding:20px}
+.ph1 .p-veil.bottom{align-items:flex-end;padding:0}
+.ph1 .p-dialog{width:100%;background:var(--bg);border:1px solid var(--ink);border-radius:5px;box-shadow:0 18px 50px rgba(0,0,0,.28);overflow:hidden}
+.ph1 .p-d-head{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 16px 12px;border-bottom:1px solid var(--line)}
+.ph1 .p-d-kicker{font:8.5px var(--mono);letter-spacing:.12em;color:var(--accent)}
+.ph1 .p-d-title{font-size:17px;font-weight:600;margin-top:5px;letter-spacing:-.01em}
+.ph1 .p-x{width:28px;height:28px;display:grid;place-items:center;border:1px solid var(--line);background:none;border-radius:3px;color:var(--ink2);cursor:pointer;flex:none}
+.ph1 .p-d-body{padding:12px 16px 14px}
+.ph1 .p-opt{display:grid;grid-template-columns:18px 1fr auto;align-items:center;gap:8px;width:100%;padding:10px 0;border:0;border-bottom:1px solid var(--line2);background:none;cursor:pointer;text-align:left;color:var(--ink)}
+.ph1 .p-opt:last-of-type{border-bottom:0}
+.ph1 .p-radio{width:13px;height:13px;border:1px solid var(--ink3);border-radius:50%;position:relative}
+.ph1 .p-opt.on .p-radio{border-color:var(--accent)}
+.ph1 .p-opt.on .p-radio:after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--accent)}
+.ph1 .p-opt-l{font-size:13.5px}
+.ph1 .p-opt-d{font:9px var(--mono);color:var(--ink3);letter-spacing:.03em}
+.ph1 .p-d-note{font-size:11px;line-height:1.6;color:var(--ink3);margin-top:10px}
+.ph1 .p-d-foot{display:flex;gap:8px;padding:12px 16px 15px;border-top:1px solid var(--line)}
+.ph1 .p-ghost,.ph1 .p-primary{flex:1;height:42px;border-radius:3px;font-size:12.5px;cursor:pointer;border:1px solid var(--ink)}
+.ph1 .p-ghost{background:transparent;color:var(--ink)}
+.ph1 .p-primary{background:var(--ink);color:var(--bg)}
+.ph1 .p-url{border:1px solid var(--line);background:var(--panel);padding:10px;font:12px var(--mono);word-break:break-all;border-radius:3px;color:var(--ink)}
+.ph1 .p-exp{font:9.5px var(--mono);color:var(--ink2);margin-top:8px;letter-spacing:.02em}
+.ph1 .p-sheet{width:100%;background:var(--bg);border-top:1px solid var(--ink);padding-bottom:4px}
+.ph1 .p-sheet-head{display:flex;align-items:center;justify-content:space-between;padding:11px 16px 8px;font:9px var(--mono);letter-spacing:.12em;color:var(--ink3)}
+.ph1 .p-sheet-text{padding:0 16px 10px;font-size:11.5px;color:var(--ink2);line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph1 .p-srow-btn{display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 16px;border:0;border-top:1px solid var(--line2);background:none;font-size:13.5px;color:var(--ink);cursor:pointer;text-align:left}
+.ph1 .p-srow-btn em{font:8.5px var(--mono);font-style:normal;color:var(--ink3);letter-spacing:.08em}
+.ph1 .p-srow-btn.danger{color:var(--danger)}
+.ph1 .p-srow-btn.dis{color:var(--ink3);cursor:default}
+.ph1 .p-srow-btn.dis em{color:var(--ink3)}
+.ph1 .p-toast{position:absolute;left:16px;right:16px;bottom:70px;background:var(--ink);color:var(--bg);font-size:11.5px;padding:9px 12px;border-radius:3px;z-index:50;text-align:center}
+
+/* ============ desktop ============ */
+.d1{
+  --bg:#F3F0E8;--panel:#FBF9F3;--panel2:#EAE6DA;
+  --ink:#191712;--ink2:#6A6558;--ink3:#96907F;
+  --line:#D6D0C0;--line2:#E3DED0;
+  --accent:#C2521A;--ok:#2F6B45;--warn:#A8731C;--danger:#A83A2A;
+  display:flex;width:1000px;height:700px;background:var(--bg);color:var(--ink);font-family:var(--sans);position:relative;overflow:hidden;
+}
+.d1[data-dark="1"]{--bg:#17150F;--panel:#1E1B14;--panel2:#262218;--ink:#EDE9DC;--ink2:#A49E8D;--ink3:#6F6A5D;--line:#38342A;--line2:#2A2620;--accent:#E06A35;--ok:#6FBF8C;--warn:#D9A44E;--danger:#E0705C}
+.d1-rail{width:196px;flex:none;border-right:1px solid var(--line);display:flex;flex-direction:column;padding:18px 16px}
+.d1-brand{display:flex;align-items:center;gap:8px;font:600 10px var(--mono);letter-spacing:.16em}
+.d1-nav{margin-top:28px;display:flex;flex-direction:column}
+.d1-ni{display:flex;align-items:baseline;gap:10px;border:0;background:none;text-align:left;padding:11px 8px;cursor:pointer;color:var(--ink2);border-left:2px solid transparent;font:12.5px var(--sans)}
+.d1-ni .no{font:8.5px var(--mono);color:var(--ink3)}
+.d1-ni.on{color:var(--ink);border-left-color:var(--accent);background:var(--panel)}
+.d1-ni.on .no{color:var(--accent)}
+.d1-railfoot{margin-top:auto;border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:9px}
+.d1-ro{display:flex;justify-content:space-between;font:8.5px var(--mono);letter-spacing:.06em;color:var(--ink3)}
+.d1-ro b{font-weight:500;color:var(--ink2);display:flex;align-items:center;gap:5px}
+.d1-dot{width:5px;height:5px;border-radius:50%;background:var(--ok);animation:breathe 2.6s ease-in-out infinite}
+.d1-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.d1-head{display:flex;align-items:flex-end;justify-content:space-between;padding:22px 26px 14px;border-bottom:1px solid var(--line);gap:16px}
+.d1-kick{font:8.5px var(--mono);letter-spacing:.14em;color:var(--ink3)}
+.d1-title{font-size:23px;font-weight:600;letter-spacing:-.02em;margin-top:5px}
+.d1-headright{display:flex;align-items:center;gap:10px}
+.d1-chip{display:flex;align-items:center;gap:6px;border:1px solid var(--line);padding:6px 9px;font:8.5px var(--mono);letter-spacing:.04em;color:var(--ink2);white-space:nowrap}
+.d1-search{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);padding:0 9px;height:30px;width:190px;color:var(--ink3)}
+.d1-search input{border:0;background:none;outline:0;font:11.5px var(--sans);color:var(--ink);width:100%;min-width:0}
+.d1-comp{margin:16px 26px 0;border:1px solid var(--ink);background:var(--panel)}
+.d1-comptop{display:flex;justify-content:space-between;padding:6px 10px;border-bottom:1px solid var(--line);font:8.5px var(--mono);letter-spacing:.07em;color:var(--ink2)}
+.d1-comp textarea{display:block;width:100%;min-height:58px;max-height:90px;border:0;background:transparent;resize:none;outline:0;padding:9px 10px;font:13.5px/1.55 var(--sans);color:var(--ink)}
+.d1-compbot{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-top:1px solid var(--line)}
+.d1-small{font:9px var(--mono);color:var(--ink3);letter-spacing:.03em}
+.d1-send{font:9.5px var(--mono);letter-spacing:.1em;padding:6px 14px;border:0;background:var(--accent);color:#FFF8F0;border-radius:2px;cursor:pointer}
+.d1-send:disabled{background:var(--panel2);color:var(--ink3);cursor:default}
+.d1-table{flex:1;min-height:0;display:flex;flex-direction:column;margin:14px 26px 0}
+.d1-thead{display:grid;grid-template-columns:150px 1fr 74px 84px;gap:12px;padding:0 0 6px;border-bottom:1px solid var(--ink);font:8px var(--mono);letter-spacing:.12em;color:var(--ink3)}
+.d1-rows{flex:1;overflow-y:auto}
+.d1-row{display:grid;grid-template-columns:150px 1fr 74px 84px;gap:12px;padding:10px 0;border-bottom:1px solid var(--line2);align-items:start}
+.d1-dev{font:9.5px var(--mono);color:var(--ink2);line-height:1.5;word-break:break-word}
+.d1-txt{font-size:12.5px;line-height:1.5;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap;word-break:break-word}
+.d1-time{font:8.5px var(--mono);color:var(--ink3);padding-top:2px}
+.d1-acts{display:flex;gap:2px;justify-content:flex-end}
+.d1-mini{width:26px;height:26px;display:grid;place-items:center;border:0;background:none;color:var(--ink2);cursor:pointer;border-radius:2px}
+.d1-mini:hover{background:var(--panel2);color:var(--ink)}
+.d1-mini.on{color:var(--accent)}
+.d1-foot{margin:0 26px;padding:9px 0 12px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font:8.5px var(--mono);color:var(--ink3);letter-spacing:.05em}
+.d1-set{padding:18px 26px;flex:1;overflow-y:auto}
+.d1-setrow{display:flex;align-items:center;gap:12px;min-height:50px;border-bottom:1px solid var(--line2);font-size:12.5px}
+.d1-setrow .v{margin-left:auto;font:10px var(--mono);color:var(--ink3)}
+.d1-setrow .grow{flex:1}
+.d1-sw{width:38px;height:21px;border:1px solid var(--ink);border-radius:3px;background:var(--panel);position:relative;cursor:pointer;flex:none;margin-left:auto}
+.d1-sw i{position:absolute;top:2px;left:2px;width:15px;height:15px;background:var(--ink3);border-radius:2px;transition:all .15s}
+.d1-sw.on i{left:19px;background:var(--accent)}
+.d1-sw.on{border-color:var(--accent)}
+.d1-seg{display:flex;border:1px solid var(--line);margin-left:auto}
+.d1-seg button{border:0;border-right:1px solid var(--line);background:var(--panel);padding:5px 10px;font:9px var(--mono);color:var(--ink2);cursor:pointer}
+.d1-seg button:last-child{border-right:0}
+.d1-seg button.on{background:var(--ink);color:var(--bg)}
+.d1-tools{padding:18px 26px;flex:1;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:0 32px}
+.d1-tool{display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:center;text-align:left;padding:13px 0;border:0;border-bottom:1px solid var(--line2);background:none;cursor:pointer;color:var(--ink);width:100%}
+.d1-tool .no{font:9px var(--mono);color:var(--accent)}
+.d1-tool .nm{font-size:12.5px}
+.d1-tool .ds{font:8.5px var(--mono);color:var(--ink3);margin-top:2px;display:block}
+.d1-tool .tag{font:8px var(--mono);color:var(--ink3);border:1px solid var(--line);padding:2px 4px}
+.d1-toast{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);font-size:11px;padding:8px 14px;border-radius:3px;z-index:20}
+
+/* ============ share page ============ */
+.sp1{min-height:520px;background:#FBF9F3;color:#191712;font-family:var(--sans);}
+.sp1-in{max-width:680px;margin:0 auto;padding:52px 56px 60px}
+.sp1-meta{display:flex;justify-content:space-between;font:9px var(--mono);letter-spacing:.12em;color:#96907F}
+.sp1-rule{height:1px;background:#191712;margin:14px 0 26px}
+.sp1-title{font-size:25px;font-weight:600;letter-spacing:-.02em;line-height:1.3}
+.sp1-body{margin-top:18px;font-size:16px;line-height:1.8;white-space:pre-wrap;word-break:break-word;color:#2A261C}
+.sp1-exp{margin-top:34px;padding-top:12px;border-top:1px solid #D6D0C0;font:10px var(--mono);color:#6A6558;letter-spacing:.03em}
+.sp1-foot{margin-top:8px;font:9px var(--mono);color:#96907F;letter-spacing:.06em}
+.sp1-gone{min-height:520px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px}
+.sp1-code{font:600 62px/1 var(--mono);color:#C2521A;letter-spacing:.06em}
+.sp1-gone h2{font-size:20px;margin-top:20px;font-weight:600}
+.sp1-gone p{font-size:13px;color:#6A6558;margin-top:10px;line-height:1.7;max-width:360px}
+.sp1-gone .sp1-foot{margin-top:30px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+/**
+ * AndroidFrame — Android设备边框（参考Pixel 8系列）
+ */
+const androidFrameStyles = {
+  wrapper: {
+    display: 'inline-block',
+    padding: 10,
+    background: '#1a1a1a',
+    borderRadius: 44,
+    boxShadow: '0 0 0 2px #2a2a2a, 0 20px 60px rgba(0,0,0,0.3)',
+    position: 'relative',
+  },
+  screen: {
+    position: 'relative',
+    borderRadius: 36,
+    overflow: 'hidden',
+    background: '#fff',
+  },
+  statusBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 32,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 24px',
+    fontSize: 14,
+    fontWeight: 500,
+    fontFamily: 'Roboto, -apple-system, sans-serif',
+    zIndex: 20,
+    pointerEvents: 'none',
+  },
+  punchHole: {
+    position: 'absolute',
+    top: 10,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: 14,
+    height: 14,
+    background: '#000',
+    borderRadius: '50%',
+    zIndex: 30,
+  },
+  statusIcons: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+  },
+  batteryText: {
+    fontSize: 11,
+    fontWeight: 600,
+    marginLeft: 2,
+  },
+  content: {
+    position: 'absolute',
+    top: 32,
+    left: 0,
+    right: 0,
+    bottom: 24,
+    overflow: 'auto',
+  },
+  navBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 24,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 60,
+    zIndex: 10,
+  },
+  navButton: {
+    width: 36,
+    height: 4,
+    background: 'rgba(0,0,0,0.3)',
+    borderRadius: 999,
+  },
+};
+
+function AndroidFrame({
+  children,
+  width = 412,
+  height = 892,
+  time = '9:41',
+  battery = 100,
+  darkMode = false,
+  navStyle = 'gesture',
+}) {
+  const textColor = darkMode ? '#fff' : '#1a1a1a';
+
+  return (
+    <div style={androidFrameStyles.wrapper}>
+      <div style={{
+        ...androidFrameStyles.screen,
+        width,
+        height,
+        background: darkMode ? '#000' : '#fff',
+      }}>
+        <div style={{ ...androidFrameStyles.statusBar, color: textColor }}>
+          <span>{time}</span>
+          <div style={androidFrameStyles.statusIcons}>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor">
+              <rect x="0" y="6" width="2" height="4" rx="0.5" />
+              <rect x="4" y="4" width="2" height="6" rx="0.5" />
+              <rect x="8" y="2" width="2" height="8" rx="0.5" />
+              <rect x="12" y="0" width="2" height="10" rx="0.5" />
+            </svg>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
+              <path d="M7 9a1 1 0 100-2 1 1 0 000 2z" fill="currentColor" />
+              <path d="M3 6a5 5 0 018 0" stroke="currentColor" strokeWidth="1.2" />
+              <path d="M0.5 3.5a11 11 0 0113 0" stroke="currentColor" strokeWidth="1.2" opacity="0.6" />
+            </svg>
+            <div style={{
+              width: 22,
+              height: 10,
+              border: '1.5px solid currentColor',
+              borderRadius: 2,
+              padding: 1,
+              position: 'relative',
+            }}>
+              <div style={{
+                width: `${battery}%`,
+                height: '100%',
+                background: 'currentColor',
+                borderRadius: 1,
+              }} />
+            </div>
+            <span style={androidFrameStyles.batteryText}>{battery}%</span>
+          </div>
+        </div>
+
+        <div style={androidFrameStyles.punchHole} />
+
+        <div style={androidFrameStyles.content}>
+          {children}
+        </div>
+
+        {navStyle === 'gesture' && (
+          <div style={androidFrameStyles.navBar}>
+            <div style={{
+              ...androidFrameStyles.navButton,
+              width: 100,
+              height: 4,
+              background: darkMode ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)',
+            }} />
+          </div>
+        )}
+
+        {navStyle === 'buttons' && (
+          <div style={androidFrameStyles.navBar}>
+            <span style={{ color: textColor, fontSize: 20 }}>◁</span>
+            <span style={{ color: textColor, fontSize: 16 }}>○</span>
+            <span style={{ color: textColor, fontSize: 16 }}>□</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+if (typeof window !== 'undefined') {
+  window.AndroidFrame = AndroidFrame;
+}
+</script>
+
+<script type="text/babel">
+/**
+ * MacosWindow — macOS应用窗口边框（含traffic lights）
+ */
+const macosWindowStyles = {
+  window: {
+    display: 'inline-block',
+    background: '#fff',
+    borderRadius: 10,
+    overflow: 'hidden',
+    boxShadow: '0 30px 80px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(0,0,0,0.15)',
+  },
+  titleBar: {
+    height: 38,
+    background: 'linear-gradient(to bottom, #e8e8e8, #d8d8d8)',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '0 14px',
+    borderBottom: '0.5px solid rgba(0,0,0,0.1)',
+    position: 'relative',
+    userSelect: 'none',
+  },
+  trafficLights: {
+    display: 'flex',
+    gap: 8,
+    alignItems: 'center',
+  },
+  light: {
+    width: 12,
+    height: 12,
+    borderRadius: '50%',
+    border: '0.5px solid rgba(0,0,0,0.15)',
+  },
+  close: { background: '#ff5f57' },
+  minimize: { background: '#febc2e' },
+  maximize: { background: '#28c840' },
+  title: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontSize: 13,
+    color: '#333',
+    fontWeight: 500,
+    fontFamily: '-apple-system, "SF Pro Text", sans-serif',
+    pointerEvents: 'none',
+  },
+  content: {
+    position: 'relative',
+    overflow: 'auto',
+  },
+  titleBarDark: {
+    background: 'linear-gradient(to bottom, #3c3c3c, #2c2c2c)',
+    borderBottom: '0.5px solid rgba(255,255,255,0.1)',
+  },
+  titleDark: {
+    color: '#ddd',
+  },
+};
+
+function MacosWindow({ title = '', width = 900, height = 600, darkMode = false, children }) {
+  return (
+    <div style={{ ...macosWindowStyles.window, background: darkMode ? '#1e1e1e' : '#fff' }}>
+      <div style={{
+        ...macosWindowStyles.titleBar,
+        ...(darkMode ? macosWindowStyles.titleBarDark : {}),
+      }}>
+        <div style={macosWindowStyles.trafficLights}>
+          <div style={{ ...macosWindowStyles.light, ...macosWindowStyles.close }} />
+          <div style={{ ...macosWindowStyles.light, ...macosWindowStyles.minimize }} />
+          <div style={{ ...macosWindowStyles.light, ...macosWindowStyles.maximize }} />
+        </div>
+        {title && (
+          <div style={{
+            ...macosWindowStyles.title,
+            ...(darkMode ? macosWindowStyles.titleDark : {}),
+          }}>
+            {title}
+          </div>
+        )}
+      </div>
+      <div style={{ ...macosWindowStyles.content, width, height }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+if (typeof window !== 'undefined') {
+  window.MacosWindow = MacosWindow;
+}
+</script>
+
+<script type="text/babel">
+/**
+ * BrowserWindow — 浏览器窗口边框（Chrome风格）
+ */
+const browserWindowStyles = {
+  window: {
+    display: 'inline-block',
+    background: '#fff',
+    borderRadius: 10,
+    overflow: 'hidden',
+    boxShadow: '0 30px 80px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(0,0,0,0.15)',
+  },
+  chrome: {
+    background: '#dee1e6',
+    paddingTop: 10,
+    paddingLeft: 10,
+    paddingRight: 10,
+    userSelect: 'none',
+  },
+  tabRow: {
+    display: 'flex',
+    alignItems: 'flex-end',
+    gap: 6,
+    position: 'relative',
+  },
+  trafficLights: {
+    display: 'flex',
+    gap: 8,
+    alignItems: 'center',
+    paddingBottom: 10,
+    marginRight: 8,
+  },
+  light: {
+    width: 12,
+    height: 12,
+    borderRadius: '50%',
+    border: '0.5px solid rgba(0,0,0,0.15)',
+  },
+  close: { background: '#ff5f57' },
+  minimize: { background: '#febc2e' },
+  maximize: { background: '#28c840' },
+  tab: {
+    background: '#fff',
+    padding: '8px 30px 8px 14px',
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    fontSize: 12,
+    color: '#222',
+    fontFamily: '-apple-system, sans-serif',
+    maxWidth: 220,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    position: 'relative',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  favicon: {
+    width: 14,
+    height: 14,
+    borderRadius: 2,
+    background: '#999',
+    flexShrink: 0,
+  },
+  navBar: {
+    background: '#fff',
+    padding: '8px 14px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    borderBottom: '1px solid #e5e7eb',
+  },
+  navButtons: {
+    display: 'flex',
+    gap: 4,
+    color: '#5f6368',
+    fontSize: 16,
+  },
+  navButton: {
+    width: 28,
+    height: 28,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '50%',
+    cursor: 'pointer',
+  },
+  urlBar: {
+    flex: 1,
+    background: '#f1f3f4',
+    borderRadius: 999,
+    padding: '7px 14px',
+    fontSize: 13,
+    color: '#333',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    fontFamily: '-apple-system, sans-serif',
+  },
+  lockIcon: {
+    color: '#5f6368',
+    fontSize: 12,
+  },
+  content: {
+    position: 'relative',
+    overflow: 'auto',
+    background: '#fff',
+  },
+};
+
+function BrowserWindow({
+  title = 'New Tab',
+  url = 'https://example.com',
+  width = 1200,
+  height = 800,
+  showTrafficLights = true,
+  children,
+}) {
+  return (
+    <div style={browserWindowStyles.window}>
+      <div style={browserWindowStyles.chrome}>
+        <div style={browserWindowStyles.tabRow}>
+          {showTrafficLights && (
+            <div style={browserWindowStyles.trafficLights}>
+              <div style={{ ...browserWindowStyles.light, ...browserWindowStyles.close }} />
+              <div style={{ ...browserWindowStyles.light, ...browserWindowStyles.minimize }} />
+              <div style={{ ...browserWindowStyles.light, ...browserWindowStyles.maximize }} />
+            </div>
+          )}
+          <div style={browserWindowStyles.tab}>
+            <div style={browserWindowStyles.favicon} />
+            <span>{title}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style={browserWindowStyles.navBar}>
+        <div style={browserWindowStyles.navButtons}>
+          <div style={browserWindowStyles.navButton}>←</div>
+          <div style={browserWindowStyles.navButton}>→</div>
+          <div style={browserWindowStyles.navButton}>↻</div>
+        </div>
+        <div style={browserWindowStyles.urlBar}>
+          <span style={browserWindowStyles.lockIcon}>🔒</span>
+          <span>{url}</span>
+        </div>
+      </div>
+
+      <div style={{ ...browserWindowStyles.content, width, height }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+if (typeof window !== 'undefined') {
+  window.BrowserWindow = BrowserWindow;
+}
+</script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+const enc = (s) => new TextEncoder().encode(s).length;
+const num = (n) => n.toLocaleString('en-US');
+
+const CLIPS1 = [
+  {id:'a1', text:'周三产品评审结论：\n1. 分享链接默认 24 小时，可选 1 小时 / 7 天 / 阅后即焚。\n2. 离线记录先写本地库，恢复网络后按创建时间补传。\n3. 超过 64 KiB 禁止发送，接近上限提前提示。', dev:'Pixel 8 · 本机', time:'刚刚', pinned:true, synced:true},
+  {id:'a2', text:'The clipboard is the shortest path between two devices. Everything else — accounts, sync daemons, dashboards — is friction. Keep it local, keep it fast.', dev:'MacBook Pro · 书房', time:'5 分钟前', pinned:false, synced:true},
+  {id:'a3', text:'{"build":"1.0.0","platform":"android","synced":true,"items":128}', dev:'Pixel 8 · 本机', time:'12 分钟前', pinned:false, synced:false},
+  {id:'a4', text:'ssh -i ~/.ssh/clipbox_ed25519 root@10.0.8.24 -p 2202', dev:'MacBook Pro · 书房', time:'昨天 22:41', pinned:false, synced:true},
+  {id:'a5', text:'https://developer.android.com/jetpack/compose/testing', dev:'iPad mini', time:'昨天 18:02', pinned:false, synced:true},
+  {id:'a6', text:'把这条贴到 Mac 上 → 好的 👍 记得带上「验收清单」📋', dev:'未知设备', time:'周一 09:15', pinned:false, synced:false, failed:true},
+];
+
+function Icon({name, size=15}) {
+  const paths = {
+    search: <g><circle cx="7" cy="7" r="4.4"/><path d="M10.3 10.3L14 14"/></g>,
+    more: <g><circle cx="3" cy="8" r="1.1" fill="currentColor" stroke="none"/><circle cx="8" cy="8" r="1.1" fill="currentColor" stroke="none"/><circle cx="13" cy="8" r="1.1" fill="currentColor" stroke="none"/></g>,
+    copy: <g><rect x="5.2" y="5.2" width="8" height="9" rx="1.2"/><path d="M10.8 2.8H4.6A1.6 1.6 0 003 4.4v6.4"/></g>,
+    pin: <g><path d="M8 1.8l1.8 3.8 4.2.6-3 2.9.7 4.1L8 11.3l-3.7 1.9.7-4.1-3-2.9 4.2-.6z"/></g>,
+    close: <path d="M4 4l8 8M12 4l-8 8"/>,
+    back: <path d="M10 3L5 8l5 5"/>,
+    check: <path d="M3 8.4l3.2 3.1L13 4.6"/>,
+  };
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round">
+      {paths[name]}
+    </svg>
+  );
+}
+
+function Mark({size=18}) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x="1.8" y="5.2" width="10.4" height="12.4" rx="2.4" stroke="currentColor" strokeWidth="1.5"/>
+      <rect x="7.8" y="1.8" width="10.4" height="12.4" rx="2.4" fill="currentColor" opacity=".92"/>
+    </svg>
+  );
+}
+
+function Scaled({w, h, scale, children}) {
+  return (
+    <div style={{width:w*scale, height:h*scale, flex:'none'}}>
+      <div style={{width:w, height:h, transform:`scale(${scale})`, transformOrigin:'top left'}}>{children}</div>
+    </div>
+  );
+}
+
+/* ---------------- phone ---------------- */
+
+function C1Phone({initialTab, initialShare, scale, initialDraft, presetTheme}) {
+  const [theme, setTheme] = useState(presetTheme || 'light');
+  const [sysDark, setSysDark] = useState(false);
+  useEffect(()=>{
+    if(!window.matchMedia) return;
+    const m = window.matchMedia('(prefers-color-scheme: dark)');
+    setSysDark(m.matches);
+    const fn = e => setSysDark(e.matches);
+    if(m.addEventListener) m.addEventListener('change', fn); else m.addListener(fn);
+    return ()=>{ if(m.removeEventListener) m.removeEventListener('change', fn); else m.removeListener(fn); };
+  },[]);
+  const dark = theme === 'dark' || (theme === 'system' && sysDark);
+  return (
+    <Scaled w={432} h={912} scale={scale}>
+      <AndroidFrame time="9:41" battery={86} darkMode={dark}>
+        <PhoneApp initialTab={initialTab} initialShare={initialShare} initialDraft={initialDraft} theme={theme} setTheme={setTheme} dark={dark} />
+      </AndroidFrame>
+    </Scaled>
+  );
+}
+
+function PhoneApp({initialTab='history', initialShare=false, initialDraft='', theme, setTheme, dark}) {
+  const [tab, setTab] = useState(initialTab);
+  const [list, setList] = useState(CLIPS1);
+  const [q, setQ] = useState('');
+  const [draft, setDraft] = useState(initialDraft);
+  const [sheet, setSheet] = useState(null);
+  const [share, setShare] = useState(initialShare ? CLIPS1[0] : null);
+  const [step, setStep] = useState('options');
+  const [ttl, setTtl] = useState(24);
+  const [toast, setToast] = useState('');
+  const tRef = useRef(null);
+
+  const flash = (m) => {
+    setToast(m);
+    clearTimeout(tRef.current);
+    tRef.current = setTimeout(()=>setToast(''), 1700);
+  };
+  useEffect(()=>()=>clearTimeout(tRef.current), []);
+
+  const copy = (text) => {
+    try { if(navigator.clipboard) navigator.clipboard.writeText(text); } catch(e) {}
+    flash('已复制到剪贴板');
+  };
+  const send = () => {
+    const t = draft.trim();
+    if(!t || enc(t) > 65536) return;
+    setList(l => [{id:'n'+Date.now(), text:t, dev:'Pixel 8 · 本机', time:'刚刚', pinned:false, synced:false}, ...l]);
+    setDraft('');
+    flash('已保存到本地 · 待同步');
+  };
+  const pin = id => setList(l => l.map(c => c.id===id ? {...c, pinned:!c.pinned} : c));
+  const del = id => { setList(l => l.filter(c => c.id!==id)); setSheet(null); flash('已删除'); };
+  const openMore = clip => setSheet(clip);
+  const openShare = clip => { setSheet(null); setShare(clip); setStep('options'); };
+  const closeShare = () => { setShare(null); setStep('options'); };
+
+  return (
+    <div className="ph1" data-dark={dark ? '1' : '0'}>
+      {tab==='history' && (
+        <History1 list={list} q={q} setQ={setQ} draft={draft} setDraft={setDraft} onSend={send} onCopy={copy} onPin={pin} onMore={openMore} />
+      )}
+      {tab==='pairing' && <Pairing1 onBack={()=>setTab('settings')} />}
+      {tab==='settings' && <Settings1 theme={theme} setTheme={setTheme} onPair={()=>setTab('pairing')} />}
+      {tab==='toolbox' && <Toolbox1 />}
+      <Nav1 tab={tab} setTab={setTab} />
+      {sheet && (
+        <Sheet1 clip={sheet} onClose={()=>setSheet(null)} onCopy={c=>{copy(c.text);setSheet(null);}} onPin={id=>{pin(id);setSheet(null);}} onShare={openShare} onDelete={del} />
+      )}
+      {share && (
+        <Share1 clip={share} step={step} ttl={ttl} setTtl={setTtl} onClose={closeShare} onGenerate={()=>setStep('result')} onCopy={copy} />
+      )}
+      {toast && <div className="p-toast">{toast}</div>}
+    </div>
+  );
+}
+
+function History1({list, q, setQ, draft, setDraft, onSend, onCopy, onPin, onMore}) {
+  const filtered = list.filter(c => (c.text + ' ' + c.dev).toLowerCase().includes(q.trim().toLowerCase()));
+  const pinned = filtered.filter(c => c.pinned);
+  const rest = filtered.filter(c => !c.pinned);
+  const bytes = enc(draft);
+  const over = bytes > 65536;
+  const warn = bytes > 58982;
+
+  return (
+    <div className="p-main">
+      <div className="p-head">
+        <div className="p-status">
+          <span className="p-dot" />
+          <span>已同步 · 刚刚</span>
+          <span className="p-synccount">128 条</span>
+        </div>
+        <div className="p-title-row">
+          <h2 className="p-title">历史</h2>
+          <span className="p-count">HIST / 01</span>
+        </div>
+        <div className="p-search">
+          <Icon name="search" size={13} />
+          <input value={q} onChange={e=>setQ(e.target.value)} placeholder="搜索文本或设备" />
+          <span className="p-slash">/</span>
+        </div>
+      </div>
+      <div className="p-scroll">
+        <div className="p-comp">
+          <div className="p-comp-top"><span>新记录 · UTF-8</span><span>{num(bytes)} / 65,536 B</span></div>
+          <textarea value={draft} onChange={e=>setDraft(e.target.value)} placeholder="输入或粘贴文本，发送到所有设备…" />
+          <div className="p-comp-bottom">
+            <span className={'p-bytes'+(over?' over':warn?' warn':'')}>{over ? '超出 64 KiB 上限' : warn ? '接近上限 90%' : '本地优先 · 立即落盘'}</span>
+            <button className="p-send" disabled={!draft.trim() || over} onClick={onSend}>发送</button>
+          </div>
+        </div>
+        {filtered.length===0 && (
+          <div className="p-empty">
+            <div className="p-empty-t">没有匹配的记录</div>
+            <div className="p-empty-s">试试更短的词，或清空搜索</div>
+          </div>
+        )}
+        {pinned.length>0 && <div className="p-group">置顶 · {pinned.length}</div>}
+        {pinned.map(c => <Row1 key={c.id} clip={c} onCopy={onCopy} onPin={onPin} onMore={onMore} />)}
+        {rest.length>0 && <div className="p-group">全部 · {rest.length}</div>}
+        {rest.map(c => <Row1 key={c.id} clip={c} onCopy={onCopy} onPin={onPin} onMore={onMore} />)}
+        <div className="p-end">仅保留最近 90 天</div>
+      </div>
+    </div>
+  );
+}
+
+function Row1({clip, onCopy, onPin, onMore}) {
+  return (
+    <article className="p-row">
+      <div className="p-meta">
+        <span className="p-dev">{clip.dev}</span>
+        <span className="p-time">{clip.time}</span>
+      </div>
+      <p className="p-text">{clip.text}</p>
+      <div className="p-rowfoot">
+        {clip.failed
+          ? <span className="p-badge fail">失败 · 待重试</span>
+          : !clip.synced
+            ? <span className="p-badge local">本地</span>
+            : <span className="p-badge">已同步</span>}
+        <span className="p-bytes">{num(enc(clip.text))} B</span>
+        <div className="p-acts">
+          <button className="p-act" title="复制" onClick={()=>onCopy(clip.text)}><Icon name="copy" size={14} /></button>
+          <button className={'p-act'+(clip.pinned?' on':'')} title="置顶" onClick={()=>onPin(clip.id)}><Icon name="pin" size={14} /></button>
+          <button className="p-act" title="更多" onClick={()=>onMore(clip)}><Icon name="more" size={14} /></button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function Nav1({tab, setTab}) {
+  const items = [['history','历史','01'],['toolbox','工具箱','02'],['settings','设置','03']];
+  return (
+    <nav className="p-nav">
+      {items.map(([id,label,idx])=>(
+        <button key={id} className={'p-tab'+(tab===id?' on':'')} onClick={()=>setTab(id)}>
+          <span className="idx">{idx}</span>
+          <span className="lbl">{label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+function Sheet1({clip, onClose, onCopy, onPin, onShare, onDelete}) {
+  return (
+    <div className="p-veil bottom" onClick={onClose}>
+      <div className="p-sheet" onClick={e=>e.stopPropagation()}>
+        <div className="p-sheet-head">
+          <span>操作</span>
+          <button className="p-x" style={{width:22,height:22}} onClick={onClose}><Icon name="close" size={12} /></button>
+        </div>
+        <div className="p-sheet-text">{clip.text.replace(/\n/g,' ')}</div>
+        <button className="p-srow-btn" onClick={()=>onCopy(clip)}><span>复制文本</span><em>COPY</em></button>
+        <button className="p-srow-btn" onClick={()=>onPin(clip.id)}><span>{clip.pinned?'取消置顶':'置顶'}</span><em>PIN</em></button>
+        <button className={'p-srow-btn'+(clip.synced?'':' dis')} onClick={()=>clip.synced && onShare(clip)}>
+          <span>生成分享链接</span><em>{clip.synced?'SHARE':'未同步'}</em>
+        </button>
+        <button className="p-srow-btn danger" onClick={()=>onDelete(clip.id)}><span>删除</span><em>DEL</em></button>
+      </div>
+    </div>
+  );
+}
+
+function Share1({clip, step, ttl, setTtl, onClose, onGenerate, onCopy}) {
+  const opts = [
+    {h:1, l:'1 小时', d:'临时传一段'},
+    {h:24, l:'24 小时', d:'默认'},
+    {h:168, l:'7 天', d:'长期引用'},
+    {h:0, l:'阅后即焚', d:'打开一次后失效'},
+  ];
+  const expiry = () => {
+    if(ttl===0) return '阅后即焚 · 打开一次后立即失效';
+    const d = new Date(Date.now()+ttl*3600e3);
+    return ttl+' 小时有效 · '+d.toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false})+' 失效';
+  };
+  return (
+    <div className="p-veil" onClick={onClose}>
+      <div className="p-dialog" onClick={e=>e.stopPropagation()}>
+        {step==='options' ? (
+          <React.Fragment>
+            <div className="p-d-head">
+              <div>
+                <div className="p-d-kicker">SHARE / 只读快照</div>
+                <div className="p-d-title">生成分享链接</div>
+              </div>
+              <button className="p-x" onClick={onClose}><Icon name="close" size={13} /></button>
+            </div>
+            <div className="p-d-body">
+              {opts.map(o=>(
+                <button key={o.h} className={'p-opt'+(ttl===o.h?' on':'')} onClick={()=>setTtl(o.h)}>
+                  <span className="p-radio" />
+                  <span className="p-opt-l">{o.l}</span>
+                  <span className="p-opt-d">{o.d}</span>
+                </button>
+              ))}
+              <div className="p-d-note">链接只包含这条记录的文本快照，不包含设备与时间。到期后页面显示「已过期」。</div>
+            </div>
+            <div className="p-d-foot">
+              <button className="p-ghost" onClick={onClose}>取消</button>
+              <button className="p-primary" onClick={onGenerate}>生成链接</button>
+            </div>
+          </React.Fragment>
+        ) : (
+          <React.Fragment>
+            <div className="p-d-head">
+              <div>
+                <div className="p-d-kicker">SHARE / READY</div>
+                <div className="p-d-title">链接已生成</div>
+              </div>
+              <button className="p-x" onClick={onClose}><Icon name="close" size={13} /></button>
+            </div>
+            <div className="p-d-body">
+              <div className="p-url">https://clip.example.com/s/7fK2mQ</div>
+              <div className="p-exp">{expiry()}</div>
+              <div className="p-d-note">任何拿到链接的人都能查看这段文本。一次性链接被打开后立即失效。</div>
+            </div>
+            <div className="p-d-foot">
+              <button className="p-ghost" onClick={onClose}>完成</button>
+              <button className="p-primary" onClick={()=>onCopy('https://clip.example.com/s/7fK2mQ')}>复制链接</button>
+            </div>
+          </React.Fragment>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Pairing1({onBack}) {
+  const [code, setCode] = useState('804217');
+  const [state, setState] = useState('idle');
+  const submit = () => {
+    if(state==='loading') return;
+    setState('loading');
+    setTimeout(()=>setState('error'), 900);
+  };
+  return (
+    <div className="p-main">
+      <div className="p-head">
+        <button className="p-backbtn" onClick={onBack}><Icon name="back" size={12} />设置 / 服务器</button>
+        <div className="p-title-row">
+          <h2 className="p-title">配对这台设备</h2>
+          <span className="p-count">PAIR / 02</span>
+        </div>
+        <div className="p-hint">输入服务器启动时生成的 6 位配对码。配对码一次性有效。</div>
+      </div>
+      <div className="p-page">
+        <div className="p-field">
+          <div className="p-label"><span>服务器地址</span><span>HTTPS</span></div>
+          <input className="p-input" defaultValue="https://clip.example.com" />
+        </div>
+        <div className="p-field">
+          <div className="p-label"><span>配对码</span><span>6 DIGITS</span></div>
+          <input className="p-input p-code" maxLength={6} value={code}
+            onChange={e=>{ setCode(e.target.value.replace(/\D/g,'')); if(state==='error') setState('idle'); }}
+            placeholder="······" />
+        </div>
+        <div className="p-field">
+          <div className="p-label"><span>设备名称</span><span>LOCAL</span></div>
+          <input className="p-input" defaultValue="Pixel 8" />
+        </div>
+        {state==='error' && (
+          <div className="p-err">
+            <b>ERR 401</b>
+            <span>配对码已过期。请在服务器上重新生成一组 6 位码；连续失败 5 次会冷却 60 秒。</span>
+          </div>
+        )}
+        <button className="p-btn" disabled={state==='loading' || code.length!==6} onClick={submit}>
+          {state==='loading' ? '正在配对…' : '配对'}
+        </button>
+        <div className="p-note">配对码为 6 位数字。连续失败会触发冷却，服务器返回 429 时提示剩余秒数。</div>
+        <div className="p-note">服务器地址与设备名保存在本机。解除配对会清空本地记录。</div>
+      </div>
+    </div>
+  );
+}
+
+function Settings1({theme, setTheme, onPair}) {
+  const [autoPaste, setAutoPaste] = useState(true);
+  const [diag, setDiag] = useState(true);
+  const seg = [{v:'system',l:'跟随系统'},{v:'light',l:'浅色'},{v:'dark',l:'深色'}];
+  return (
+    <div className="p-main">
+      <div className="p-head">
+        <div className="p-status"><span className="p-dot" /><span>已连接 · clip.example.com</span><span className="p-synccount">v1.0.0</span></div>
+        <div className="p-title-row">
+          <h2 className="p-title">设置</h2>
+          <span className="p-count">SET / 03</span>
+        </div>
+      </div>
+      <div className="p-page">
+        <div className="p-sec">
+          <div className="p-seclbl">连接</div>
+          <button className="p-srow" onClick={onPair}>
+            <span className="k">服务器</span><span className="v">clip.example.com</span><span className="chev">›</span>
+          </button>
+          <div className="p-srow"><span className="k">设备</span><span className="v">Pixel 8 · 本机</span></div>
+          <div className="p-srow"><span className="k">解除配对</span><span className="v danger">清空本地数据</span></div>
+        </div>
+        <div className="p-sec">
+          <div className="p-seclbl">桌面端</div>
+          <div className="p-srow"><span className="k">自动粘贴</span><span className="v">接收后立即粘贴</span><span className={'p-sw'+(autoPaste?' on':'')} onClick={()=>setAutoPaste(!autoPaste)}><i /></span></div>
+          <div className="p-srow"><span className="k">自动发送</span><span className="v">关闭</span><span className="p-sw"><i /></span></div>
+        </div>
+        <div className="p-sec">
+          <div className="p-seclbl">外观</div>
+          <div className="p-srow" style={{display:'block', paddingTop:9}}>
+            <div className="p-seg">
+              {seg.map(s=>(
+                <button key={s.v} className={theme===s.v?'on':''} onClick={()=>setTheme(s.v)}>{s.l}</button>
+              ))}
+            </div>
+          </div>
+          <div className="p-srow"><span className="k">语言</span><span className="v">简体中文</span><span className="chev">›</span></div>
+        </div>
+        <div className="p-sec">
+          <div className="p-seclbl">其他</div>
+          <div className="p-srow"><span className="k">诊断日志</span><span className="v">最近 7 天</span><span className={'p-sw'+(diag?' on':'')} onClick={()=>setDiag(!diag)}><i /></span></div>
+          <div className="p-srow"><span className="k">关于 Clipbox</span><span className="v">1.0.0</span></div>
+        </div>
+        <div className="p-note">主题与语言立即生效；不做动态取色，三端共用同一组固定色板。</div>
+      </div>
+    </div>
+  );
+}
+
+const TOOLS1 = [
+  {id:'json', name:'JSON 格式化', desc:'格式化 · 压缩 · 校验', tag:'JSON'},
+  {id:'b64', name:'Base64', desc:'标准 / URL-safe · 容错解码', tag:'B64'},
+  {id:'url', name:'URL 编解码', desc:'组件 / 整串', tag:'URL'},
+  {id:'ts', name:'时间戳', desc:'本地 / UTC / ISO 8601', tag:'TIME'},
+  {id:'re', name:'正则测试', desc:'匹配 · 分组 · 标志', tag:'REGEX'},
+];
+
+function Toolbox1() {
+  const [open, setOpen] = useState(null);
+  if(open) return <ToolDetail1 tool={TOOLS1.find(t=>t.id===open)} onBack={()=>setOpen(null)} />;
+  return (
+    <div className="p-main">
+      <div className="p-head">
+        <div className="p-status"><span className="p-dot" /><span>全部本地处理 · 不上传</span><span className="p-synccount">5 个工具</span></div>
+        <div className="p-title-row">
+          <h2 className="p-title">工具箱</h2>
+          <span className="p-count">TOOL / 04</span>
+        </div>
+      </div>
+      <div className="p-tools">
+        {TOOLS1.map((t,i)=>(
+          <button key={t.id} className="p-tool" onClick={()=>setOpen(t.id)}>
+            <span className="no">{String(i+1).padStart(2,'0')}</span>
+            <span><span className="nm">{t.name}</span><span className="ds">{t.desc}</span></span>
+            <span className="tag">{t.tag}</span>
+          </button>
+        ))}
+        <div className="p-note">输入上限 100 KiB；处理在设备内完成，不经过服务器。</div>
+      </div>
+    </div>
+  );
+}
+
+function b64enc(s) {
+  const bytes = new TextEncoder().encode(s);
+  let bin = '';
+  bytes.forEach(b => { bin += String.fromCharCode(b); });
+  return btoa(bin);
+}
+function b64dec(s) {
+  let t = s.trim().replace(/-/g,'+').replace(/_/g,'/');
+  while(t.length % 4) t += '=';
+  const bin = atob(t);
+  const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+function ToolDetail1({tool, onBack}) {
+  const initial = tool.id==='json'
+    ? '{"build":"1.0.0","platform":"android","synced":true,"items":128}'
+    : tool.id==='b64'
+      ? '5L2g5aW977yM5oiR5Zyo5LyY5a6d6ZuG5ou/5L2g44CC'
+      : tool.id==='url'
+        ? 'https://clip.example.com/s/7fK2mQ?from=android&ttl=24'
+        : '';
+  const [src, setSrc] = useState(initial);
+  const [out, setOut] = useState('');
+  const [err, setErr] = useState('');
+  const [pat, setPat] = useState('\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\\b');
+
+  const run = (mode) => {
+    setErr('');
+    try {
+      if(tool.id==='json') {
+        const obj = JSON.parse(src);
+        if(mode==='min') setOut(JSON.stringify(obj));
+        else {
+          const pretty = JSON.stringify(obj, null, 2);
+          setOut(mode==='check'
+            ? '合法 JSON · '+pretty.split('\n').length+' 行 · '+num(enc(pretty))+' B'
+            : pretty);
+        }
+      } else if(tool.id==='b64') {
+        setOut(mode==='enc' ? b64enc(src) : b64dec(src));
+      } else if(tool.id==='url') {
+        setOut(mode==='enc' ? encodeURIComponent(src) : decodeURIComponent(src));
+      } else if(tool.id==='ts') {
+        const d = src.trim() ? new Date(Number(src.trim())) : new Date();
+        if(isNaN(d.getTime())) throw new Error('无法解析时间戳');
+        setOut('本地  '+d.toLocaleString('zh-CN',{hour12:false})+'\nISO   '+d.toISOString()+'\n秒    '+Math.floor(d.getTime()/1000)+'\n毫秒  '+d.getTime());
+      } else {
+        const flags = 'g';
+        const ms = Array.from(src.matchAll(new RegExp(pat, flags)));
+        setOut(ms.length ? ms.map((m,i)=>(i+1)+'. '+m[0]+'  @'+m.index).join('\n') : '没有匹配。');
+      }
+    } catch(e) {
+      setErr(String(e.message || e));
+      setOut('');
+    }
+  };
+
+  return (
+    <div className="p-main">
+      <div className="p-head">
+        <button className="p-backbtn" onClick={onBack}><Icon name="back" size={12} />工具箱 / {tool.name}</button>
+        <div className="p-title-row">
+          <h2 className="p-title">{tool.name}</h2>
+          <span className="p-count">LOCAL</span>
+        </div>
+      </div>
+      <div className="p-detail">
+        {tool.id==='re' && (
+          <input className="p-input" value={pat} onChange={e=>setPat(e.target.value)} placeholder="正则表达式" />
+        )}
+        <textarea className="p-io" value={src} onChange={e=>setSrc(e.target.value)}
+          placeholder={tool.id==='ts' ? '留空则使用当前时间；也可输入秒或毫秒时间戳' : '输入文本…'} />
+        <div className="p-actions">
+          {tool.id==='json' && <React.Fragment>
+            <button className="p-mini primary" onClick={()=>run('format')}>格式化</button>
+            <button className="p-mini" onClick={()=>run('min')}>压缩</button>
+            <button className="p-mini" onClick={()=>run('check')}>校验</button>
+          </React.Fragment>}
+          {tool.id==='b64' && <React.Fragment>
+            <button className="p-mini primary" onClick={()=>run('enc')}>编码</button>
+            <button className="p-mini" onClick={()=>run('dec')}>解码</button>
+          </React.Fragment>}
+          {tool.id==='url' && <React.Fragment>
+            <button className="p-mini primary" onClick={()=>run('enc')}>编码</button>
+            <button className="p-mini" onClick={()=>run('dec')}>解码</button>
+          </React.Fragment>}
+          {tool.id==='ts' && <React.Fragment>
+            <button className="p-mini primary" onClick={()=>{ setSrc(''); setTimeout(()=>run('now'),0); }}>现在</button>
+            <button className="p-mini" onClick={()=>run('now')}>解析</button>
+          </React.Fragment>}
+          {tool.id==='re' && <React.Fragment>
+            <button className="p-mini primary" onClick={()=>run('test')}>测试</button>
+            <button className="p-mini" onClick={()=>{ setOut(''); setErr(''); }}>清空</button>
+          </React.Fragment>}
+        </div>
+        <div className="p-out">
+          {err ? <span style={{color:'var(--danger)'}}>{err}</span> : (out || '输出会显示在这里。')}
+        </div>
+        <div className="p-note">输入 {num(enc(src))} B / 上限 102,400 B</div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- desktop ---------------- */
+
+function C1Desk() {
+  const [theme, setTheme] = useState('light');
+  const [view, setView] = useState('history');
+  const [list, setList] = useState(CLIPS1);
+  const [draft, setDraft] = useState('');
+  const [autoPaste, setAutoPaste] = useState(true);
+  const [autoSend, setAutoSend] = useState(false);
+  const [q, setQ] = useState('');
+  const [toast, setToast] = useState('');
+  const tRef = useRef(null);
+  const dark = theme === 'dark';
+  const flash = m => { setToast(m); clearTimeout(tRef.current); tRef.current = setTimeout(()=>setToast(''),1600); };
+  useEffect(()=>()=>clearTimeout(tRef.current), []);
+
+  const send = () => {
+    const t = draft.trim();
+    if(!t) return;
+    setList(l => [{id:'d'+Date.now(), text:t, dev:'MacBook Pro · 书房', time:'刚刚', pinned:false, synced:false}, ...l]);
+    setDraft('');
+    flash('已发送 · 待同步到其他设备');
+  };
+
+  return (
+    <MacosWindow title="Clipbox" width={1000} height={700} darkMode={dark}>
+      <div className="d1" data-dark={dark?'1':'0'}>
+        <aside className="d1-rail">
+          <div className="d1-brand"><Mark size={17} /><span>CLIPBOX</span></div>
+          <nav className="d1-nav">
+            {[['history','历史','01'],['toolbox','工具箱','02'],['settings','设置','03']].map(([id,l,no])=>(
+              <button key={id} className={'d1-ni'+(view===id?' on':'')} onClick={()=>setView(id)}>
+                <span className="no">{no}</span><span>{l}</span>
+              </button>
+            ))}
+          </nav>
+          <div className="d1-railfoot">
+            <div className="d1-ro"><span>SYNC</span><b><span className="d1-dot" />已连接</b></div>
+            <div className="d1-ro"><span>DEVICE</span><b>MacBook Pro</b></div>
+            <div className="d1-ro"><span>VERSION</span><b>1.0.0</b></div>
+          </div>
+        </aside>
+        <main className="d1-main">
+          {view==='history' && (
+            <React.Fragment>
+              <header className="d1-head">
+                <div>
+                  <div className="d1-kick">HISTORY / 128 ITEMS</div>
+                  <h1 className="d1-title">历史</h1>
+                </div>
+                <div className="d1-headright">
+                  <div className="d1-chip"><span className="d1-dot" />自动粘贴已开启</div>
+                  <div className="d1-search">
+                    <Icon name="search" size={12} />
+                    <input value={q} onChange={e=>setQ(e.target.value)} placeholder="搜索" />
+                  </div>
+                </div>
+              </header>
+              <div className="d1-comp">
+                <div className="d1-comptop"><span>新记录 · UTF-8 {num(enc(draft))} / 65,536 B</span><span>⌘ ↵ 发送</span></div>
+                <textarea value={draft} onChange={e=>setDraft(e.target.value)} placeholder="在这里输入，发送到所有设备…" />
+                <div className="d1-compbot">
+                  <span className="d1-small">离线也会先写入本地库</span>
+                  <button className="d1-send" disabled={!draft.trim() || enc(draft)>65536} onClick={send}>发送</button>
+                </div>
+              </div>
+              <div className="d1-table">
+                <div className="d1-thead"><span>来源</span><span>内容</span><span>时间</span><span style={{textAlign:'right'}}>操作</span></div>
+                <div className="d1-rows">
+                  {list.filter(c=>(c.text+' '+c.dev).toLowerCase().includes(q.trim().toLowerCase())).map(c=>(
+                    <div className="d1-row" key={c.id}>
+                      <div className="d1-dev">{c.dev}</div>
+                      <div className="d1-txt">{c.text}</div>
+                      <div className="d1-time">{c.time}</div>
+                      <div className="d1-acts">
+                        <button className="d1-mini" title="复制"><Icon name="copy" size={13} /></button>
+                        <button className={'d1-mini'+(c.pinned?' on':'')} title="置顶" onClick={()=>setList(l=>l.map(x=>x.id===c.id?{...x,pinned:!x.pinned}:x))}><Icon name="pin" size={13} /></button>
+                        <button className="d1-mini" title="更多"><Icon name="more" size={13} /></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="d1-foot"><span>本地优先 · 仅保留最近 90 天</span><span>最后同步 14:51:08</span></div>
+            </React.Fragment>
+          )}
+          {view==='toolbox' && (
+            <React.Fragment>
+              <header className="d1-head">
+                <div>
+                  <div className="d1-kick">TOOLBOX / LOCAL ONLY</div>
+                  <h1 className="d1-title">工具箱</h1>
+                </div>
+                <div className="d1-chip">输入上限 100 KiB</div>
+              </header>
+              <div className="d1-tools">
+                {TOOLS1.map((t,i)=>(
+                  <button key={t.id} className="d1-tool">
+                    <span className="no">{String(i+1).padStart(2,'0')}</span>
+                    <span><span className="nm">{t.name}</span><span className="ds">{t.desc}</span></span>
+                    <span className="tag">{t.tag}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="d1-foot"><span>处理在设备内完成 · 不经过服务器</span><span>5 个工具</span></div>
+            </React.Fragment>
+          )}
+          {view==='settings' && (
+            <React.Fragment>
+              <header className="d1-head">
+                <div>
+                  <div className="d1-kick">SETTINGS / v1.0.0</div>
+                  <h1 className="d1-title">设置</h1>
+                </div>
+                <div className="d1-chip"><span className="d1-dot" />已连接 · clip.example.com</div>
+              </header>
+              <div className="d1-set">
+                <div className="d1-setrow"><span>服务器</span><span className="v">clip.example.com</span></div>
+                <div className="d1-setrow"><span>设备</span><span className="v">MacBook Pro · 书房</span></div>
+                <div className="d1-setrow"><span>自动粘贴</span><span className="v">接收后立即粘贴</span><span className={'d1-sw'+(autoPaste?' on':'')} onClick={()=>setAutoPaste(!autoPaste)}><i /></span></div>
+                <div className="d1-setrow"><span>自动发送</span><span className="v">回车立即发送</span><span className={'d1-sw'+(autoSend?' on':'')} onClick={()=>setAutoSend(!autoSend)}><i /></span></div>
+                <div className="d1-setrow"><span>外观</span>
+                  <div className="d1-seg">
+                    {[['system','跟随系统'],['light','浅色'],['dark','深色']].map(([v,l])=>(
+                      <button key={v} className={theme===v?'on':''} onClick={()=>setTheme(v)}>{l}</button>
+                    ))}
+                  </div>
+                </div>
+                <div className="d1-setrow"><span>语言</span><span className="v">简体中文</span></div>
+                <div className="d1-setrow"><span>诊断日志</span><span className="v">最近 7 天 · 仅本地</span></div>
+              </div>
+              <div className="d1-foot"><span>主题与语言立即生效 · 固定色板</span><span>v1.0.0</span></div>
+            </React.Fragment>
+          )}
+        </main>
+        {toast && <div className="d1-toast">{toast}</div>}
+      </div>
+    </MacosWindow>
+  );
+}
+
+/* ---------------- share page ---------------- */
+
+function SharePage1({expired}) {
+  if(expired) {
+    return (
+      <div className="sp1">
+        <div className="sp1-gone">
+          <div className="sp1-code">410</div>
+          <h2>这个链接已经过期</h2>
+          <p>分享者设置了有效期，链接到期后内容不再可读。请让对方重新生成一个链接。</p>
+          <div className="sp1-foot">由 Clipbox 生成 · 只读快照</div>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="sp1">
+      <div className="sp1-in">
+        <div className="sp1-meta"><span>CLIPBOX · 分享</span><span>24 小时 · 7fK2mQ</span></div>
+        <div className="sp1-rule" />
+        <h1 className="sp1-title">会议纪要 · 11 月 13 日</h1>
+        <div className="sp1-body">{CLIPS1[0].text}</div>
+        <div className="sp1-exp">此链接将在 24 小时后失效 · 11/14 15:32</div>
+        <div className="sp1-foot">由 Clipbox 生成 · 只读快照 · 不加载外部资源</div>
+      </div>
+    </div>
+  );
+}
+
+function ShareDemo1() {
+  const [expired, setExpired] = useState(false);
+  return (
+    <div>
+      <div className="b1-share-tabs">
+        <button className={!expired?'on':''} onClick={()=>setExpired(false)}>正常</button>
+        <button className={expired?'on':''} onClick={()=>setExpired(true)}>已过期</button>
+      </div>
+      <Scaled w={720} h={606} scale={0.6}>
+        <BrowserWindow title="Clipbox 分享 · 7fK2mQ" url="https://clip.example.com/s/7fK2mQ" width={720} height={520}>
+          <SharePage1 expired={expired} />
+        </BrowserWindow>
+      </Scaled>
+    </div>
+  );
+}
+
+/* ---------------- board ---------------- */
+
+function Caption({code, label, note}) {
+  return <div className="b1-cap"><span><b>{code}</b> {label}</span><em>{note}</em></div>;
+}
+
+function Board1() {
+  return (
+    <div className="b1">
+      <div className="b1-in">
+        <div className="b1-top">
+          <span className="b1-logo"><Mark size={13} /> CLIPBOX</span>
+          <span>三端高保真设计 · 方向稿</span>
+          <span>DIRECTION 01 / 03 · 2026.11.13</span>
+        </div>
+
+        <header className="b1-head">
+          <div>
+            <div className="b1-kicker">仪器清单 · THE MEASURED LIST</div>
+            <h1 className="b1-title">把文本传输<br />当成一次计量</h1>
+            <p className="b1-sub">Rams 的仪器观：严格网格、中性底、一个信号色。没有卡片，没有图标墙，只有准确的读数和一条条对齐的记录。界面不解释自己。</p>
+          </div>
+          <div className="b1-principles">
+            <div className="b1-p"><b>01</b><span>发丝线代替卡片，一切对齐到 4px 基线。</span></div>
+            <div className="b1-p"><b>02</b><span>橙色只给当前状态与主操作，其余是灰与黑。</span></div>
+            <div className="b1-p"><b>03</b><span>设备、时间、字节数用等宽字体，像仪器读数。</span></div>
+          </div>
+        </header>
+
+        <div className="b1-spec">
+          <div className="b1-sp"><i style={{background:'#F3F0E8'}} /><b>底色</b><span>#F3F0E8</span></div>
+          <div className="b1-sp"><i style={{background:'#C2521A'}} /><b>信号</b><span>#C2521A</span></div>
+          <div className="b1-sp"><i style={{background:'#191712'}} /><b>墨色</b><span>#191712</span></div>
+          <div className="b1-sp"><b>正文</b><span>14 / 21</span></div>
+          <div className="b1-sp"><b>读数</b><span>9.5 MONO</span></div>
+        </div>
+
+        <div className="b1-ruler">
+          <span>0</span>
+          <span style={{left:400}}>412 dp · 单屏基准</span>
+          <span className="r">S-01 → S-07</span>
+        </div>
+
+        <div className="b1-bench">
+          <div className="b1-hero b1-item">
+            <C1Phone initialTab="history" initialDraft="把这段发到 Mac：明早 10 点评审，记得带上接口文档。" scale={0.74} />
+            <Caption code="S-01" label="历史 · 默认" note="发送器 + 置顶 + 记录" />
+          </div>
+          <div className="b1-stripcol">
+            <div className="b1-states">
+              <div><b>STATES</b><span>空态 / 无结果</span></div>
+              <div><b>OFFLINE</b><span>离线可用</span></div>
+              <div><b>RETRY</b><span>失败重试</span></div>
+              <div><b>LIMIT</b><span>超限禁用</span></div>
+            </div>
+            <div className="b1-strip">
+              <div className="b1-item">
+                <C1Phone initialTab="pairing" scale={0.5} />
+                <Caption code="S-10" label="配对" note="错误可区分" />
+              </div>
+              <div className="b1-item">
+                <C1Phone initialTab="settings" scale={0.5} presetTheme="dark" />
+                <Caption code="S-12" label="设置 · 深色" note="主题三段切换" />
+              </div>
+              <div className="b1-item">
+                <C1Phone initialTab="toolbox" scale={0.5} />
+                <Caption code="S-15" label="工具箱" note="5 个本地工具" />
+              </div>
+              <div className="b1-item">
+                <C1Phone initialTab="history" initialShare={true} scale={0.5} />
+                <Caption code="S-07" label="分享设置" note="仅已同步可分享" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="b1-foot">
+          <div className="b1-fitem">
+            <Scaled w={1000} h={738} scale={0.6}>
+              <C1Desk />
+            </Scaled>
+            <Caption code="D-01" label="Desktop 1000 × 700" note="NavigationRail · 自动粘贴提示" />
+          </div>
+          <div className="b1-fitem">
+            <ShareDemo1 />
+            <Caption code="W-01" label="分享页" note="只读 · 无脚本" />
+          </div>
+          <aside className="b1-note">
+            <div><b>FORM FROM CONTENT</b>文本传输本质是一次计量——多少字节、从哪台设备、什么时候、是否同步。把计量做成骨架，而不是装饰。</div>
+            <div><b>桌面端</b>发送器与列表共用同一条基线，字节读数与手机完全一致。</div>
+            <div><b>分享页</b>只保留正文与到期提示，没有任何导航或品牌装饰。</div>
+            <div><b>深色</b>沿用同一组 token，橙色略提亮以维持对比度。</div>
+          </aside>
+        </div>
+
+        <div className="b1-end">
+          <span>可点击：底栏切换 · 搜索 · ··· 操作 · 分享弹层 · 设置里切主题 · 桌面左栏切换</span>
+          <span>CLIPBOX · 2026.11</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root1 = ReactDOM.createRoot(document.getElementById('root'));
+root1.render(<Board1 />);
+</script>
+</body>
+</html>

@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clipbox · 方向 03 · 硬件面板</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+:root{
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Noto Sans SC", Arial, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#060607}
+body{font-family:var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+button{font-family:inherit}
+@keyframes breathe3{0%,100%{opacity:1}50%{opacity:.28}}
+@keyframes blink3{0%,49%{opacity:1}50%,100%{opacity:.12}}
+
+/* ============ board ============ */
+.b3{
+  width:1440px;margin:0 auto;position:relative;overflow:hidden;
+  background:#0C0C0D;color:#EAE6DC;
+  background-image:
+    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+  background-size:72px 72px;
+}
+.b3-in{padding:0 48px 30px;position:relative;z-index:1}
+.b3-top{display:flex;align-items:center;justify-content:space-between;height:48px;font:9px var(--mono);letter-spacing:.14em;color:#7A7468;border-bottom:1px solid #232326}
+.b3-logo{display:flex;align-items:center;gap:8px;color:#F2EFE7;font-weight:600;letter-spacing:.2em}
+.b3-head{display:grid;grid-template-columns:1fr 316px 268px;gap:36px;padding:38px 0 26px;align-items:start}
+.b3-kicker{display:flex;align-items:center;gap:9px;font:9px var(--mono);letter-spacing:.16em;color:#FF5A1F}
+.b3-kicker:before{content:'';width:16px;height:1px;background:#FF5A1F}
+.b3-title{font-size:62px;line-height:1.02;letter-spacing:-.045em;font-weight:600;margin-top:18px;color:#F4F1E9}
+.b3-sub{margin-top:18px;font-size:13.5px;line-height:1.8;color:#9A9487;max-width:500px}
+.b3-sub b{color:#D8D3C6;font-weight:500}
+.b3-notes{display:flex;flex-direction:column;gap:12px;padding-top:4px}
+.b3-note{display:grid;grid-template-columns:24px 1fr;gap:8px;font-size:12px;line-height:1.65;color:#8C8678;border-top:1px solid #232326;padding-top:10px}
+.b3-note b{font:9px var(--mono);color:#FF5A1F;letter-spacing:.08em;padding-top:3px}
+.b3-form{margin-top:2px;font-size:11px;line-height:1.7;color:#6E695D;border-top:1px solid #232326;padding-top:11px}
+.b3-form b{display:block;font:8px var(--mono);letter-spacing:.14em;color:#FF5A1F;margin-bottom:4px}
+
+/* scope */
+.b3-scope{border:1px solid #2B2B2F;background:#0F0F11;padding:0 0 10px;box-shadow:0 0 0 1px rgba(0,0,0,.6) inset}
+.b3-scope-h{display:flex;align-items:center;gap:7px;padding:9px 12px;border-bottom:1px solid #26262A;font:8px var(--mono);letter-spacing:.16em;color:#77716A}
+.b3-scope-h .live{width:5px;height:5px;background:#FF5A1F;animation:breathe3 2.2s ease-in-out infinite}
+.b3-scope-h .r{margin-left:auto;color:#55B97F}
+.b3-scope-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 12px;border-bottom:1px solid #1D1D20;font:8px var(--mono);letter-spacing:.1em;color:#6E695F}
+.b3-scope-row b{font:11px var(--mono);font-weight:500;color:#EDE9DE;letter-spacing:.03em}
+.b3-scope-row b.hot{color:#FF5A1F}
+.b3-scope-meter{display:flex;gap:2px;padding:11px 12px 5px}
+.b3-scope-meter i{flex:1;height:14px;background:#1D1D20;display:block}
+.b3-scope-meter i.on{background:#FF5A1F}
+.b3-scope-f{padding:2px 12px 0;font:7.5px var(--mono);letter-spacing:.08em;color:#5C574E;display:flex;justify-content:space-between}
+
+/* bus + bench */
+.b3-bus{position:relative;margin-top:6px;height:22px;border-top:1px solid #333338;display:flex;align-items:flex-start;justify-content:space-between;font:8px var(--mono);letter-spacing:.14em;color:#6B665B;padding-top:5px}
+.b3-bus:after{content:'';position:absolute;top:-1px;left:0;right:0;height:5px;background-image:repeating-linear-gradient(90deg,#3A3A3F 0 1px,transparent 1px 24px);pointer-events:none}
+.b3-bench{position:relative;height:800px;margin-top:0}
+.b3-drop{position:absolute;top:0;width:1px;background:#2E2E33}
+.b3-drop i{position:absolute;left:-2px;bottom:-2px;width:5px;height:5px;background:#FF5A1F}
+.b3-dev{position:absolute}
+.b3-ch{position:absolute;padding-top:6px;border-top:1px solid #2B2B2F;display:flex;align-items:baseline;gap:8px;font:8px var(--mono);letter-spacing:.06em;color:#6E695F}
+.b3-ch b{color:#FF5A1F;letter-spacing:.1em;font-weight:500}
+.b3-ch em{font-style:normal;margin-left:auto;color:#5C574E;letter-spacing:.1em}
+
+/* out rack */
+.b3-out{position:relative;margin-top:18px;height:22px;border-top:1px solid #333338;display:flex;align-items:flex-start;justify-content:space-between;font:8px var(--mono);letter-spacing:.14em;color:#6B665B;padding-top:5px}
+.b3-out:after{content:'';position:absolute;top:-1px;left:0;right:0;height:5px;background-image:repeating-linear-gradient(90deg,#3A3A3F 0 1px,transparent 1px 24px);pointer-events:none}
+.b3-lower{display:grid;grid-template-columns:auto auto 1fr;gap:30px;align-items:start;margin-top:20px}
+.b3-cap{margin-top:11px;font:8.5px var(--mono);letter-spacing:.05em;color:#6E695F}
+.b3-cap b{color:#EAE6DC;font-weight:500}
+.b3-side{border-left:1px solid #26262A;padding-left:20px;align-self:stretch;display:flex;flex-direction:column;gap:9px}
+.b3-spec{display:flex;align-items:center;gap:8px;font:8.5px var(--mono);letter-spacing:.04em;color:#77716A}
+.b3-spec i{width:11px;height:11px;border:1px solid rgba(255,255,255,.14);flex:none}
+.b3-spec b{color:#EAE6DC;font-weight:500;margin-right:auto}
+.b3-side .b3-form{border-top:1px solid #26262A;padding-top:10px;margin-top:2px}
+.b3-side .b3-warn{font:8px/1.7 var(--mono);letter-spacing:.03em;color:#5F5A50;border-top:1px solid #26262A;padding-top:9px}
+.b3-end{margin-top:22px;padding-top:11px;border-top:1px solid #232326;display:flex;justify-content:space-between;font:8.5px var(--mono);letter-spacing:.1em;color:#6B665B}
+
+/* ============ phone ============ */
+.ph3{
+  position:relative;height:100%;display:flex;flex-direction:column;
+  background:var(--bg);color:var(--ink);font-family:var(--sans);
+  --bg:#0C0C0D;--panel:#131315;--panel2:#1A1A1D;--inset:#08080A;
+  --ink:#F2EFE7;--ink2:#A29C90;--ink3:#615C53;
+  --line:#27272B;--line2:#1B1B1E;
+  --accent:#FF5A1F;--accent-dim:#3B1A0D;
+  --ok:#74D89E;--warn:#E8B33C;--danger:#FF6E5C;
+}
+.ph3[data-light="1"]{
+  --bg:#EDEAE2;--panel:#F7F4EC;--panel2:#E4E0D5;--inset:#E6E2D7;
+  --ink:#141311;--ink2:#5E594D;--ink3:#8F8877;
+  --line:#CBC5B6;--line2:#DBD6C9;
+  --accent:#D2460F;--accent-dim:#F4DCD0;
+  --ok:#2F6B45;--warn:#8A5F14;--danger:#A83A2A;
+}
+.ph3 .c3-head{flex:none;padding:13px 16px 0}
+.ph3 .c3-link{display:flex;align-items:center;gap:6px;font:9px var(--mono);letter-spacing:.1em;color:var(--ink2)}
+.ph3 .c3-dot{width:5px;height:5px;background:var(--ok);box-shadow:0 0 0 3px rgba(116,216,158,.13);animation:breathe3 2.4s ease-in-out infinite;flex:none}
+.ph3 .c3-link .r{margin-left:auto;color:var(--ink3);letter-spacing:.06em}
+.ph3 .c3-titlerow{display:flex;align-items:flex-end;justify-content:space-between;margin-top:7px}
+.ph3 .c3-title{font-size:25px;font-weight:600;letter-spacing:-.02em;line-height:1}
+.ph3 .c3-rec{font:8px var(--mono);letter-spacing:.1em;color:var(--ink3);padding-bottom:2px}
+.ph3 .c3-rec b{font-size:13px;font-weight:500;color:var(--ink);margin-right:4px}
+
+.ph3 .c3-search{display:flex;align-items:center;gap:8px;height:34px;margin-top:11px;border:1px solid var(--line);background:var(--inset);padding:0 9px}
+.ph3 .c3-q{width:15px;height:15px;display:grid;place-items:center;border:1px solid var(--line);font:8px var(--mono);color:var(--ink3);flex:none}
+.ph3 .c3-search input{flex:1;border:0;background:transparent;outline:0;font:12px var(--mono);color:var(--ink);min-width:0}
+.ph3 .c3-search input::placeholder{color:var(--ink3);font-family:var(--sans)}
+.ph3 .c3-esc{font:7px var(--mono);color:var(--ink3);border:1px solid var(--line);padding:1px 4px;letter-spacing:.08em;flex:none}
+
+.ph3 .c3-comp{margin-top:10px;border:1px solid var(--line);background:var(--inset)}
+.ph3 .c3-compbar{display:flex;justify-content:space-between;padding:5px 9px;border-bottom:1px solid var(--line2);font:7.5px var(--mono);letter-spacing:.11em;color:var(--ink3)}
+.ph3 .c3-compbar .hot{color:var(--accent)}
+.ph3 .c3-compbody{display:flex;gap:7px;padding:8px 9px 3px}
+.ph3 .c3-prompt{font:11px var(--mono);color:var(--accent);padding-top:2px;flex:none;display:flex;align-items:flex-start;gap:3px}
+.ph3 .c3-blk{width:6px;height:12px;background:var(--accent);display:inline-block;margin-top:1px;animation:blink3 1.15s steps(1) infinite}
+.ph3 .c3-comp textarea{flex:1;min-height:42px;max-height:92px;border:0;background:transparent;resize:none;outline:0;font:12px/1.65 var(--mono);color:var(--ink);caret-color:var(--accent);padding:0}
+.ph3 .c3-comp textarea::placeholder{color:var(--ink3);font-family:var(--mono);font-size:10.5px}
+.ph3 .c3-compfoot{display:flex;align-items:center;gap:7px;padding:5px 9px 7px}
+.ph3 .c3-bytes{font:7.5px var(--mono);letter-spacing:.03em;color:var(--ink3);white-space:nowrap}
+.ph3 .c3-bytes b{font-size:9px;font-weight:500;color:var(--ink);letter-spacing:.06em}
+.ph3 .c3-bytes em{font-style:normal;color:var(--ink3)}
+.ph3 .c3-bytes.warn b{color:var(--warn)}
+.ph3 .c3-bytes.over b{color:var(--danger)}
+.ph3 .c3-meter{display:flex;gap:2px;margin-left:2px;flex:none}
+.ph3 .c3-meter i{width:3px;height:6px;background:var(--line);display:block}
+.ph3 .c3-meter i.on{background:var(--accent)}
+.ph3 .c3-meter i.warn{background:var(--warn)}
+.ph3 .c3-send{margin-left:auto;height:27px;padding:0 11px;border:1px solid #7E2C10;background:var(--accent);color:#180A05;font:8.5px var(--mono);letter-spacing:.13em;font-weight:700;cursor:pointer;box-shadow:inset 0 -2px 0 rgba(0,0,0,.4);flex:none}
+.ph3 .c3-send:disabled{background:var(--panel2);color:var(--ink3);border-color:var(--line);box-shadow:inset 0 -2px 0 rgba(0,0,0,.35);cursor:default}
+
+.ph3 .c3-scroll{flex:1;min-height:0;overflow-y:auto;margin-top:6px}
+.ph3 .c3-group{display:flex;align-items:center;gap:7px;padding:6px 16px 5px;font:7.5px var(--mono);letter-spacing:.16em;color:var(--ink3);background:var(--bg);position:sticky;top:0;z-index:2}
+.ph3 .c3-group:before{content:'';width:4px;height:4px;background:var(--accent);flex:none}
+.ph3 .c3-group .r{margin-left:auto;letter-spacing:.06em}
+.ph3 .c3-row{display:grid;grid-template-columns:38px 1fr;gap:9px;padding:9px 16px 8px;border-top:1px solid var(--line2);position:relative}
+.ph3 .c3-row.pinned{background:linear-gradient(90deg,rgba(255,90,31,.06),transparent 62%)}
+.ph3 .c3-row.pinned:before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent)}
+.ph3 .c3-rmeta{display:flex;flex-direction:column;gap:3px;font:7.5px var(--mono);color:var(--ink3);padding-top:2px}
+.ph3 .c3-rmeta b{font-weight:500;color:var(--ink2);letter-spacing:.04em}
+.ph3 .c3-rtop{display:flex;align-items:center;gap:6px;font:7px var(--mono);letter-spacing:.1em;color:var(--ink3);min-height:10px}
+.ph3 .c3-rtop .pin{color:var(--accent);display:flex;align-items:center;gap:3px}
+.ph3 .c3-rtop .badge{padding:1px 4px;border:1px solid currentColor}
+.ph3 .c3-rtop .badge.fail{color:var(--danger)}
+.ph3 .c3-rtop .badge.pend{color:var(--warn)}
+.ph3 .c3-rtop .b{margin-left:auto;color:var(--ink3);letter-spacing:.04em}
+.ph3 .c3-rtext{margin-top:4px;font-size:13.5px;line-height:1.55;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;color:var(--ink)}
+.ph3 .c3-racts{display:flex;gap:1px;margin-top:5px;justify-content:flex-end;margin-right:-5px}
+.ph3 .c3-act{border:0;background:none;color:var(--ink3);font:7px var(--mono);letter-spacing:.1em;padding:4px 6px;cursor:pointer}
+.ph3 .c3-act:hover{color:var(--accent)}
+.ph3 .c3-act.on{color:var(--accent)}
+.ph3 .c3-empty{padding:36px 20px;text-align:center;font:9px var(--mono);letter-spacing:.08em;color:var(--ink3);line-height:1.8}
+.ph3 .c3-empty b{display:block;color:var(--ink);font-size:11px;letter-spacing:.02em;margin-bottom:5px}
+.ph3 .c3-end{text-align:center;font:7.5px var(--mono);letter-spacing:.14em;color:var(--ink3);padding:10px 0 12px}
+
+.ph3 .c3-nav{flex:none;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:7px 12px 10px;border-top:1px solid var(--line);background:var(--panel)}
+.ph3 .c3-key{height:52px;border:1px solid var(--line);background:var(--panel2);color:var(--ink2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;box-shadow:inset 0 -3px 0 rgba(0,0,0,.45);position:relative}
+.ph3 .c3-key b{font:9.5px var(--mono);letter-spacing:.18em;font-weight:600}
+.ph3 .c3-key span{font-size:8.5px;color:var(--ink3);letter-spacing:.04em}
+.ph3 .c3-key.on{color:var(--ink);border-color:#5C2A12}
+.ph3 .c3-key.on:before{content:'';position:absolute;top:-1px;left:-1px;right:-1px;height:2px;background:var(--accent)}
+.ph3 .c3-key.on span{color:var(--ink2)}
+
+/* phone pages */
+.ph3 .c3-page{flex:1;min-height:0;overflow-y:auto;padding:0 16px 16px}
+.ph3 .c3-crumb{display:flex;align-items:center;gap:8px;font:8px var(--mono);letter-spacing:.12em;color:var(--ink3);padding:13px 0 12px}
+.ph3 .c3-crumb button{margin-left:auto;border:1px solid var(--line);background:none;color:var(--ink2);font:7.5px var(--mono);letter-spacing:.1em;padding:3px 7px;cursor:pointer}
+.ph3 .c3-h2{font-size:23px;font-weight:600;letter-spacing:-.025em;line-height:1.15}
+.ph3 .c3-sub{font-size:11px;line-height:1.65;color:var(--ink2);margin-top:7px}
+.ph3 .c3-field{margin-top:14px}
+.ph3 .c3-flabel{display:flex;justify-content:space-between;font:7.5px var(--mono);letter-spacing:.14em;color:var(--ink3);margin-bottom:5px}
+.ph3 .c3-input{width:100%;height:40px;border:1px solid var(--line);background:var(--inset);padding:0 10px;font:11.5px var(--mono);color:var(--ink);outline:0}
+.ph3 .c3-input:focus{border-color:#7E2C10}
+.ph3 .c3-code{display:flex;gap:6px;position:relative}
+.ph3 .c3-cell{flex:1;height:52px;border:1px solid var(--line);background:var(--inset);display:grid;place-items:center;font:600 22px var(--mono);color:var(--ink)}
+.ph3 .c3-cell.on{border-color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent)}
+.ph3 .c3-codeinput{position:absolute;inset:0;opacity:0;width:100%;height:100%;border:0;cursor:text}
+.ph3 .c3-cta{width:100%;height:44px;margin-top:16px;border:1px solid #7E2C10;background:var(--accent);color:#180A05;font:9px var(--mono);letter-spacing:.18em;font-weight:700;cursor:pointer;box-shadow:inset 0 -3px 0 rgba(0,0,0,.38)}
+.ph3 .c3-cta:disabled{background:var(--panel2);border-color:var(--line);color:var(--ink3);box-shadow:inset 0 -3px 0 rgba(0,0,0,.3);cursor:default}
+.ph3 .c3-alert{margin-top:12px;border:1px solid #6B2A16;background:rgba(255,90,31,.07);padding:9px 10px;font-size:10.5px;line-height:1.55;color:var(--ink)}
+.ph3 .c3-alert b{display:block;font:7.5px var(--mono);letter-spacing:.12em;color:var(--accent);margin-bottom:3px}
+.ph3 .c3-fine{font:7.5px/1.7 var(--mono);letter-spacing:.04em;color:var(--ink3);margin-top:12px}
+.ph3 .c3-footpanel{margin-top:auto;border:1px solid var(--line);background:var(--panel);padding:0 10px 4px}
+.ph3 .c3-fp-h{display:flex;justify-content:space-between;font:7px var(--mono);letter-spacing:.16em;color:var(--ink3);padding:7px 0 5px;border-bottom:1px solid var(--line2)}
+.ph3 .c3-fp-r{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;font:7.5px var(--mono);letter-spacing:.08em;color:var(--ink3);border-bottom:1px solid var(--line2)}
+.ph3 .c3-fp-r:last-child{border-bottom:0}
+.ph3 .c3-fp-r b{font:9px var(--mono);font-weight:500;color:var(--ink2);letter-spacing:.04em}
+.ph3 .c3-fp-r b.ok{color:var(--ok)}
+
+.ph3 .c3-sect{margin-top:15px}
+.ph3 .c3-sectk{display:flex;align-items:center;gap:7px;font:7.5px var(--mono);letter-spacing:.16em;color:var(--ink3);padding-bottom:5px}
+.ph3 .c3-sectk:before{content:'';width:10px;height:1px;background:var(--accent);flex:none}
+.ph3 .c3-srow{display:flex;align-items:center;gap:9px;min-height:46px;border-top:1px solid var(--line2);font-size:12.5px;color:var(--ink)}
+.ph3 .c3-srow .v{margin-left:auto;font:8.5px var(--mono);color:var(--ink2);text-align:right;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ph3 .c3-srow .v.dim{color:var(--ink3)}
+.ph3 .c3-tog{width:38px;height:20px;border:1px solid var(--line);background:var(--inset);position:relative;cursor:pointer;flex:none;margin-left:auto}
+.ph3 .c3-tog i{position:absolute;top:2px;left:2px;width:14px;height:14px;background:var(--ink3);transition:all .15s}
+.ph3 .c3-tog.on{border-color:#6B2E12}
+.ph3 .c3-tog.on i{left:20px;background:var(--accent);box-shadow:0 0 8px rgba(255,90,31,.55)}
+.ph3 .c3-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:2px 0 8px}
+.ph3 .c3-segbtn{height:33px;border:1px solid var(--line);background:var(--panel2);color:var(--ink2);font:8.5px var(--mono);letter-spacing:.08em;cursor:pointer;box-shadow:inset 0 -2px 0 rgba(0,0,0,.4)}
+.ph3 .c3-segbtn.on{border-color:#6B2E12;color:var(--ink);box-shadow:inset 0 2px 0 var(--accent)}
+.ph3 .c3-danger{color:var(--accent);font:8px var(--mono);letter-spacing:.08em;background:none;border:0;cursor:pointer}
+
+.ph3 .c3-toolgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.ph3 .c3-tool{border:1px solid var(--line);background:var(--panel);color:var(--ink);text-align:left;padding:9px 10px;min-height:100px;display:flex;flex-direction:column;box-shadow:inset 0 -3px 0 rgba(0,0,0,.45);cursor:pointer}
+.ph3 .c3-tool .idx{font:7.5px var(--mono);color:var(--accent);letter-spacing:.14em}
+.ph3 .c3-tool .nm{font:600 18px/1 var(--mono);letter-spacing:.02em;margin-top:auto}
+.ph3 .c3-tool .cn{font-size:10px;color:var(--ink2);margin-top:4px}
+.ph3 .c3-tool .ds{font:7px var(--mono);color:var(--ink3);margin-top:2px;letter-spacing:.04em}
+.ph3 .c3-tool.wide{grid-column:span 2;min-height:78px}
+.ph3 .c3-toolbar{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.ph3 .c3-chip{border:1px solid var(--line);background:var(--panel2);color:var(--ink2);font:7.5px var(--mono);letter-spacing:.08em;padding:5px 8px;cursor:pointer}
+.ph3 .c3-chip.on{border-color:#6B2E12;color:var(--accent);box-shadow:inset 0 2px 0 var(--accent)}
+.ph3 .c3-iolabel{display:flex;justify-content:space-between;font:7.5px var(--mono);letter-spacing:.14em;color:var(--ink3);margin-top:11px;margin-bottom:4px}
+.ph3 .c3-io{width:100%;border:1px solid var(--line);background:var(--inset);color:var(--ink);font:10px/1.65 var(--mono);padding:8px 9px;outline:0;resize:none;min-height:78px}
+.ph3 .c3-out{flex:1;min-height:76px;overflow:auto;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:10px/1.65 var(--mono);padding:8px 9px;white-space:pre-wrap;word-break:break-word}
+.ph3 .c3-out.err{color:var(--danger)}
+.ph3 .c3-status{font:7.5px var(--mono);letter-spacing:.08em;color:var(--ok);margin-top:6px}
+.ph3 .c3-status.err{color:var(--danger)}
+
+/* sheet */
+.ph3 .c3-veil{position:absolute;inset:0;background:rgba(0,0,0,.66);z-index:40;display:flex;align-items:flex-end}
+.ph3 .c3-sheet{width:100%;background:var(--bg);border-top:2px solid var(--accent);max-height:93%;overflow-y:auto;padding-bottom:10px;box-shadow:0 -20px 50px rgba(0,0,0,.5)}
+.ph3 .c3-sheet-h{display:flex;align-items:center;gap:7px;padding:10px 16px 5px;font:7.5px var(--mono);letter-spacing:.16em;color:var(--ink3)}
+.ph3 .c3-sheet-h .r{margin-left:auto}
+.ph3 .c3-sheet-title{font-size:17px;font-weight:600;letter-spacing:-.01em;padding:0 16px}
+.ph3 .c3-sheet-sub{font-size:10px;color:var(--ink2);line-height:1.6;padding:5px 16px 0}
+.ph3 .c3-ttl{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:13px 16px 4px}
+.ph3 .c3-ttlbtn{height:55px;border:1px solid var(--line);background:var(--panel);color:var(--ink2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;box-shadow:inset 0 -2px 0 rgba(0,0,0,.45)}
+.ph3 .c3-ttlbtn b{font:600 11.5px var(--mono);color:var(--ink)}
+.ph3 .c3-ttlbtn span{font-size:8px;color:var(--ink3)}
+.ph3 .c3-ttlbtn.on{border-color:#7E2C10;background:var(--accent-dim);box-shadow:inset 0 2px 0 var(--accent)}
+.ph3 .c3-ttlbtn.on b{color:var(--accent)}
+.ph3 .c3-sheet-acts{padding:10px 16px 2px;display:flex;gap:7px}
+.ph3 .c3-sheet-acts .c3-cta{margin-top:0}
+.ph3 .c3-ghost{height:44px;border:1px solid var(--line);background:none;color:var(--ink2);font:8.5px var(--mono);letter-spacing:.12em;padding:0 12px;cursor:pointer}
+.ph3 .c3-linkbox{margin:12px 16px 0;border:1px solid var(--line);background:var(--inset);padding:9px 10px;font:9.5px/1.6 var(--mono);color:var(--ink);word-break:break-all}
+.ph3 .c3-linkrow{display:flex;align-items:baseline;gap:9px;padding:12px 16px 0}
+.ph3 .c3-linkid{font:600 25px var(--mono);letter-spacing:.12em;color:var(--accent)}
+.ph3 .c3-linkmeta{margin-left:auto;font:7.5px var(--mono);letter-spacing:.08em;color:var(--ink3);text-align:right;line-height:1.7}
+.ph3 .c3-sheet-note{padding:8px 16px 0;font:7.5px/1.7 var(--mono);letter-spacing:.04em;color:var(--ink3)}
+
+/* menu */
+.ph3 .c3-menu{width:100%;background:var(--bg);border-top:2px solid var(--accent);padding:10px 16px 12px}
+.ph3 .c3-menuh{font:7.5px var(--mono);letter-spacing:.14em;color:var(--ink3);display:flex;justify-content:space-between;margin-bottom:7px}
+.ph3 .c3-mitem{width:100%;display:flex;align-items:center;gap:9px;min-height:46px;border-top:1px solid var(--line2);background:none;border-left:0;border-right:0;border-bottom:0;color:var(--ink);font-size:12.5px;text-align:left;cursor:pointer}
+.ph3 .c3-mitem .k{margin-left:auto;font:7.5px var(--mono);letter-spacing:.06em;color:var(--ink3)}
+.ph3 .c3-mitem:disabled{color:var(--ink3);cursor:default}
+.ph3 .c3-mitem:disabled .k{color:var(--danger)}
+.ph3 .c3-mitem.danger{color:var(--danger)}
+
+/* toast */
+.ph3 .c3-toast{position:absolute;left:50%;bottom:86px;transform:translateX(-50%);background:var(--ink);color:var(--bg);font:8.5px var(--mono);letter-spacing:.1em;padding:7px 13px;z-index:60;white-space:nowrap;box-shadow:0 10px 24px rgba(0,0,0,.4)}
+
+/* ============ desktop ============ */
+.dk3{width:1000px;height:700px;background:#0B0B0C;color:#EDE9DE;display:flex;font-family:var(--sans);overflow:hidden;--mono:ui-monospace,"SF Mono",Menlo,monospace}
+.dk3-rail{width:66px;flex:none;border-right:1px solid #232327;display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:6px;background:#0A0A0B}
+.dk3-logo{width:30px;height:30px;display:grid;place-items:center;border:1px solid #2C2C31;margin-bottom:14px}
+.dk3-rk{width:48px;height:50px;border:1px solid transparent;background:none;color:#6D675C;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
+.dk3-rk b{font:9px var(--mono);letter-spacing:.12em}
+.dk3-rk span{font-size:8px}
+.dk3-rk.on{color:#F2EFE7;border-color:#3A2418;background:#141416;box-shadow:inset 0 2px 0 #FF5A1F}
+.dk3-railf{margin-top:auto;font:8px var(--mono);color:#55504A;letter-spacing:.1em}
+.dk3-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.dk3-top{height:36px;flex:none;display:flex;align-items:center;gap:8px;padding:0 20px;border-bottom:1px solid #232327;font:8px var(--mono);letter-spacing:.1em;color:#8A8478}
+.dk3-top .dot{width:5px;height:5px;background:#74D89E;animation:breathe3 2.4s ease-in-out infinite}
+.dk3-top .r{margin-left:auto;color:#5F5A50}
+.dk3-head{display:flex;align-items:flex-end;gap:12px;padding:16px 20px 10px}
+.dk3-head h1{font-size:22px;font-weight:600;letter-spacing:-.02em;line-height:1}
+.dk3-head .cnt{font:8px var(--mono);color:#6D675C;letter-spacing:.12em;padding-bottom:2px}
+.dk3-search{margin-left:auto;width:196px;height:30px;border:1px solid #27272B;background:#08080A;display:flex;align-items:center;gap:7px;padding:0 8px}
+.dk3-search span{font:7.5px var(--mono);color:#5F5A50}
+.dk3-search input{flex:1;background:none;border:0;outline:0;color:#EDE9DE;font:11px var(--mono);min-width:0}
+.dk3-comp{margin:0 20px;border:1px solid #2B2B2F;background:#08080A;display:flex;align-items:center;gap:8px;padding:7px 9px}
+.dk3-comp .p{font:11px var(--mono);color:#FF5A1F}
+.dk3-comp .blk{width:6px;height:12px;background:#FF5A1F;animation:blink3 1.15s steps(1) infinite;flex:none}
+.dk3-comp input{flex:1;background:none;border:0;outline:0;color:#EDE9DE;font:11.5px var(--mono);min-width:0;caret-color:#FF5A1F}
+.dk3-comp input::placeholder{color:#5F5A50}
+.dk3-comp .b{font:7.5px var(--mono);color:#6D675C;letter-spacing:.04em;white-space:nowrap}
+.dk3-comp .send{height:26px;padding:0 11px;border:1px solid #7E2C10;background:#FF5A1F;color:#180A05;font:8px var(--mono);letter-spacing:.12em;font-weight:700;cursor:pointer;box-shadow:inset 0 -2px 0 rgba(0,0,0,.4)}
+.dk3-comp .send:disabled{background:#1A1A1D;color:#615C53;border-color:#27272B;cursor:default}
+.dk3-cols{display:grid;grid-template-columns:45px 108px 1fr 64px;gap:10px;padding:12px 20px 5px;font:7px var(--mono);letter-spacing:.14em;color:#55504A}
+.dk3-list{flex:1;min-height:0;overflow-y:auto;padding:0 20px 12px}
+.dk3-lrow{display:grid;grid-template-columns:45px 108px 1fr 64px;gap:10px;padding:8px 0;border-top:1px solid #1C1C1F;position:relative}
+.dk3-lrow.pin{background:linear-gradient(90deg,rgba(255,90,31,.055),transparent 55%)}
+.dk3-lrow.pin:before{content:'';position:absolute;left:-20px;top:0;bottom:0;width:2px;background:#FF5A1F}
+.dk3-lrow .t{font:8px var(--mono);color:#8A8478;padding-top:2px;line-height:1.7}
+.dk3-lrow .d{font:8px var(--mono);color:#A29C90;padding-top:2px;line-height:1.7}
+.dk3-lrow .txt{font-size:11.5px;line-height:1.55;color:#E4DFD4;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.dk3-lrow .bt{font:7.5px var(--mono);color:#615C53;text-align:right;padding-top:2px}
+.dk3-lrow .tags{display:flex;gap:5px;margin-bottom:3px}
+.dk3-tag{font:6.5px var(--mono);letter-spacing:.1em;padding:1px 4px;border:1px solid #2A2A2E;color:#7A7468}
+.dk3-tag.hot{border-color:#5C2A12;color:#FF5A1F}
+.dk3-scope{width:196px;flex:none;border-left:1px solid #232327;background:#0A0A0B;padding:12px 12px;display:flex;flex-direction:column;gap:0}
+.dk3-sh{display:flex;align-items:center;gap:6px;font:7px var(--mono);letter-spacing:.16em;color:#6D675C;padding-bottom:8px;border-bottom:1px solid #1F1F22}
+.dk3-sh i{width:4px;height:4px;background:#FF5A1F;animation:breathe3 2.2s infinite}
+.dk3-sr{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid #1A1A1D;font:7px var(--mono);letter-spacing:.1em;color:#615C53}
+.dk3-sr b{font:10px var(--mono);font-weight:500;color:#E4DFD4;letter-spacing:.02em}
+.dk3-sm{display:flex;gap:2px;padding:9px 0 4px}
+.dk3-sm i{flex:1;height:12px;background:#1D1D20}
+.dk3-sm i.on{background:#FF5A1F}
+.dk3-sf{font:6.5px var(--mono);letter-spacing:.08em;color:#55504A;display:flex;justify-content:space-between}
+.dk3-note{margin-top:auto;font:7px/1.7 var(--mono);letter-spacing:.03em;color:#55504A;border-top:1px solid #1F1F22;padding-top:8px}
+.dk3-page{padding:0 20px;flex:1;min-height:0;overflow-y:auto}
+.dk3-tools{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding-top:6px}
+.dk3-tool{min-height:104px;border:1px solid #27272B;background:#121214;color:#EDE9DE;text-align:left;padding:9px 10px;cursor:pointer;box-shadow:inset 0 -3px 0 rgba(0,0,0,.45);display:flex;flex-direction:column}
+.dk3-tool .idx{font:7px var(--mono);color:#FF5A1F;letter-spacing:.14em}
+.dk3-tool .nm{font:600 17px var(--mono);margin-top:auto}
+.dk3-tool .cn{font-size:9.5px;color:#8A8478;margin-top:3px}
+.dk3-setrow{display:flex;align-items:center;gap:10px;min-height:42px;border-bottom:1px solid #1C1C1F;font-size:11.5px}
+.dk3-setrow .v{margin-left:auto;font:8px var(--mono);color:#8A8478}
+.dk3-setrow .sw{width:32px;height:18px;border:1px solid #2B2B2F;background:#08080A;position:relative;cursor:pointer;margin-left:auto}
+.dk3-setrow .sw i{position:absolute;top:2px;left:2px;width:12px;height:12px;background:#5F5A50}
+.dk3-setrow .sw.on{border-color:#6B2E12}
+.dk3-setrow .sw.on i{left:16px;background:#FF5A1F}
+
+/* ============ share page (printout) ============ */
+.sp3{min-height:100%;background:#F1EDE3;color:#17150F;padding:52px 54px 44px;font-family:var(--sans)}
+.sp3-in{max-width:680px;margin:0 auto}
+.sp3-top{display:flex;justify-content:space-between;font:8px var(--mono);letter-spacing:.16em;color:#8A8172;padding-bottom:9px}
+.sp3-rule{height:2px;background:#D2460F}
+.sp3-id{display:flex;align-items:baseline;gap:10px;margin-top:18px;font:8px var(--mono);letter-spacing:.12em;color:#8A8172}
+.sp3-id b{color:#D2460F;font-weight:500}
+.sp3-title{font-size:29px;line-height:1.25;letter-spacing:-.02em;font-weight:600;margin-top:12px;color:#17150F}
+.sp3-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px;padding:10px 0;border-top:1px solid #CFC7B6;border-bottom:1px solid #CFC7B6;font:7.5px var(--mono);letter-spacing:.08em;color:#8A8172}
+.sp3-meta b{display:block;font-size:9px;color:#17150F;font-weight:500;margin-top:3px;letter-spacing:.03em}
+.sp3-body{margin-top:24px;font-size:15.5px;line-height:1.85;white-space:pre-wrap;word-break:break-word;color:#1D1B15}
+.sp3-exp{margin-top:26px;font:8px var(--mono);letter-spacing:.06em;color:#8A8172}
+.sp3-foot{margin-top:30px;padding-top:10px;border-top:1px solid #CFC7B6;display:flex;justify-content:space-between;font:7.5px var(--mono);letter-spacing:.1em;color:#9A9181}
+.sp3-gone{min-height:100%;display:flex;align-items:center;justify-content:center;background:#F1EDE3;color:#17150F;padding:50px}
+.sp3-gonecard{max-width:400px}
+.sp3-gcode{font:600 54px/1 var(--mono);color:#D2460F;letter-spacing:.02em}
+.sp3-gonecard h2{font-size:22px;letter-spacing:-.01em;margin-top:14px}
+.sp3-gonecard p{font-size:13px;line-height:1.8;color:#5C5648;margin-top:10px}
+.sp3-gfoot{margin-top:22px;padding-top:10px;border-top:1px solid #CFC7B6;font:7.5px var(--mono);letter-spacing:.1em;color:#8A8172}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+/* ===== AndroidFrame (skill asset) ===== */
+const androidFrameStyles3 = {
+  wrapper:{display:'inline-block',padding:10,background:'#1a1a1a',borderRadius:44,boxShadow:'0 0 0 2px #2a2a2a, 0 20px 60px rgba(0,0,0,0.3)',position:'relative'},
+  screen:{position:'relative',borderRadius:36,overflow:'hidden',background:'#fff'},
+  statusBar:{position:'absolute',top:0,left:0,right:0,height:32,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 24px',fontSize:14,fontWeight:500,fontFamily:'Roboto, -apple-system, sans-serif',zIndex:20,pointerEvents:'none'},
+  punchHole:{position:'absolute',top:10,left:'50%',transform:'translateX(-50%)',width:14,height:14,background:'#000',borderRadius:'50%',zIndex:30},
+  statusIcons:{display:'flex',alignItems:'center',gap:6},
+  batteryText:{fontSize:11,fontWeight:600,marginLeft:2},
+  content:{position:'absolute',top:32,left:0,right:0,bottom:24,overflow:'auto'},
+  navBar:{position:'absolute',bottom:0,left:0,right:0,height:24,display:'flex',alignItems:'center',justifyContent:'center',gap:60,zIndex:10},
+};
+function AndroidFrame3({children,width=412,height=892,time='9:41',battery=100,darkMode=false,navStyle='gesture'}){
+  const textColor = darkMode ? '#fff' : '#1a1a1a';
+  return (
+    <div style={androidFrameStyles3.wrapper}>
+      <div style={{...androidFrameStyles3.screen,width,height,background:darkMode?'#000':'#fff'}}>
+        <div style={{...androidFrameStyles3.statusBar,color:textColor}}>
+          <span>{time}</span>
+          <div style={androidFrameStyles3.statusIcons}>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="currentColor">
+              <rect x="0" y="6" width="2" height="4" rx="0.5"/><rect x="4" y="4" width="2" height="6" rx="0.5"/><rect x="8" y="2" width="2" height="8" rx="0.5"/><rect x="12" y="0" width="2" height="10" rx="0.5"/>
+            </svg>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
+              <path d="M7 9a1 1 0 100-2 1 1 0 000 2z" fill="currentColor"/>
+              <path d="M3 6a5 5 0 018 0" stroke="currentColor" strokeWidth="1.2"/>
+              <path d="M0.5 3.5a11 11 0 0113 0" stroke="currentColor" strokeWidth="1.2" opacity="0.6"/>
+            </svg>
+            <div style={{width:22,height:10,border:'1.5px solid currentColor',borderRadius:2,padding:1}}>
+              <div style={{width:`${battery}%`,height:'100%',background:'currentColor',borderRadius:1}}/>
+            </div>
+            <span style={androidFrameStyles3.batteryText}>{battery}%</span>
+          </div>
+        </div>
+        <div style={androidFrameStyles3.punchHole}/>
+        <div style={androidFrameStyles3.content}>{children}</div>
+        {navStyle==='gesture' && (
+          <div style={androidFrameStyles3.navBar}>
+            <div style={{width:100,height:4,borderRadius:999,background:darkMode?'rgba(255,255,255,0.5)':'rgba(0,0,0,0.4)'}}/>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+if (typeof window !== 'undefined') window.AndroidFrame3 = AndroidFrame3;
+</script>
+
+<script type="text/babel">
+/* ===== MacosWindow (skill asset) ===== */
+const macosWindowStyles3 = {
+  window:{display:'inline-block',background:'#fff',borderRadius:10,overflow:'hidden',boxShadow:'0 30px 80px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(0,0,0,0.15)'},
+  titleBar:{height:38,background:'linear-gradient(to bottom, #e8e8e8, #d8d8d8)',display:'flex',alignItems:'center',padding:'0 14px',borderBottom:'0.5px solid rgba(0,0,0,0.1)',position:'relative',userSelect:'none'},
+  trafficLights:{display:'flex',gap:8,alignItems:'center'},
+  light:{width:12,height:12,borderRadius:'50%',border:'0.5px solid rgba(0,0,0,0.15)'},
+  close:{background:'#ff5f57'},minimize:{background:'#febc2e'},maximize:{background:'#28c840'},
+  title:{position:'absolute',left:0,right:0,textAlign:'center',fontSize:13,color:'#333',fontWeight:500,fontFamily:'-apple-system, "SF Pro Text", sans-serif',pointerEvents:'none'},
+  content:{position:'relative',overflow:'auto'},
+  titleBarDark:{background:'linear-gradient(to bottom, #3c3c3c, #2c2c2c)',borderBottom:'0.5px solid rgba(255,255,255,0.1)'},
+  titleDark:{color:'#ddd'},
+};
+function MacosWindow3({title='',width=900,height=600,darkMode=false,children}){
+  return (
+    <div style={{...macosWindowStyles3.window,background:darkMode?'#1e1e1e':'#fff'}}>
+      <div style={{...macosWindowStyles3.titleBar,...(darkMode?macosWindowStyles3.titleBarDark:{})}}>
+        <div style={macosWindowStyles3.trafficLights}>
+          <div style={{...macosWindowStyles3.light,...macosWindowStyles3.close}}/>
+          <div style={{...macosWindowStyles3.light,...macosWindowStyles3.minimize}}/>
+          <div style={{...macosWindowStyles3.light,...macosWindowStyles3.maximize}}/>
+        </div>
+        {title && <div style={{...macosWindowStyles3.title,...(darkMode?macosWindowStyles3.titleDark:{})}}>{title}</div>}
+      </div>
+      <div style={{...macosWindowStyles3.content,width,height}}>{children}</div>
+    </div>
+  );
+}
+if (typeof window !== 'undefined') window.MacosWindow3 = MacosWindow3;
+</script>
+
+<script type="text/babel">
+/* ===== BrowserWindow (skill asset) ===== */
+const browserWindowStyles3 = {
+  window:{display:'inline-block',background:'#fff',borderRadius:10,overflow:'hidden',boxShadow:'0 30px 80px rgba(0,0,0,0.25), 0 0 0 0.5px rgba(0,0,0,0.15)'},
+  chrome:{background:'#dee1e6',paddingTop:10,paddingLeft:10,paddingRight:10,userSelect:'none'},
+  tabRow:{display:'flex',alignItems:'flex-end',gap:6,position:'relative'},
+  trafficLights:{display:'flex',gap:8,alignItems:'center',paddingBottom:10,marginRight:8},
+  light:{width:12,height:12,borderRadius:'50%',border:'0.5px solid rgba(0,0,0,0.15)'},
+  close:{background:'#ff5f57'},minimize:{background:'#febc2e'},maximize:{background:'#28c840'},
+  tab:{background:'#fff',padding:'8px 30px 8px 14px',borderTopLeftRadius:10,borderTopRightRadius:10,fontSize:12,color:'#222',fontFamily:'-apple-system, sans-serif',maxWidth:220,display:'flex',alignItems:'center',gap:8,position:'relative',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'},
+  favicon:{width:14,height:14,borderRadius:2,background:'#999',flexShrink:0},
+  navBar:{background:'#fff',padding:'8px 14px',display:'flex',alignItems:'center',gap:10,borderBottom:'1px solid #e5e7eb'},
+  navButtons:{display:'flex',gap:4,color:'#5f6368',fontSize:16},
+  navButton:{width:28,height:28,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'50%',cursor:'pointer'},
+  urlBar:{flex:1,background:'#f1f3f4',borderRadius:999,padding:'7px 14px',fontSize:13,color:'#333',display:'flex',alignItems:'center',gap:8,fontFamily:'-apple-system, sans-serif'},
+  lockIcon:{color:'#5f6368',fontSize:12},
+  content:{position:'relative',overflow:'auto',background:'#fff'},
+};
+function BrowserWindow3({title='New Tab',url='https://example.com',width=1200,height=800,showTrafficLights=true,children}){
+  return (
+    <div style={browserWindowStyles3.window}>
+      <div style={browserWindowStyles3.chrome}>
+        <div style={browserWindowStyles3.tabRow}>
+          {showTrafficLights && (
+            <div style={browserWindowStyles3.trafficLights}>
+              <div style={{...browserWindowStyles3.light,...browserWindowStyles3.close}}/>
+              <div style={{...browserWindowStyles3.light,...browserWindowStyles3.minimize}}/>
+              <div style={{...browserWindowStyles3.light,...browserWindowStyles3.maximize}}/>
+            </div>
+          )}
+          <div style={browserWindowStyles3.tab}>
+            <div style={browserWindowStyles3.favicon}/>
+            <span>{title}</span>
+          </div>
+        </div>
+      </div>
+      <div style={browserWindowStyles3.navBar}>
+        <div style={browserWindowStyles3.navButtons}>
+          <div style={browserWindowStyles3.navButton}>←</div>
+          <div style={browserWindowStyles3.navButton}>→</div>
+          <div style={browserWindowStyles3.navButton}>↻</div>
+        </div>
+        <div style={browserWindowStyles3.urlBar}>
+          <span style={browserWindowStyles3.lockIcon}>🔒</span>
+          <span>{url}</span>
+        </div>
+      </div>
+      <div style={{...browserWindowStyles3.content,width,height}}>{children}</div>
+    </div>
+  );
+}
+if (typeof window !== 'undefined') window.BrowserWindow3 = BrowserWindow3;
+</script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+const CLIPS3 = [
+  {id:'c1', time:'14:47', dev:'Pixel 8', devc:'PX8', bytes:71, pin:true, state:'synced', type:'TEXT', text:'周三产品评审结论：\n1. 分享链接默认 24 小时，可选 1 小时 / 7 天 / 阅后即焚。\n2. 离线记录先写本地库，恢复网络后按创建时间补传。'},
+  {id:'c2', time:'14:31', dev:'MacBook Pro · 书房', devc:'MBP', bytes:196, pin:false, state:'synced', type:'TEXT', text:'The clipboard is the shortest path between two devices. Everything else — accounts, sync daemons, dashboards — is friction. Keep it local, keep it fast.'},
+  {id:'c3', time:'14:12', dev:'Pixel 8', devc:'PX8', bytes:64, pin:false, state:'synced', type:'JSON', text:'{"build":"1.0.0","platform":"android","synced":true,"items":128}'},
+  {id:'c4', time:'13:58', dev:'iPad mini', devc:'IPM', bytes:58, pin:false, state:'synced', type:'LINK', text:'https://developer.android.com/jetpack/compose/testing'},
+  {id:'c5', time:'13:20', dev:'MacBook Pro · 书房', devc:'MBP', bytes:56, pin:false, state:'failed', type:'CODE', text:'ssh -i ~/.ssh/clipbox_ed25519 root@10.0.8.24 -p 2202'},
+  {id:'c6', time:'昨天', dev:'未知设备', devc:'---', bytes:49, pin:false, state:'pending', type:'TEXT', text:'明早 10 点评审，记得带上接口文档。🧾'},
+];
+const TOOLS3 = [
+  {id:'json', idx:'01', nm:'JSON', cn:'格式化 / 压缩 / 校验', ds:'STRICT PARSE'},
+  {id:'b64',  idx:'02', nm:'BASE64', cn:'标准 / URL-safe', ds:'UTF-8 SAFE'},
+  {id:'url',  idx:'03', nm:'URL', cn:'组件 / 整串编码', ds:'+ AS SPACE'},
+  {id:'ts',   idx:'04', nm:'TIME', cn:'时间戳换算', ds:'LOCAL / UTC / ISO'},
+  {id:'regex',idx:'05', nm:'REGEX', cn:'匹配与分组测试', ds:'g i m FLAGS', wide:true},
+];
+const bytesOf3 = s => new TextEncoder().encode(s).length;
+
+function Mark3({size=16, color='#FF5A1F'}) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <rect x="2.5" y="6.5" width="13" height="13" rx="2.5" stroke={color} strokeWidth="1.6"/>
+      <rect x="8.5" y="2.5" width="13" height="13" rx="2.5" stroke={color} strokeWidth="1.6" opacity=".45"/>
+    </svg>
+  );
+}
+function Scaled3({w,h,scale,children}){
+  return (
+    <div style={{width:w*scale,height:h*scale,overflow:'hidden'}}>
+      <div style={{width:w,height:h,transform:`scale(${scale})`,transformOrigin:'top left'}}>{children}</div>
+    </div>
+  );
+}
+
+/* ===== phone ===== */
+function C3Phone({initialTab='history', initialShare=false, initialDraft='', scale=0.5, presetTheme='dark'}){
+  const [theme,setTheme] = useState(presetTheme);
+  return (
+    <div style={{width:432*scale,height:912*scale}}>
+      <div style={{width:432,height:912,transform:`scale(${scale})`,transformOrigin:'top left'}}>
+        <AndroidFrame3 darkMode={theme==='dark'} time="9:41" battery={82}>
+          <Phone3 initialTab={initialTab} initialShare={initialShare} initialDraft={initialDraft} theme={theme} setTheme={setTheme}/>
+        </AndroidFrame3>
+      </div>
+    </div>
+  );
+}
+
+function Phone3({initialTab, initialShare, initialDraft, theme, setTheme}){
+  const [tab,setTab] = useState(initialTab || 'history');
+  const [list,setList] = useState(CLIPS3);
+  const [q,setQ] = useState('');
+  const [draft,setDraft] = useState(initialDraft || '');
+  const [menu,setMenu] = useState(null);
+  const [share,setShare] = useState(initialShare ? {clip:CLIPS3[0], step:1, ttl:'24h'} : null);
+  const [toast,setToast] = useState('');
+  const [tool,setTool] = useState(null);
+  const [clipBoardOn,setClipBoardOn] = useState(true);
+  const toastTimer = useRef(null);
+
+  const ping = (t) => {
+    setToast(t);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(()=>setToast(''), 1500);
+  };
+  const onCopy = (c) => { ping('COPIED · '+c.bytes+' B'); };
+  const onPin = (c) => {
+    setList(l => l.map(x => x.id===c.id ? {...x, pin:!x.pin} : x));
+    ping(c.pin ? 'UNPINNED' : 'PINNED');
+  };
+  const onDelete = (c) => { setList(l => l.filter(x=>x.id!==c.id)); setMenu(null); ping('DELETED'); };
+  const onRetry = (c) => {
+    setList(l => l.map(x => x.id===c.id ? {...x, state:'pending'} : x));
+    ping('RETRY QUEUED');
+  };
+  const onSend = () => {
+    const t = draft.trim();
+    if(!t) return;
+    const now = new Date();
+    const hm = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+    const c = {id:'n'+Date.now(), time:hm, dev:'Pixel 8', devc:'PX8', bytes:bytesOf3(t), pin:false, state:'synced', type:'TEXT', text:t};
+    setList(l => [c, ...l]);
+    setDraft('');
+    ping('SENT · '+c.bytes+' B');
+  };
+
+  return (
+    <div className="ph3" data-light={theme==='light' ? '1':'0'}>
+      {tab==='history' && (
+        <History3 list={list} q={q} setQ={setQ} draft={draft} setDraft={setDraft} onSend={onSend} onCopy={onCopy} onPin={onPin} onRetry={onRetry} onMore={setMenu}/>
+      )}
+      {tab==='pairing' && <Pairing3 onBack={()=>setTab('history')}/>}
+      {tab==='settings' && <Settings3 theme={theme} setTheme={setTheme} clipboard={clipBoardOn} setClipboard={setClipBoardOn} onPair={()=>setTab('pairing')}/>}
+      {tab==='toolbox' && (tool ? <ToolDetail3 tool={tool} onBack={()=>setTool(null)}/> : <Toolbox3 onOpen={setTool} onBack={()=>setTab('history')}/>)}
+
+      <Nav3 tab={tab} setTab={(t)=>{setTab(t); if(t!=='toolbox') setTool(null);}}/>
+
+      {menu && (
+        <ActionSheet3 clip={menu} onClose={()=>setMenu(null)} onCopy={(c)=>{onCopy(c);setMenu(null);}}
+          onPin={(c)=>{onPin(c);setMenu(null);}}
+          onShare={(c)=>{setMenu(null); setShare({clip:c, step:1, ttl:'24h'});}}
+          onDelete={onDelete}/>
+      )}
+      {share && (
+        <Share3 clip={share.clip} step={share.step} ttl={share.ttl}
+          setTtl={(t)=>setShare(s=>({...s,ttl:t}))}
+          onClose={()=>setShare(null)}
+          onGenerate={()=>setShare(s=>({...s,step:2}))}
+          onCopy={()=>ping('LINK COPIED')}/>
+      )}
+      {toast && <div className="c3-toast">{toast}</div>}
+    </div>
+  );
+}
+
+function History3({list,q,setQ,draft,setDraft,onSend,onCopy,onPin,onRetry,onMore}){
+  const bytes = bytesOf3(draft);
+  const over = bytes > 65536;
+  const warn = bytes > 65536*0.9 && !over;
+  const shown = list.filter(c => !q || c.text.toLowerCase().includes(q.toLowerCase()) || c.dev.toLowerCase().includes(q.toLowerCase()));
+  const pinned = shown.filter(c=>c.pin);
+  const rest = shown.filter(c=>!c.pin);
+  const segs = 18;
+  const lit = Math.min(segs, Math.round(bytes/65536*segs));
+  return (
+    <>
+      <div className="c3-head">
+        <div className="c3-link">
+          <span className="c3-dot"/>LINK · 3 DEV · RTT 1.2 s
+          <span className="r">14:51:22</span>
+        </div>
+        <div className="c3-titlerow">
+          <h1 className="c3-title">历史</h1>
+          <div className="c3-rec"><b>128</b>RECORDS</div>
+        </div>
+        <div className="c3-search">
+          <span className="c3-q">Q</span>
+          <input value={q} onChange={e=>setQ(e.target.value)} placeholder="搜索文本或设备"/>
+          <span className="c3-esc">ESC</span>
+        </div>
+        <div className="c3-comp">
+          <div className="c3-compbar"><span>TX BUFFER · UTF-8</span><span className={warn||over?'hot':''}>MAX 65 536 B</span></div>
+          <div className="c3-compbody">
+            <span className="c3-prompt">&gt;<i className="c3-blk"/></span>
+            <textarea value={draft} onChange={e=>setDraft(e.target.value)} placeholder="粘贴或输入，发送到所有设备" rows={2}/>
+          </div>
+          <div className="c3-compfoot">
+            <div className={'c3-bytes'+(over?' over':warn?' warn':'')}>
+              <b>{String(bytes).padStart(6,'0')}</b><em> / 65 536 B</em>
+              <span className="c3-meter">
+                {Array.from({length:segs}).map((_,i)=><i key={i} className={i<lit?(over?'warn':warn?'warn':'on'):''}/>)}
+              </span>
+            </div>
+            <button className="c3-send" disabled={!draft.trim()||over} onClick={onSend}>SEND ⏎</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="c3-scroll">
+        {shown.length===0 && (
+          <div className="c3-empty"><b>没有匹配记录</b>换个关键词，或按 ESC 清空搜索。</div>
+        )}
+        {pinned.length>0 && <>
+          <div className="c3-group">PINNED<span className="r">{String(pinned.length).padStart(2,'0')}</span></div>
+          {pinned.map(c=><Row3 key={c.id} c={c} onCopy={onCopy} onPin={onPin} onRetry={onRetry} onMore={onMore}/>)}
+        </>}
+        {rest.length>0 && <>
+          <div className="c3-group">LOG · RECENT<span className="r">{String(rest.length).padStart(2,'0')}</span></div>
+          {rest.map(c=><Row3 key={c.id} c={c} onCopy={onCopy} onPin={onPin} onRetry={onRetry} onMore={onMore}/>)}
+        </>}
+        <div className="c3-end">END OF LOG · 128 SYNCED</div>
+      </div>
+    </>
+  );
+}
+
+function Row3({c,onCopy,onPin,onRetry,onMore}){
+  return (
+    <div className={'c3-row'+(c.pin?' pinned':'')}>
+      <div className="c3-rmeta"><b>{c.time}</b><span>{c.devc}</span></div>
+      <div>
+        <div className="c3-rtop">
+          <span>{c.type}</span>
+          {c.pin && <span className="pin">▲ PIN</span>}
+          {c.state==='failed' && <span className="badge fail">ERR</span>}
+          {c.state==='pending' && <span className="badge pend">SYNC</span>}
+          <span className="b">{c.bytes} B</span>
+        </div>
+        <div className="c3-rtext">{c.text}</div>
+        <div className="c3-racts">
+          {c.state==='failed' && <button className="c3-act" onClick={()=>onRetry(c)}>RETRY</button>}
+          <button className="c3-act" onClick={()=>onCopy(c)}>COPY</button>
+          <button className={'c3-act'+(c.pin?' on':'')} onClick={()=>onPin(c)}>{c.pin?'UNPIN':'PIN'}</button>
+          <button className="c3-act" onClick={()=>onMore(c)}>···</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Nav3({tab,setTab}){
+  const items = [['history','LOG','历史'],['toolbox','TOOL','工具箱'],['settings','SYS','设置']];
+  return (
+    <div className="c3-nav">
+      {items.map(([id,k,cn])=>(
+        <button key={id} className={'c3-key'+(tab===id?' on':'')} onClick={()=>setTab(id)}>
+          <b>{k}</b><span>{cn}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ActionSheet3({clip,onClose,onCopy,onPin,onShare,onDelete}){
+  const canShare = clip.state==='synced';
+  const [confirm,setConfirm] = useState(false);
+  return (
+    <div className="c3-veil" onClick={onClose}>
+      <div className="c3-menu" onClick={e=>e.stopPropagation()}>
+        <div className="c3-menuh"><span>RECORD · {clip.time} · {clip.devc}</span><span onClick={onClose} style={{cursor:'pointer'}}>ESC</span></div>
+        {!confirm ? <>
+          <button className="c3-mitem" onClick={()=>onCopy(clip)}>复制文本<span className="k">{clip.bytes} B</span></button>
+          <button className="c3-mitem" onClick={()=>onPin(clip)}>{clip.pin?'取消置顶':'置顶'}<span className="k">PIN</span></button>
+          <button className="c3-mitem" disabled={!canShare} onClick={()=>canShare&&onShare(clip)}>生成分享链接<span className="k">{canShare?'24 H':'NOT SYNCED'}</span></button>
+          <button className="c3-mitem danger" onClick={()=>setConfirm(true)}>删除<span className="k">DEL</span></button>
+        </> : <>
+          <div style={{fontSize:11.5,color:'var(--ink2)',lineHeight:1.65,padding:'4px 0 8px'}}>删除后不可恢复；其他设备上的同一条记录也会在下次同步时移除。</div>
+          <button className="c3-mitem danger" onClick={()=>onDelete(clip)}>确认删除<span className="k">HOLD</span></button>
+          <button className="c3-mitem" onClick={()=>setConfirm(false)}>取消<span className="k">ESC</span></button>
+        </>}
+      </div>
+    </div>
+  );
+}
+
+function Share3({clip,step,ttl,setTtl,onClose,onGenerate,onCopy}){
+  const opts = [['1h','1 H','1 小时'],['24h','24 H','1 天'],['7d','7 D','7 天'],['burn','BURN','阅后即焚']];
+  return (
+    <div className="c3-veil" onClick={onClose}>
+      <div className="c3-sheet" onClick={e=>e.stopPropagation()}>
+        <div className="c3-sheet-h">
+          <span>SHARE · {step===1?'TTL':'LINK'}</span>
+          <span className="r" style={{cursor:'pointer'}} onClick={onClose}>ESC</span>
+        </div>
+        {step===1 ? <>
+          <div className="c3-sheet-title">生成只读快照</div>
+          <div className="c3-sheet-sub">链接只包含这条记录的快照，不加载脚本与外部资源。</div>
+          <div className="c3-ttl">
+            {opts.map(([id,b,cn])=>(
+              <button key={id} className={'c3-ttlbtn'+(ttl===id?' on':'')} onClick={()=>setTtl(id)}>
+                <b>{b}</b><span>{cn}</span>
+              </button>
+            ))}
+          </div>
+          <div className="c3-sheet-acts">
+            <button className="c3-ghost" onClick={onClose}>取消</button>
+            <button className="c3-cta" style={{flex:1}} onClick={onGenerate}>GENERATE LINK</button>
+          </div>
+          <div className="c3-sheet-note">READ-ONLY · NO JS · TEXT/PLAIN SNAPSHOT</div>
+        </> : <>
+          <div className="c3-sheet-title">链接已生成</div>
+          <div className="c3-linkrow">
+            <span className="c3-linkid">7fK2mQ</span>
+            <div className="c3-linkmeta">{opts.find(o=>o[0]===ttl)[1]} TTL<br/>EXPIRES 11-14 15:32</div>
+          </div>
+          <div className="c3-linkbox">https://clip.example.com/s/7fK2mQ</div>
+          <div className="c3-sheet-acts">
+            <button className="c3-cta" style={{flex:1}} onClick={onCopy}>COPY LINK</button>
+          </div>
+          <div className="c3-sheet-note">任何拿到链接的人都能读取；到期或阅后即焚后返回 410。</div>
+        </>}
+      </div>
+    </div>
+  );
+}
+
+function Pairing3({onBack}){
+  const [code,setCode] = useState('804217');
+  const [busy,setBusy] = useState(false);
+  const [err,setErr] = useState(false);
+  const [server,setServer] = useState('https://clip.example.com');
+  const [name,setName] = useState('Pixel 8');
+  const submit = () => {
+    if(busy) return;
+    setBusy(true); setErr(false);
+    setTimeout(()=>{ setBusy(false); setErr(true); }, 900);
+  };
+  return (
+    <div className="c3-page" style={{display:'flex',flexDirection:'column'}}>
+      <div className="c3-crumb">SETUP / NEW DEVICE <button onClick={onBack}>← BACK</button></div>
+      <h2 className="c3-h2">接入服务器</h2>
+      <p className="c3-sub">输入地址与一次性配对码，这台设备会出现在所有端。配对码 10 分钟内有效。</p>
+      <div className="c3-field">
+        <div className="c3-flabel"><span>SERVER</span><span>HTTPS</span></div>
+        <input className="c3-input" value={server} onChange={e=>setServer(e.target.value)}/>
+      </div>
+      <div className="c3-field">
+        <div className="c3-flabel"><span>PAIR CODE</span><span>6 DIGITS</span></div>
+        <div className="c3-code">
+          {Array.from({length:6}).map((_,i)=>(
+            <div key={i} className={'c3-cell'+(i===Math.min(code.length,5)?' on':'')}>{code[i]||''}</div>
+          ))}
+          <input className="c3-codeinput" value={code} inputMode="numeric"
+            onChange={e=>setCode(e.target.value.replace(/\D/g,'').slice(0,6))}/>
+        </div>
+      </div>
+      <div className="c3-field">
+        <div className="c3-flabel"><span>DEVICE NAME</span><span>AUTO</span></div>
+        <input className="c3-input" value={name} onChange={e=>setName(e.target.value)}/>
+      </div>
+      <button className="c3-cta" onClick={submit} disabled={busy||code.length!==6}>
+        {busy ? 'PAIRING…' : 'PAIR DEVICE'}
+      </button>
+      {err && (
+        <div className="c3-alert">
+          <b>ERR 401 · CODE EXPIRED</b>
+          配对码已过期。回到桌面端 → 设置 → 设备，重新生成一组六位码。
+        </div>
+      )}
+      <div className="c3-fine">连续失败 5 次后进入 60 秒冷却（HTTP 429）。<br/>服务器地址更换会清空本地记录。</div>
+      <div className="c3-footpanel">
+        <div className="c3-fp-h"><span>LINK TEST</span><span>PRE-FLIGHT</span></div>
+        <div className="c3-fp-r"><span>TRANSPORT</span><b className="ok">HTTPS · TLS 1.3</b></div>
+        <div className="c3-fp-r"><span>SERVER RTT</span><b>24 ms</b></div>
+        <div className="c3-fp-r"><span>SCHEMA</span><b>v3 · 128 REC</b></div>
+      </div>
+    </div>
+  );
+}
+
+function Settings3({theme,setTheme,clipboard,setClipboard,onPair}){
+  const [lang,setLang] = useState('zh');
+  const [diag,setDiag] = useState(true);
+  return (
+    <div className="c3-page">
+      <div className="c3-crumb">SYS / SETTINGS <span style={{marginLeft:'auto',color:'var(--ink3)'}}>1.0.0</span></div>
+      <h2 className="c3-h2">设置</h2>
+      <p className="c3-sub">全部数据留在你的设备上；服务器只做中转，不保留历史。</p>
+
+      <div className="c3-sect">
+        <div className="c3-sectk">SYS.01 / CONNECTION</div>
+        <div className="c3-srow"><span>服务器</span><span className="v">clip.example.com</span></div>
+        <div className="c3-srow"><span>设备名</span><span className="v">Pixel 8 · 本机</span></div>
+        <div className="c3-srow"><span>Desktop 剪贴板</span>
+          <button className={'c3-tog'+(clipboard?' on':'')} onClick={()=>setClipboard(!clipboard)}><i/></button>
+        </div>
+        <div className="c3-srow"><span>换服务器</span><button className="c3-danger" onClick={onPair}>重新配对</button></div>
+      </div>
+
+      <div className="c3-sect">
+        <div className="c3-sectk">SYS.02 / APPEARANCE</div>
+        <div className="c3-seg">
+          {[['system','跟随系统'],['light','浅色'],['dark','深色']].map(([id,label])=>(
+            <button key={id} className={'c3-segbtn'+(theme===id?' on':'')} onClick={()=>setTheme(id)}>{label}</button>
+          ))}
+        </div>
+        <div className="c3-seg" style={{gridTemplateColumns:'repeat(3,1fr)'}}>
+          {[['zh','简体'],['tw','繁體'],['en','ENGLISH']].map(([id,label])=>(
+            <button key={id} className={'c3-segbtn'+(lang===id?' on':'')} onClick={()=>setLang(id)}>{label}</button>
+          ))}
+        </div>
+      </div>
+
+      <div className="c3-sect">
+        <div className="c3-sectk">SYS.03 / DIAGNOSTICS</div>
+        <div className="c3-srow"><span>诊断日志</span>
+          <button className={'c3-tog'+(diag?' on':'')} onClick={()=>setDiag(!diag)}><i/></button>
+        </div>
+        <div className="c3-srow"><span>日志大小</span><span className="v dim">128 KB / 7 天</span></div>
+        <div className="c3-srow"><span>解除配对</span><button className="c3-danger">清除本机数据</button></div>
+      </div>
+
+      <div className="c3-sect">
+        <div className="c3-sectk">SYS.04 / ABOUT</div>
+        <div className="c3-srow"><span>版本</span><span className="v">1.0.0 · 2026.11.13</span></div>
+        <div className="c3-srow"><span>开源许可</span><span className="v dim">MIT · 无遥测</span></div>
+      </div>
+    </div>
+  );
+}
+
+function TSwitch3({on,onClick}){
+  return <button className={'c3-tog'+(on?' on':'')} onClick={onClick}><i/></button>;
+}
+
+function Toolbox3({onOpen,onBack}){
+  return (
+    <div className="c3-page" style={{display:'flex',flexDirection:'column'}}>
+      <div className="c3-crumb">TOOLBOX / LOCAL <button onClick={onBack}>← LOG</button></div>
+      <h2 className="c3-h2">工具箱</h2>
+      <p className="c3-sub">5 个纯本地模块，不上传、不联网。输入上限 100 KiB。</p>
+      <div className="c3-toolgrid">
+        {TOOLS3.map(t=>(
+          <button key={t.id} className={'c3-tool'+(t.wide?' wide':'')} onClick={()=>onOpen(t)}>
+            <span className="idx">MOD {t.idx}</span>
+            <span className="nm">{t.nm}</span>
+            <span className="cn">{t.cn}</span>
+            <span className="ds">{t.ds}</span>
+          </button>
+        ))}
+      </div>
+      <div className="c3-footpanel">
+        <div className="c3-fp-h"><span>EXEC</span><span>ON-DEVICE</span></div>
+        <div className="c3-fp-r"><span>NETWORK</span><b>DISABLED</b></div>
+        <div className="c3-fp-r"><span>INPUT LIMIT</span><b>100 KiB</b></div>
+        <div className="c3-fp-r"><span>LAST RUN</span><b>BASE64 · 2 MIN AGO</b></div>
+      </div>
+    </div>
+  );
+}
+
+function b64enc3(s){ return btoa(unescape(encodeURIComponent(s))); }
+function b64dec3(s){ return decodeURIComponent(escape(atob(s))); }
+
+function ToolDetail3({tool,onBack}){
+  const [input,setInput] = useState(
+    tool.id==='json' ? '{"device":"Pixel 8","synced":true,"items":128}' :
+    tool.id==='b64' ? '把这段发到 Mac：明早 10 点评审。' :
+    tool.id==='url' ? 'https://clip.example.com/s/7fK2mQ?from=Pixel 8&at=14:51' :
+    tool.id==='ts' ? '1763025060' :
+    '(\\d{2}):(\\d{2})'
+  );
+  const [out,setOut] = useState('');
+  const [err,setErr] = useState(false);
+  const [mode,setMode] = useState('enc');
+  const [flags,setFlags] = useState('g');
+  const [status,setStatus] = useState('IDLE');
+
+  const run = () => {
+    try{
+      let r = '';
+      if(tool.id==='json'){
+        const v = JSON.parse(input);
+        r = JSON.stringify(v,null,2);
+      } else if(tool.id==='b64'){
+        r = mode==='enc' ? b64enc3(input) : b64dec3(input);
+      } else if(tool.id==='url'){
+        r = mode==='enc' ? encodeURIComponent(input) : decodeURIComponent(input);
+      } else if(tool.id==='ts'){
+        const n = Number(input.trim());
+        if(!Number.isFinite(n)) throw new Error('不是合法的时间戳');
+        const d = new Date(n*1000);
+        r = 'LOCAL  '+d.toLocaleString('zh-CN',{hour12:false})+'\nUTC    '+d.toUTCString()+'\nISO    '+d.toISOString();
+      } else if(tool.id==='regex'){
+        let re;
+        try{ re = new RegExp(input, flags); }catch(e){ throw new Error('正则语法错误：'+e.message); }
+        const sample = '14:51 同步完成 · 13:20 重试 · 09:05 离线';
+        const ms = [...sample.matchAll(re)];
+        if(ms.length===0) throw new Error('没有匹配');
+        r = ms.map(m=>{
+          const groups = m.slice(1).map((g,i)=>`G${i+1}=${g===undefined?'∅':g}`).join('  ');
+          return `@${String(m.index).padStart(2,'0')}  ${m[0]}  ${groups}`;
+        }).join('\n');
+      }
+      setOut(r); setErr(false); setStatus('OK · '+bytesOf3(r)+' B');
+    } catch(e){
+      setOut('ERR · '+e.message); setErr(true); setStatus('ERR');
+    }
+  };
+  const clear = () => { setInput(''); setOut(''); setErr(false); setStatus('IDLE'); };
+  const copy = () => { if(out) setStatus('COPIED · '+bytesOf3(out)+' B'); };
+
+  return (
+    <div className="c3-page" style={{display:'flex',flexDirection:'column'}}>
+      <div className="c3-crumb">MOD {tool.idx} / {tool.nm} <button onClick={onBack}>← BACK</button></div>
+      <h2 className="c3-h2" style={{fontFamily:'var(--mono)',fontSize:21,letterSpacing:'.02em'}}>{tool.nm}</h2>
+      <div className="c3-sub">{tool.cn} · 本地执行</div>
+      <div className="c3-toolbar">
+        {tool.id==='b64' || tool.id==='url' ? (
+          <button className="c3-chip on" onClick={()=>setMode(mode==='enc'?'dec':'enc')}>
+            MODE: {mode==='enc' ? 'ENCODE' : 'DECODE'}
+          </button>
+        ) : null}
+        {tool.id==='regex' ? (
+          ['g','i','m'].map(f=>(
+            <button key={f} className={'c3-chip'+(flags.includes(f)?' on':'')}
+              onClick={()=>setFlags(fs=>fs.includes(f)?fs.replace(f,''):fs+f)}>{f.toUpperCase()}</button>
+          ))
+        ) : null}
+        {tool.id==='ts' ? (
+          <button className="c3-chip" onClick={()=>setInput(String(Math.floor(Date.now()/1000)))}>NOW</button>
+        ) : null}
+      </div>
+      <div className="c3-iolabel"><span>INPUT · UTF-8</span><span>{bytesOf3(input)} / 102 400 B</span></div>
+      <textarea className="c3-io" value={input} onChange={e=>setInput(e.target.value)}/>
+      <div className="c3-toolbar">
+        <button className="c3-cta" style={{marginTop:0,height:38,flex:1,fontSize:8.5}} onClick={run}>RUN</button>
+        <button className="c3-ghost" style={{height:38}} onClick={copy}>COPY</button>
+        <button className="c3-ghost" style={{height:38}} onClick={clear}>CLR</button>
+      </div>
+      <div className="c3-iolabel"><span>OUTPUT</span><span className={err?'c3-status err':'c3-status'} style={{marginTop:0}}>{status}</span></div>
+      <div className={'c3-out'+(err?' err':'')}>{out || '— 运行后显示结果'}</div>
+    </div>
+  );
+}
+
+/* ===== desktop ===== */
+function D3Desk(){
+  const [tab,setTab] = useState('history');
+  const [rows,setRows] = useState(CLIPS3);
+  const [draft,setDraft] = useState('');
+  const [autoPaste,setAutoPaste] = useState(true);
+  const [autoSend,setAutoSend] = useState(false);
+  const bytes = bytesOf3(draft);
+  const send = () => {
+    const t = draft.trim(); if(!t) return;
+    const c = {id:'d'+Date.now(), time:'14:51', dev:'MacBook Pro · 书房', devc:'MBP', bytes:bytesOf3(t), pin:false, state:'synced', type:'TEXT', text:t};
+    setRows(r=>[c,...r]); setDraft('');
+  };
+  return (
+    <MacosWindow3 title="Clipbox" width={1000} height={700} darkMode={true}>
+      <div className="dk3">
+        <div className="dk3-rail">
+          <div className="dk3-logo"><Mark3 size={15}/></div>
+          {[['history','LOG','历史'],['toolbox','TOOL','工具'],['settings','SYS','设置']].map(([id,k,cn])=>(
+            <button key={id} className={'dk3-rk'+(tab===id?' on':'')} onClick={()=>setTab(id)}>
+              <b>{k}</b><span>{cn}</span>
+            </button>
+          ))}
+          <div className="dk3-railf">1.0</div>
+        </div>
+        <div className="dk3-main">
+          <div className="dk3-top"><span className="dot"/>LINK · 3 DEV · TX 4 / RX 12<span className="r">CLIP.OS 1.0 · 14:51:22</span></div>
+          {tab==='history' && <>
+            <div className="dk3-head">
+              <h1>历史</h1><span className="cnt">128 RECORDS</span>
+              <div className="dk3-search"><span>Q</span><input placeholder="搜索文本或设备"/></div>
+            </div>
+            <div className="dk3-comp">
+              <span className="p">&gt;</span><span className="blk"/>
+              <input value={draft} onChange={e=>setDraft(e.target.value)} placeholder="粘贴或输入，回车发送"/>
+              <span className="b">{String(bytes).padStart(6,'0')} / 65 536 B</span>
+              <button className="send" disabled={!draft.trim()} onClick={send}>SEND ⏎</button>
+            </div>
+            <div className="dk3-cols"><span>TIME</span><span>SOURCE</span><span>CONTENT</span><span style={{textAlign:'right'}}>BYTES</span></div>
+            <div className="dk3-list">
+              {rows.map(c=>(
+                <div key={c.id} className={'dk3-lrow'+(c.pin?' pin':'')}>
+                  <div className="t">{c.time}<br/><span style={{color:'#615C53'}}>{c.devc}</span></div>
+                  <div className="d">{c.dev}</div>
+                  <div>
+                    <div className="tags">
+                      <span className="dk3-tag">{c.type}</span>
+                      {c.pin && <span className="dk3-tag hot">PIN</span>}
+                      {c.state==='failed' && <span className="dk3-tag hot">ERR</span>}
+                      {c.state==='pending' && <span className="dk3-tag hot">SYNC</span>}
+                    </div>
+                    <div className="txt">{c.text}</div>
+                  </div>
+                  <div className="bt">{c.bytes} B</div>
+                </div>
+              ))}
+              <div style={{padding:'10px 0',font:'7px var(--mono)',letterSpacing:'.14em',color:'#55504A',textAlign:'center'}}>END OF LOG · 128 SYNCED</div>
+            </div>
+          </>}
+          {tab==='toolbox' && <>
+            <div className="dk3-head"><h1>工具箱</h1><span className="cnt">5 LOCAL MODULES</span></div>
+            <div className="dk3-page">
+              <div className="dk3-tools">
+                {TOOLS3.map(t=>(
+                  <button key={t.id} className="dk3-tool">
+                    <span className="idx">MOD {t.idx}</span>
+                    <span className="nm">{t.nm}</span>
+                    <span className="cn">{t.cn}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>}
+          {tab==='settings' && <>
+            <div className="dk3-head"><h1>设置</h1><span className="cnt">SYS</span></div>
+            <div className="dk3-page">
+              <div style={{font:'7px var(--mono)',letterSpacing:'.14em',color:'#615C53',padding:'8px 0 4px'}}>CONNECTION</div>
+              <div className="dk3-setrow">服务器<span className="v">clip.example.com</span></div>
+              <div className="dk3-setrow">设备名<span className="v">MacBook Pro · 书房</span></div>
+              <div className="dk3-setrow">Desktop 剪贴板<span className="v">自动粘贴 · 需要前台</span>
+                <button className={'sw'+(autoPaste?' on':'')} onClick={()=>setAutoPaste(!autoPaste)}><i/></button>
+              </div>
+              <div className="dk3-setrow">接收后自动发送<span className="v">默认关闭</span>
+                <button className={'sw'+(autoSend?' on':'')} onClick={()=>setAutoSend(!autoSend)}><i/></button>
+              </div>
+              <div style={{font:'7px var(--mono)',letterSpacing:'.14em',color:'#615C53',padding:'16px 0 4px'}}>APPEARANCE</div>
+              <div className="dk3-setrow">主题<span className="v">跟随系统 / 浅色 / 深色</span></div>
+              <div className="dk3-setrow">语言<span className="v">简体 / 繁體 / English</span></div>
+            </div>
+          </>}
+        </div>
+        <div className="dk3-scope">
+          <div className="dk3-sh"><i/>READOUT<span style={{marginLeft:'auto',color:'#74D89E'}}>LIVE</span></div>
+          <div className="dk3-sr"><span>SYNC</span><b>3 DEV</b></div>
+          <div className="dk3-sr"><span>RTT</span><b>1.2 s</b></div>
+          <div className="dk3-sr"><span>TX BUFFER</span><b>000071 B</b></div>
+          <div className="dk3-sr"><span>LIMIT</span><b>65 536 B</b></div>
+          <div className="dk3-sr"><span>SHARE TTL</span><b>24 H</b></div>
+          <div className="dk3-sm">{Array.from({length:14}).map((_,i)=><i key={i} className={i<2?'on':''}/>)}</div>
+          <div className="dk3-sf"><span>BUFFER</span><span>0.1 %</span></div>
+          <div className="dk3-sr" style={{marginTop:8}}><span>AUTO PASTE</span><b style={{color:'#FF5A1F'}}>ON</b></div>
+          <div className="dk3-note">读数来自本地状态，不上报服务器。桌面端默认自动粘贴；自动发送默认关闭。</div>
+        </div>
+      </div>
+    </MacosWindow3>
+  );
+}
+
+/* ===== share page ===== */
+function SharePage3({state}){
+  if(state==='expired'){
+    return (
+      <div className="sp3-gone">
+        <div className="sp3-gonecard">
+          <div className="sp3-gcode">410</div>
+          <h2>这个链接已经过期</h2>
+          <p>分享者设置了有效期，链接到期后正文不再可读。请让对方在 Clipbox 里重新生成一个链接。</p>
+          <div className="sp3-gfoot">只读快照 · 不加载脚本与外部资源</div>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="sp3">
+      <div className="sp3-in">
+        <div className="sp3-top"><span>CLIPBOX · SHARE</span><span>24 H · READ-ONLY</span></div>
+        <div className="sp3-rule"/>
+        <div className="sp3-id"><b>7fK2mQ</b><span>TEXT SNAPSHOT · UTF-8</span></div>
+        <h1 className="sp3-title">会议纪要 · 11 月 13 日</h1>
+        <div className="sp3-meta">
+          <div>FROM<b>Pixel 8</b></div>
+          <div>CREATED<b>11-13 14:47</b></div>
+          <div>EXPIRES<b>11-14 15:32</b></div>
+        </div>
+        <div className="sp3-body">{CLIPS3[0].text}</div>
+        <div className="sp3-exp">此链接将在 24 小时后失效 · 11/14 15:32</div>
+        <div className="sp3-foot"><span>由 Clipbox 生成 · 只读快照</span><span>NO JS · NO TRACKING</span></div>
+      </div>
+    </div>
+  );
+}
+
+function ShareDemo3(){
+  const [st,setSt] = useState('normal');
+  return (
+    <div>
+      <div style={{display:'flex',gap:6,marginBottom:9}}>
+        <button className={'c3-chip'+(st==='normal'?' on':'')} onClick={()=>setSt('normal')}>正常</button>
+        <button className={'c3-chip'+(st==='expired'?' on':'')} onClick={()=>setSt('expired')}>已过期</button>
+      </div>
+      <Scaled3 w={720} h={606} scale={0.56}>
+        <BrowserWindow3 title="Clipbox 分享 · 7fK2mQ" url="https://clip.example.com/s/7fK2mQ" width={720} height={520}>
+          <SharePage3 state={st}/>
+        </BrowserWindow3>
+      </Scaled3>
+    </div>
+  );
+}
+
+/* ===== board ===== */
+const CHANNELS3 = [
+  {ch:'CH-01', name:'历史 · 默认', st:'ACTIVE', x:0, y:26, s:0.78, tab:'history', draft:'把这段发到 Mac：明早 10 点评审，记得带上接口文档。'},
+  {ch:'CH-02', name:'分享 · 时限', st:'SHEET', x:352, y:220, s:0.5, tab:'history', share:true},
+  {ch:'CH-03', name:'配对 · 一次性码', st:'FORM', x:596, y:96, s:0.5, tab:'pairing'},
+  {ch:'CH-04', name:'设置 · 读数', st:'SYS', x:840, y:220, s:0.5, tab:'settings'},
+  {ch:'CH-05', name:'工具箱 · 5 键', st:'LOCAL', x:1084, y:96, s:0.5, tab:'toolbox'},
+];
+
+function Board3(){
+  return (
+    <div className="b3">
+      <div className="b3-in">
+        <div className="b3-top">
+          <span className="b3-logo"><Mark3 size={13}/> CLIPBOX</span>
+          <span>三端高保真设计 · 方向稿</span>
+          <span>DIRECTION 03 / 03 · 2026.11.13</span>
+        </div>
+
+        <div className="b3-head">
+          <div>
+            <div className="b3-kicker">APP 01 · HARDWARE PANEL / 仪表与按键</div>
+            <h1 className="b3-title">把剪贴当成<br/>一台口袋仪器</h1>
+            <p className="b3-sub">字节数、同步状态、来源设备，全部做成 <b>读数</b>；工具箱的 5 个入口做成 5 个方形按键。发送器是一条命令行，块状光标停在末尾。除当前状态外，一屏没有第二种颜色。</p>
+          </div>
+          <div className="b3-notes">
+            <div className="b3-note"><b>01</b><span>读数优先：字节、同步、设备名都是仪表的一部分。</span></div>
+            <div className="b3-note"><b>02</b><span>按键有厚度：按下是 inset，不是阴影浮起。</span></div>
+            <div className="b3-note"><b>03</b><span>信号橙只给当前状态；其余保持极暗、极静。</span></div>
+            <div className="b3-form"><b>FORM FROM CONTENT</b>这是一个技术用户每天用的文本工具，像一台口袋仪器；字节数与同步状态就是它的仪表。</div>
+          </div>
+          <div className="b3-scope">
+            <div className="b3-scope-h"><span className="live"/>READOUT<span className="r">LIVE</span></div>
+            <div className="b3-scope-row"><span>SYNC</span><b>3 DEV / 1.2 s</b></div>
+            <div className="b3-scope-row"><span>TX BUFFER</span><b>000071 B</b></div>
+            <div className="b3-scope-row"><span>LIMIT</span><b>65 536 B</b></div>
+            <div className="b3-scope-row"><span>SHARE TTL</span><b>24 H</b></div>
+            <div className="b3-scope-row"><span>CARRY</span><b className="hot">LOCAL ONLY</b></div>
+            <div className="b3-scope-meter">
+              {Array.from({length:22}).map((_,i)=><i key={i} className={i<2?'on':''}/>)}
+            </div>
+            <div className="b3-scope-f"><span>UTF-8</span><span>0.1 % OF LIMIT</span></div>
+          </div>
+        </div>
+
+        <div className="b3-bus"><span>BUS 0 · TX / RX</span><span>5 CHANNELS · 1 PAIR</span></div>
+        <div className="b3-bench">
+          {CHANNELS3.map(c=>(
+            <React.Fragment key={c.ch}>
+              <div className="b3-drop" style={{left:c.x+216*c.s, height:c.y}}><i/></div>
+              <div className="b3-dev" style={{left:c.x, top:c.y}}>
+                <C3Phone initialTab={c.tab} initialShare={!!c.share} initialDraft={c.draft||''} scale={c.s}/>
+              </div>
+              <div className="b3-ch" style={{left:c.x, top:c.y+912*c.s+12, width:432*c.s}}>
+                <b>{c.ch}</b>{c.name}<em>{c.st}</em>
+              </div>
+            </React.Fragment>
+          ))}
+        </div>
+
+        <div className="b3-out"><span>OUT · DESKTOP / SHARE</span><span>READ-ONLY FEED</span></div>
+        <div className="b3-lower">
+          <div>
+            <Scaled3 w={1000} h={738} scale={0.56}><D3Desk/></Scaled3>
+            <div className="b3-cap"><b>D-01</b> Desktop 1000 × 700 · 读数栏在右</div>
+          </div>
+          <div>
+            <ShareDemo3/>
+            <div className="b3-cap"><b>W-01</b> 分享页 · 仪器打印纸</div>
+          </div>
+          <aside className="b3-side">
+            <div className="b3-spec"><i style={{background:'#0C0C0D'}}/><b>机身</b><span>#0C0C0D</span></div>
+            <div className="b3-spec"><i style={{background:'#131315'}}/><b>面板</b><span>#131315</span></div>
+            <div className="b3-spec"><i style={{background:'#FF5A1F'}}/><b>信号</b><span>#FF5A1F</span></div>
+            <div className="b3-spec"><i style={{background:'#F2EFE7'}}/><b>读数</b><span>#F2EFE7</span></div>
+            <div className="b3-spec"><i style={{background:'#F1EDE3'}}/><b>纸张</b><span>#F1EDE3</span></div>
+            <div className="b3-form" style={{marginTop:4}}><b>NOTE</b>点阵字体在无外部字体时降级为等宽 + 字距；这是设计稿，不假装是硬件渲染。</div>
+            <div className="b3-warn">风险：这是六张候选里唯一允许 bold 的一张。若去掉仪表语言后信息更清楚，就不选它。</div>
+          </aside>
+        </div>
+
+        <div className="b3-end">
+          <span>可点击：底栏键 · 搜索 · 置顶 · COPY · 分享时限 · 配对提交 · 主题切换 · 桌面左栏</span>
+          <span>CLIPBOX · 2026.11</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+const root3 = ReactDOM.createRoot(document.getElementById('root'));
+root3.render(<Board3/>);
+</script>
+</body>
+</html>

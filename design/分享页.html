@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clipbox · 只读快照</title>
+<style>
+  :root{
+    --bg:#F3F0E8;--panel:#FBF9F3;--ink:#191712;--ink2:#5B5446;--ink3:#6B6455;
+    --line:#D0CABA;--line2:#E0DBCD;--accent:#A8430F;
+    --mono:Menlo,Consolas,"Courier New";
+    --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#17150F;--panel:#1E1B14;--ink:#EDE9DC;--ink2:#B7B0A0;--ink3:#9A9384;
+      --line:#3A352B;--line2:#2A2620;--accent:#E8823F;
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:var(--sans);font-size:16px;line-height:1.7;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+
+  /* preview chrome — not part of the shared page */
+  .pv{
+    position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+    padding:10px 20px;background:#1B1913;color:#EDE9DC;border-bottom:1px solid #3A352B;
+  }
+  .pv-brand{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;letter-spacing:.01em}
+  .pv-brand svg{display:block}
+  .pv-note{font-size:14px;color:#C9C3B4;margin-left:auto}
+  .pv-tabs{display:flex;gap:1px;border:1px solid #4A4436;background:#4A4436}
+  .pv-tabs a{
+    display:block;padding:6px 12px;font-size:12.5px;color:#D8D2C2;background:#1B1913;
+    text-decoration:none;line-height:1.4;min-height:32px;
+  }
+  .pv-tabs a:hover{background:#2A2620;color:#fff}
+  body:not(:has(.state:target)) .pv-tabs a[href="#ok"],
+  body:has(#ok:target) .pv-tabs a[href="#ok"],
+  body:has(#expired:target) .pv-tabs a[href="#expired"],
+  body:has(#used:target) .pv-tabs a[href="#used"],
+  body:has(#invalid:target) .pv-tabs a[href="#invalid"]{background:#EDE9DC;color:#17150F}
+
+  /* shared page */
+  .state{display:none}
+  .state:target{display:block}
+  body:not(:has(.state:target)) #ok{display:block}
+
+  .wrap{max-width:680px;margin:0 auto;padding:64px 0 72px}
+  .meta{display:flex;align-items:center;gap:10px;font:12px var(--mono);color:var(--ink3);line-height:1.5}
+  .meta .mark{display:flex;align-items:center;gap:7px;color:var(--ink)}
+  .meta .mark b{font:600 13px var(--sans);letter-spacing:0;color:var(--ink)}
+  .meta .r{margin-left:auto;text-align:right}
+  .rule{height:1px;background:var(--ink);margin:16px 0 22px}
+  .expiry{display:flex;align-items:center;gap:8px;font:12px var(--mono);color:var(--ink2);line-height:1.6;margin:0 0 26px}
+  .expiry i{display:block;width:6px;height:6px;background:var(--accent);flex:none}
+  h1{
+    margin:0 0 26px;font-size:30px;line-height:1.35;font-weight:650;letter-spacing:-.02em;
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",var(--sans);
+  }
+  .body{
+    font-family:var(--mono);font-size:15px;line-height:1.9;color:var(--ink);
+    white-space:pre-wrap;word-break:break-word;margin:0;
+  }
+  .foot{
+    margin-top:52px;padding-top:16px;border-top:1px solid var(--line2);
+    font:12.5px var(--mono);color:var(--ink2);line-height:1.7;
+    display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  }
+
+  /* 404 / 410 */
+  .gone{min-height:calc(100vh - 58px);display:flex;align-items:center;justify-content:center;padding:56px 24px}
+  .gone-in{width:100%;max-width:560px}
+  .gone-code{font:600 64px/1 var(--mono);color:var(--ink);letter-spacing:-.02em}
+  .gone-kicker{display:flex;align-items:center;gap:8px;font:12px var(--mono);color:var(--ink2);margin-top:26px}
+  .gone-kicker i{display:block;width:6px;height:6px;background:var(--accent);flex:none}
+  .gone-in h2{font-size:30px;line-height:1.3;font-weight:650;letter-spacing:-.02em;margin:12px 0 0;font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",var(--sans)}
+  .gone-in p{font-size:16px;line-height:1.8;color:var(--ink2);margin:16px 0 0;max-width:440px}
+  .gone-foot{margin-top:64px;padding-top:16px;border-top:1px solid var(--line2);font:12.5px var(--mono);color:var(--ink2);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  @media (max-width:720px){
+    .wrap{padding:40px 22px 56px}
+    h1{font-size:24px;margin-bottom:20px}
+    .body{font-size:15px;line-height:1.85}
+    .meta{flex-wrap:wrap;gap:6px 10px}
+    .meta .r{margin-left:0;width:100%}
+    .gone{padding:44px 22px}
+    .gone-code{font-size:48px}
+    .gone-in h2{font-size:24px}
+    .pv-note{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="pv">
+  <div class="pv-brand">
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3" y="3" width="13" height="13" rx="2.5" fill="none" stroke="#EDE9DC" stroke-width="1.6"/>
+      <rect x="8" y="8" width="13" height="13" rx="2.5" fill="#E8823F"/>
+    </svg>
+    Clipbox 分享页
+  </div>
+  <div class="pv-tabs" role="group" aria-label="预览状态">
+    <a href="#ok">正常</a>
+    <a href="#expired">已过期</a>
+    <a href="#used">已使用</a>
+    <a href="#invalid">无效</a>
+  </div>
+  <span class="pv-note">预览控制不属于分享页 · 页面本身无 JavaScript、无外部资源</span>
+</div>
+
+<main>
+  <section class="state" id="ok">
+    <div class="wrap">
+      <div class="meta">
+        <span class="mark">
+          <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="3" width="13" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <rect x="8" y="8" width="13" height="13" rx="2.5" fill="currentColor"/>
+          </svg>
+          <b>Clipbox</b> 只读快照
+        </span>
+        <span class="r">分享于 今天 15:04</span>
+      </div>
+      <div class="rule"></div>
+      <div class="expiry"><i></i>链接在 明天 15:20 过期</div>
+      <h1>服务日志摘录与复现步骤</h1>
+      <p class="body">2026-11-13T15:02:11.408Z  INFO  boot      server listening on 0.0.0.0:8443
+2026-11-13T15:02:11.402Z  INFO  db        sqlite opened /var/lib/clipbox/clipbox.db (WAL)
+2026-11-13T15:02:11.395Z  INFO  cleanup   retained 500 unpinned, 12 pinned, floor=1841
+2026-11-13T15:02:09.117Z  WARN  ws        device dev_7Qm4Xb reconnect attempt=2 backoff=4s
+2026-11-13T15:02:05.884Z  INFO  clips     POST /api/v1/clips id=01JB7K2Q8ZC4R9 201 38ms
+2026-11-13T15:02:05.882Z  INFO  outbox    replay CREATE clip=01JB7K2Q8ZC4R9 retry=0
+2026-11-13T15:02:04.201Z  INFO  http      GET /api/v1/clips since=1838 limit=200 200 61ms
+2026-11-13T15:02:04.140Z  INFO  sync      lastSeq 1838 → 1841 (3 items, hasMore=false)
+2026-11-13T15:01:58.730Z  WARN  ws        heartbeat timeout, closing code=4408
+2026-11-13T15:01:58.728Z  INFO  ws        auth ok device=dev_7Qm4Xb serverSeq=1838
+2026-11-13T15:01:52.004Z  INFO  share     POST /api/v1/shares clip=01JB7K1M2A 201 ttl=86400
+2026-11-13T15:01:49.337Z  INFO  clips     PATCH /api/v1/clips/01JB7K0X9Q pinned=true 200 21ms
+2026-11-13T15:01:41.512Z  INFO  http      bearer device=dev_7Qm4Xb scope=owner
+2026-11-13T15:01:30.209Z  INFO  clips     DELETE /api/v1/clips/01JB7JZ4TA 200 19ms
+2026-11-13T15:01:30.205Z  INFO  outbox    replay DELETE clip=01JB7JZ4TA retry=0
+2026-11-13T15:01:12.660Z  INFO  cleanup   tombstone purge count=12 next_run=+24h
+2026-11-13T15:00:58.118Z  INFO  ws        broadcast clip.created seq=1838 devices=3
+2026-11-13T15:00:58.101Z  INFO  clips     POST /api/v1/clips id=01JB7K0X9Q 201 33ms
+
+共 18 条日志，2 条 WARN，0 条 ERROR。
+复现步骤：关闭 Wi-Fi 后连续发送 5 条文本，重新联网，观察 outbox 的重放顺序与 seq 推进。</p>
+      <div class="foot">
+        <span>由 Clipbox 生成，只读快照</span>
+        <span>clip.example.com</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="state" id="expired">
+    <div class="gone">
+      <div class="gone-in">
+        <div class="gone-code">410</div>
+        <div class="gone-kicker"><i></i>只读快照</div>
+        <h2>链接已过期</h2>
+        <p>分享有效期已结束。内容不会再展示，请联系分享者重新生成。</p>
+        <div class="gone-foot">
+          <span>由 Clipbox 生成，只读快照</span>
+          <span>clip.example.com</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="state" id="used">
+    <div class="gone">
+      <div class="gone-in">
+        <div class="gone-code">410</div>
+        <div class="gone-kicker"><i></i>一次性链接</div>
+        <h2>链接已使用</h2>
+        <p>这是一次性链接，已在首次打开时失效。请向分享者索取新的链接。</p>
+        <div class="gone-foot">
+          <span>由 Clipbox 生成，只读快照</span>
+          <span>clip.example.com</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="state" id="invalid">
+    <div class="gone">
+      <div class="gone-in">
+        <div class="gone-code">404</div>
+        <div class="gone-kicker"><i></i>只读快照</div>
+        <h2>链接不存在</h2>
+        <p>这个链接无效，或已被分享者删除。请向对方索取新的链接。</p>
+        <div class="gone-foot">
+          <span>由 Clipbox 生成，只读快照</span>
+          <span>clip.example.com</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+</body>
+</html>
