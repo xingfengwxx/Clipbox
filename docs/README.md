@@ -43,28 +43,28 @@ flowchart LR
 ClipBox/
 ├── ClipboxClient/        # 客户端 Gradle 根工程（待实现）
 ├── ClipboxServer/        # 服务端 Gradle 工程（待实现）
-├── docs/
-│   ├── 功能需求文档.md
-│   ├── api.md
-│   ├── 客户端技术架构.md
-│   ├── 服务端技术架构.md
-│   ├── Clipbox 项目交接文档.md
-│   └── adr/              # 架构决策记录
-├── GLOSSARY.md           # 领域术语表
-└── README.md
+└── docs/
+    ├── 功能需求文档.md
+    ├── api.md
+    ├── 客户端技术架构.md
+    ├── 服务端技术架构.md
+    ├── Clipbox 项目交接文档.md
+    ├── GLOSSARY.md       # 领域术语表
+    ├── README.md
+    └── adr/              # 架构决策记录
 ```
 
 ## 文档
 
 | 文档 | 内容 | 权威范围 |
 | --- | --- | --- |
-| [功能需求文档](docs/功能需求文档.md) | 104 条 REQ，Given / When / Then 验收条件与追溯矩阵 | 产品行为与验收标准 |
-| [API 契约](docs/api.md) | 路径、字段、错误码、限流、同步语义、示例 | 客户端与服务端之间唯一接口依据 |
-| [客户端技术架构](docs/客户端技术架构.md) | 分层、Room Schema、SyncEngine、Outbox、桌面剪贴板 | 客户端实现细节 |
-| [服务端技术架构](docs/服务端技术架构.md) | 模块划分、SQLite Schema、清理任务、Docker 部署 | 服务端实现细节 |
+| [功能需求文档](功能需求文档.md) | 104 条 REQ，Given / When / Then 验收条件与追溯矩阵 | 产品行为与验收标准 |
+| [API 契约](api.md) | 路径、字段、错误码、限流、同步语义、示例 | 客户端与服务端之间唯一接口依据 |
+| [客户端技术架构](客户端技术架构.md) | 分层、Room Schema、SyncEngine、Outbox、桌面剪贴板 | 客户端实现细节 |
+| [服务端技术架构](服务端技术架构.md) | 模块划分、SQLite Schema、清理任务、Docker 部署 | 服务端实现细节 |
 | [术语表](GLOSSARY.md) | 剪贴记录、同步游标、墓碑等规范用词 | 全项目术语 |
-| [ADR-0001](docs/adr/0001-server-seq-change-feed.md) | 用 `serverSeq` 变更流替代 ULID 游标 | 同步机制决策 |
-| [ADR-0002](docs/adr/0002-share-content-snapshot.md) | 分享保存内容快照而非记录引用 | 分享生命周期决策 |
+| [ADR-0001](adr/0001-server-seq-change-feed.md) | 用 `serverSeq` 变更流替代 ULID 游标 | 同步机制决策 |
+| [ADR-0002](adr/0002-share-content-snapshot.md) | 分享保存内容快照而非记录引用 | 分享生命周期决策 |
 
 ## 核心设计
 
