@@ -1,6 +1,6 @@
 # Clipbox
 
-离线优先的跨设备文本中转与本地工具箱。Android、iPhone / iPad 与电脑之间传文本，不必发消息给自己，也不必登录网页。
+离线优先的跨设备文本中转与本地工具箱。Android、iPhone / iPad 与电脑之间传文本，不必发消息给自己，也不必登录网页。界面支持简体中文、繁體中文与 English，默认简体中文。
 
 > **当前状态**：v1.0.0 设计冻结。四份设计与需求文档已完成；`ClipboxClient/` 与 `ClipboxServer/` 代码工程待按文档实现。
 
@@ -16,6 +16,7 @@
 | 分享链接 | 由剪贴记录生成只读网页，有效期 1 小时 / 24 小时 / 7 天，可选阅后即焚 |
 | 工具箱 | JSON、Base64、URL、时间戳、正则 5 个纯本地工具，断网可用、不上传内容 |
 | 诊断日志 | 设置页开关；debug 默认开、release 默认关，开启后网络日志含请求 / 响应体与令牌，仅本机输出 |
+| 多语言 | 设置页切换简体中文（默认）/ 繁體中文 / English，立即生效并持久化；系统弹窗跟随操作系统语言 |
 
 不承担：图片 / 文件 / 音视频传输、多用户与账号体系、云端 AI、端到端加密（P2 评估）。
 
@@ -36,7 +37,7 @@ flowchart LR
     Server -->|WebSocket 广播| Desktop
 ```
 
-- 客户端：Compose Multiplatform（Android + iOS + Desktop 共享 UI 与业务代码）+ Room KMP + Ktor Client，本地库是唯一数据源。
+- 客户端：Compose Multiplatform（Android + iOS + Desktop 共享 UI 与业务代码，Compose Resources 多语言）+ Room KMP + Ktor Client，本地库是唯一数据源。
 - 服务端：Ktor + Exposed + SQLite WAL，单实例部署，目标资源 2 核 / 2GB / 3Mbps，JVM `-Xmx256m`。
 - 同步：服务端为每次创建、置顶、删除分配单调递增的 `serverSeq`；客户端用 `since` 增量拉取，断线后自动补齐，落后于墓碑清理线时全量重同步。
 
@@ -59,13 +60,21 @@ ClipBox/
     └── adr/              # 架构决策记录
 ```
 
+## 工程路径
+
+| 工程 | 绝对路径 |
+| --- | --- |
+| 服务端 | `/Users/wangxingxing/AndroidStudioProjects/MyProjects/ClipBox/ClipboxServer` |
+| 客户端 | `/Users/wangxingxing/AndroidStudioProjects/MyProjects/ClipBox/ClipboxClient` |
+| 文档 | `/Users/wangxingxing/AndroidStudioProjects/MyProjects/ClipBox/docs` |
+
 ## 文档
 
 | 文档 | 内容 | 权威范围 |
 | --- | --- | --- |
 | [功能需求文档](功能需求文档.md) | 108 条 REQ，Given / When / Then 验收条件与追溯矩阵 | 产品行为与验收标准 |
 | [API 契约](api.md) | 路径、字段、错误码、限流、同步语义、示例 | 客户端与服务端之间唯一接口依据 |
-| [客户端技术架构](客户端技术架构.md) | 分层、Room Schema、SyncEngine、Outbox、三端平台能力、iOS 分享扩展、诊断日志 | 客户端实现细节 |
+| [客户端技术架构](客户端技术架构.md) | 分层、Room Schema、SyncEngine、Outbox、三端平台能力、iOS 分享扩展、多语言、诊断日志 | 客户端实现细节 |
 | [服务端技术架构](服务端技术架构.md) | 模块划分、SQLite Schema、清理任务、Docker 部署 | 服务端实现细节 |
 | [术语表](GLOSSARY.md) | 剪贴记录、同步游标、墓碑等规范用词 | 全项目术语 |
 | [ADR-0001](adr/0001-server-seq-change-feed.md) | 用 `serverSeq` 变更流替代 ULID 游标 | 同步机制决策 |

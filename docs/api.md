@@ -8,6 +8,7 @@
 | 基线 | [Clipbox 项目交接文档](./Clipbox%20项目交接文档.md) v0.1 |
 | 相关 | [GLOSSARY.md](GLOSSARY.md)、[ADR-0001](./adr/0001-server-seq-change-feed.md)、[ADR-0002](./adr/0002-share-content-snapshot.md) |
 | 适用产品 | Clipbox v1.0.0 |
+| 工程路径 | 服务端 `/Users/wangxingxing/AndroidStudioProjects/MyProjects/ClipBox/ClipboxServer`<br>客户端 `/Users/wangxingxing/AndroidStudioProjects/MyProjects/ClipBox/ClipboxClient` |
 
 本文只定义客户端与服务端之间的接口契约。客户端内部实现见[客户端技术架构](./客户端技术架构.md)，服务端内部实现见[服务端技术架构](./服务端技术架构.md)，产品行为与验收见[功能需求文档](./功能需求文档.md)。
 
