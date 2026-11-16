@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.leftJoin
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 
 data class ClipRow(
     val id: String,
@@ -56,6 +57,20 @@ object ClipRepository {
             .where { ClipsTable.id eq id }
             .singleOrNull()
             ?.toClipRow()
+
+    /** 置顶状态与 server_seq 必须一起更新，否则客户端按序号拉取时看不到本次变化。 */
+    fun updatePinned(id: String, pinned: Boolean, serverSeq: Long): Int =
+        ClipsTable.update({ ClipsTable.id eq id }) {
+            it[ClipsTable.pinned] = if (pinned) 1 else 0
+            it[ClipsTable.serverSeq] = serverSeq
+        }
+
+    /** 软删除只写 deleted_at 与新 server_seq；正文保留到墓碑物理清理。 */
+    fun markDeleted(id: String, deletedAt: Long, serverSeq: Long): Int =
+        ClipsTable.update({ ClipsTable.id eq id }) {
+            it[ClipsTable.deletedAt] = deletedAt
+            it[ClipsTable.serverSeq] = serverSeq
+        }
 
     /**
      * 按 serverSeq 升序读取 since 之后的变更，含墓碑。
