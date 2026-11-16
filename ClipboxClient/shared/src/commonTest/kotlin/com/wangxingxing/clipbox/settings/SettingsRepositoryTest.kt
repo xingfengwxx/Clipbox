@@ -144,7 +144,8 @@ class SettingsRepositoryTest {
     }
 }
 
-private class FakePreferencesDataStore(
+// 其他共享层测试复用该内存实现，避免为 Repository 测试重复搭建 DataStore
+internal class FakePreferencesDataStore(
     initial: Preferences = emptyPreferences(),
 ) : DataStore<Preferences> {
 
