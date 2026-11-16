@@ -1,3 +1,9 @@
+/**
+ * author : 王星星
+ * date : 2026-11-16 10:33
+ * email : 1099420259@qq.com
+ * description : /healthz 契约测试：断言状态码、Content-Type 与响应字段。
+ */
 package com.wangxingxing.clipbox.server
 
 import com.wangxingxing.clipbox.server.config.AppConfig

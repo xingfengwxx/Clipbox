@@ -1,3 +1,9 @@
+/**
+ * author : 王星星
+ * date : 2026-11-16 10:33
+ * email : 1099420259@qq.com
+ * description : 启动配置校验的单元测试；数据目录使用临时目录，避免污染仓库。
+ */
 package com.wangxingxing.clipbox.server.config
 
 import java.nio.file.Files

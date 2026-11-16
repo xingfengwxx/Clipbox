@@ -1,3 +1,10 @@
+/**
+ * author : 王星星
+ * date : 2026-11-16 10:33
+ * email : 1099420259@qq.com
+ * description : 服务端启动配置的读取与校验；非法配置在启动前抛出 ConfigException。
+ *               注意：错误信息只描述缺失项或格式约束，不得回显 ADMIN_TOKEN 明文。
+ */
 package com.wangxingxing.clipbox.server.config
 
 import java.io.IOException
@@ -24,6 +31,7 @@ data class AppConfig(
         fun fromEnv(env: Map<String, String>): AppConfig {
             val adminToken = env["ADMIN_TOKEN"]?.takeIf { it.isNotBlank() }
                 ?: throw ConfigException("ADMIN_TOKEN 未配置")
+            // 只报告长度约束，不把令牌值带进异常信息，避免启动日志泄露管理凭证。
             if (adminToken.length < MIN_ADMIN_TOKEN_LENGTH) {
                 throw ConfigException("ADMIN_TOKEN 长度必须不少于 $MIN_ADMIN_TOKEN_LENGTH 个字符")
             }
@@ -40,6 +48,7 @@ data class AppConfig(
                 parsed
             } ?: DEFAULT_PORT
 
+            // 本机与测试默认写相对目录；容器部署由 compose 显式注入 DATA_DIR=/data。
             val dataDirRaw = env["DATA_DIR"]?.takeIf { it.isNotBlank() } ?: DEFAULT_DATA_DIR
             val dataDir = resolveWritableDataDir(dataDirRaw)
 
@@ -51,6 +60,7 @@ data class AppConfig(
             )
         }
 
+        // 分享链接按 PUBLIC_BASE_URL + "/s/" + token 直接拼接：尾斜杠、查询串或片段会破坏拼接结果。
         private fun validatePublicBaseUrl(value: String) {
             val uri = try {
                 URI(value)
