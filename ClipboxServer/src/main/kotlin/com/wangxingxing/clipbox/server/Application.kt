@@ -12,12 +12,19 @@ import com.wangxingxing.clipbox.server.config.ConfigException
 import com.wangxingxing.clipbox.server.db.DatabaseFactory
 import com.wangxingxing.clipbox.server.plugins.configureSerialization
 import com.wangxingxing.clipbox.server.routes.healthRoutes
+import com.wangxingxing.clipbox.server.routes.pairingRoutes
+import com.wangxingxing.clipbox.server.service.AdminService
+import com.wangxingxing.clipbox.server.service.PairingService
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.routing.routing
 import kotlin.system.exitProcess
+import kotlinx.coroutines.runBlocking
+import org.slf4j.LoggerFactory
+
+private val logger = LoggerFactory.getLogger("com.wangxingxing.clipbox.server.Application")
 
 fun main() {
     // 校验失败直接退出，避免服务以部分配置启动后产生难以排查的运行时错误。
@@ -53,8 +60,16 @@ fun Application.module(config: AppConfig, databaseFactory: DatabaseFactory? = nu
     }
     monitor.subscribe(ApplicationStopped) { factory.close() }
 
+    val adminService = AdminService(factory, config.adminToken)
+    val pairingService = PairingService(factory)
+    // 启动即补发自助配对码，保证容器日志里始终可用；生成失败直接终止启动，不进入无码可用的状态。
+    runBlocking { adminService.ensureStartupCode() }?.let { code ->
+        logger.info("[PAIRING-CODE] 启动自动生成配对码：{}（10 分钟内有效，一次性使用）", code)
+    }
+
     configureSerialization()
     routing {
         healthRoutes(factory::isHealthy)
+        pairingRoutes(adminService, pairingService)
     }
 }

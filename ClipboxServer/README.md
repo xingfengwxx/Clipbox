@@ -1,6 +1,6 @@
 # Clipbox Server
 
-服务端（Ktor Netty）。当前为 T-S-01 骨架：启动配置校验 + `/healthz`，不含配对、数据库与业务路由。
+服务端（Ktor Netty）。当前已实现启动配置校验、SQLite 迁移与仓储、`/healthz`、配对码生成与设备配对。
 
 ## 版本基线
 
@@ -50,3 +50,30 @@ curl -sS http://127.0.0.1:8080/healthz
 ```json
 {"status": "ok", "version": "1.0.0", "time": 1730000000000}
 ```
+
+## 配对
+
+启动时若不存在「未使用且未过期」的配对码，会生成一个并打印一次启动日志：
+
+```text
+[PAIRING-CODE] 启动自动生成配对码：123456（10 分钟内有效，一次性使用）
+```
+
+管理端随时补发（管理令牌错误返回 401）：
+
+```bash
+curl -sS -X POST http://127.0.0.1:8080/api/v1/admin/pairing-codes \
+  -H "X-Admin-Token: $ADMIN_TOKEN"
+# {"code":"654321","expiresAt":1730000600000}
+```
+
+客户端用码换取设备令牌，令牌只在该响应出现一次：
+
+```bash
+curl -sS -X POST http://127.0.0.1:8080/api/v1/pair \
+  -H 'Content-Type: application/json' \
+  -d '{"code":"654321","deviceName":"Pixel 8"}'
+# {"deviceId":"01J8...","token":"<43 字符>","deviceName":"Pixel 8"}
+```
+
+配对码 600 秒有效、一次性；服务端只保存设备令牌的 SHA-256 摘要。
