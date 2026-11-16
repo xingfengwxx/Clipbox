@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>品牌方向三 · 卡槽 · 信槽 / Sulci</title>
+<style>
+  :root{
+    --bg:#faf7ef; --panel:#ffffff; --panel2:#f2eee2;
+    --ink:#191712; --ink2:#5b5446; --line:#d0caba;
+    --accent:#a8430f; --dark:#17150f;
+    --mono:Menlo,Consolas,"Courier New",monospace;
+    --sans:"PingFang SC","Noto Sans SC",-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-font-smoothing:antialiased}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.65}
+  .wrap{max-width:1240px;margin:0 auto;padding:36px 44px 56px}
+  .mono{font-family:var(--mono);font-size:12px;letter-spacing:.01em;color:var(--ink2)}
+  .bar{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+  .bar h1{font-size:28px;font-weight:600;letter-spacing:.04em;margin-top:4px}
+  .bar .tag{font-family:var(--mono);font-size:14px;color:var(--ink2);text-align:right}
+  .spec{display:grid;grid-template-columns:1.15fr 1fr;gap:48px;padding:38px 0;border-bottom:1px solid var(--line)}
+  .plate{position:relative;background:var(--panel);border:1px solid var(--line);padding:36px;background-image:linear-gradient(var(--panel2) 1px,transparent 1px),linear-gradient(90deg,var(--panel2) 1px,transparent 1px);background-size:24px 24px;background-position:-1px -1px}
+  .plate .center{display:flex;align-items:center;justify-content:center;min-height:320px;position:relative}
+  .dim{position:absolute;left:50%;transform:translateX(-50%);bottom:16px;width:220px;height:18px}
+  .dim .line{position:absolute;left:0;right:0;top:9px;height:1px;background:var(--ink2)}
+  .dim .t{position:absolute;top:3px;width:1px;height:13px;background:var(--ink2)}
+  .dim .t.l{left:0}.dim .t.r{right:0}
+  .dim span{position:absolute;left:50%;transform:translateX(-50%);top:-10px;background:var(--panel);padding:0 6px;font-family:var(--mono);font-size:12px;color:var(--ink2)}
+  .angle{position:absolute;right:28px;top:44px;text-align:right}
+  .angle .a{font-family:var(--mono);font-size:12px;color:var(--ink2)}
+  .angle .line{width:54px;height:1px;background:var(--ink2);margin:6px 0 0 auto;transform:rotate(-16deg);transform-origin:right}
+  .names{display:flex;flex-direction:column;gap:2px}
+  .zh-name{font-size:64px;font-weight:500;letter-spacing:.1em;line-height:1.1}
+  .en-name{font-family:var(--mono);font-size:30px;font-weight:400;letter-spacing:.04em;color:var(--accent);margin-top:4px}
+  .pinyin{font-family:var(--mono);font-size:12px;color:var(--ink2);margin-top:6px}
+  .spec p{font-size:15px;margin-top:22px;max-width:520px}
+  .rows{border-top:1px solid var(--line);margin-top:24px}
+  .row{display:grid;grid-template-columns:92px 1fr;gap:16px;padding:8px 0;border-bottom:1px solid var(--line)}
+  .row dt{font-family:var(--mono);font-size:12px;color:var(--ink2)}
+  .row dd{font-size:14px}
+  .sect{padding:34px 0;border-bottom:1px solid var(--line)}
+  .sect-head{display:flex;justify-content:space-between;align-items:baseline;gap:24px;margin-bottom:22px}
+  .sect-head h2{font-size:18px;font-weight:600;letter-spacing:.04em}
+  .sizes{display:flex;align-items:flex-end;gap:52px;flex-wrap:wrap}
+  .size{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .size .cap{font-family:var(--mono);font-size:12px;color:var(--ink2)}
+  .usage{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .swatch{padding:26px 24px;display:flex;align-items:center;justify-content:center;gap:20px;min-height:150px;border-radius:10px;border:1px solid var(--line)}
+  .swatch .lbl{font-family:var(--mono);font-size:12px;align-self:flex-start;margin-left:auto;color:var(--ink2)}
+  .sw-paper{background:var(--panel)}
+  .sw-ink{background:var(--dark);color:#ede9dc}
+  .sw-ink .lbl{color:#b7b0a0}
+  .sw-mono{background:var(--panel2)}
+  .masks{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .mask{display:flex;flex-direction:column;align-items:center;gap:12px;padding:22px;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+  .mask .cap{font-family:var(--mono);font-size:12px;color:var(--ink2)}
+  .alt{display:grid;grid-template-columns:1fr 1.1fr;gap:48px;align-items:center;padding:34px 0}
+  .alt .pair{display:flex;align-items:center;gap:18px}
+  .alt .pair .zh{font-size:34px;font-weight:500;letter-spacing:.1em}
+  .alt .pair .en{font-family:var(--mono);font-size:17px;color:var(--accent)}
+  .alt p{font-size:14px}
+  .cols{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;padding:34px 0 8px}
+  .cols h3{font-size:15px;font-weight:600;margin-bottom:10px;letter-spacing:.04em}
+  .cols ul{list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14px}
+  .cols li{padding-left:14px;position:relative}
+  .cols li::before{content:"";position:absolute;left:0;top:9px;width:5px;height:5px;background:var(--accent)}
+  .foot{display:flex;justify-content:space-between;gap:24px;padding-top:24px;font-family:var(--mono);font-size:14px;color:var(--ink2)}
+  .accent{fill:var(--accent)}
+  .mono-mark .accent{fill:currentColor}
+  .sw-ink .accent{fill:#e8823f}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="bar">
+    <div>
+      <div class="mono">品牌方向三 / 槽</div>
+      <h1>卡槽</h1>
+    </div>
+    <div class="tag">中英命名与图形提案<br>客户端品牌提案 · 2026-11-16</div>
+  </header>
+
+  <section class="spec">
+    <div class="plate">
+      <div class="center">
+        <svg viewBox="0 0 32 32" width="232" height="232" aria-label="信槽图形">
+          <rect class="accent" x="13.6" y="2.2" width="9" height="17" rx="1.4" transform="rotate(16 18.1 10.7)"/>
+          <path d="M4.5 14.8H27.5V25H4.5Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="angle">
+        <div class="a">插入角 16°</div>
+        <div class="line"></div>
+      </div>
+      <div class="dim"><span>图形网格 32</span><i class="line"></i><i class="t l"></i><i class="t r"></i></div>
+    </div>
+    <div>
+      <div class="names">
+        <span class="zh-name">信槽</span>
+        <span class="en-name">Sulci</span>
+        <span class="pinyin">xìn cáo / səl-kai</span>
+      </div>
+      <p>卡槽是硬件语言：一张卡滑进槽位，位置固定、取出即用。图形是一张橙色卡片插入墨色槽口，槽口本身围成匣的负空间；没有箭头，也没有设备。</p>
+      <dl class="rows">
+        <div class="row"><dt>中文名</dt><dd>信槽</dd></div>
+        <div class="row"><dt>英文名</dt><dd>Sulci（拉丁 sulcus 的复数：沟、槽）</dd></div>
+        <div class="row"><dt>备选</dt><dd>卡槽 / Cistrel</dd></div>
+        <div class="row"><dt>语义</dt><dd>槽位、插入、固定位置</dd></div>
+        <div class="row"><dt>气质</dt><dd>技术图纸、尺寸标注、单卡动作</dd></div>
+        <div class="row"><dt>可用性</dt><dd>初筛未见同名 App；Sulci 在解剖学语境常见，待定稿复核</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="sect">
+    <div class="sect-head">
+      <h2>尺寸</h2>
+      <span class="mono">24 / 48 / 96 / 160，实际像素渲染</span>
+    </div>
+    <div class="sizes">
+      <div class="size">
+        <svg viewBox="0 0 32 32" width="24" height="24" aria-label="24px">
+          <rect class="accent" x="13.6" y="2.2" width="9" height="17" rx="1.4" transform="rotate(16 18.1 10.7)"/>
+          <path d="M4.5 14.8H27.5V25H4.5Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+        </svg>
+        <span class="cap">24 px</span>
+      </div>
+      <div class="size">
+        <svg viewBox="0 0 32 32" width="48" height="48" aria-label="48px">
+          <rect class="accent" x="13.6" y="2.2" width="9" height="17" rx="1.4" transform="rotate(16 18.1 10.7)"/>
+          <path d="M4.5 14.8H27.5V25H4.5Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+        </svg>
+        <span class="cap">48 px</span>
+      </div>
+      <div class="size">
+        <svg viewBox="0 0 32 32" width="96" height="96" aria-label="96px">
+          <rect class="accent" x="13.6" y="2.2" width="9" height="17" rx="1.4" transform="rotate(16 18.1 10.7)"/>
+          <path d="M4.5 14.8H27.5V25H4.5Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+        </svg>
+        <span class="cap">96 px</span>
+      </div>
+      <div class="size">
+        <div style="width:160px;height:160px;border-radius:26px;background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center">
+          <svg viewBox="0 0 32 32" width="112" height="112" aria-label="160px">
+            <rect class="accent" x="13.6" y="2.2" width="9" height="17" rx="1.4" transform="rotate(16 18.1 10.7)"/>
+            <path d="M4.5 14.8H27.5V25H4.5Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="cap">图标预览 160</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="sect">
+    <div class="sect-head">
+      <h2>用法</h2>
+      <span class="mono">纸底 / 墨底 / 单色</span>
+    </div>
+    <div class="usage">
+      <div class="swatch sw-paper">
+        <svg viewBox="0 0 32 32" width="54" height="54" aria-label="纸底">
+          <rect class="accent" x="13.6" y="2.2" width="9" height="17" rx="1.4" transform="rotate(16 18.1 10.7)"/>
+          <path d="M4.5 14.8H27.5V25H4.5Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+        </svg>
+        <span class="lbl">纸底</span>
+      </div>
+      <div class="swatch sw-ink">
+        <svg viewBox="0 0 32 32" width="54" height="54" aria-label="墨底">
+          <rect class="accent" x="13.6" y="2.2" width="9" height="17" rx="1.4" transform="rotate(16 18.1 10.7)"/>
+          <path d="M4.5 14.8H27.5V25H4.5Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+        </svg>
+        <span class="lbl">墨底</span>
+      </div>
+      <div class="swatch sw-mono mono-mark">
+        <svg viewBox="0 0 32 32" width="54" height="54" aria-label="单色">
+          <rect class="accent" x="13.6" y="2.2" width="9" height="17" rx="1.4" transform="rotate(16 18.1 10.7)"/>
+          <path d="M4.5 14.8H27.5V25H4.5Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+        </svg>
+        <span class="lbl">单色</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="sect">
+    <div class="sect-head">
+      <h2>图标形状</h2>
+      <span class="mono" style="font-size:14px">圆角方 / 圆形 / Android 自适应安全区 66dp</span>
+    </div>
+    <div class="masks">
+      <div class="mask">
+        <div style="width:104px;height:104px;border-radius:24px;background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center">
+          <svg viewBox="0 0 32 32" width="66" height="66" aria-label="圆角方">
+            <rect class="accent" x="13.6" y="2.2" width="9" height="17" rx="1.4" transform="rotate(16 18.1 10.7)"/>
+            <path d="M4.5 14.8H27.5V25H4.5Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="cap">圆角方</span>
+      </div>
+      <div class="mask">
+        <div style="width:104px;height:104px;border-radius:50%;background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center">
+          <svg viewBox="0 0 32 32" width="60" height="60" aria-label="圆形">
+            <rect class="accent" x="13.6" y="2.2" width="9" height="17" rx="1.4" transform="rotate(16 18.1 10.7)"/>
+            <path d="M4.5 14.8H27.5V25H4.5Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="cap">圆形</span>
+      </div>
+      <div class="mask">
+        <div style="width:104px;height:104px;border-radius:24px;background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;position:relative">
+          <svg viewBox="0 0 32 32" width="64" height="64" aria-label="自适应">
+            <rect class="accent" x="13.6" y="2.2" width="9" height="17" rx="1.4" transform="rotate(16 18.1 10.7)"/>
+            <path d="M4.5 14.8H27.5V25H4.5Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+          </svg>
+          <span style="position:absolute;width:64px;height:64px;border:1px dashed var(--accent);border-radius:50%"></span>
+        </div>
+        <span class="cap">自适应安全区</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="alt">
+    <div>
+      <div class="pair">
+        <svg viewBox="0 0 32 32" width="46" height="46" aria-label="卡槽图形">
+          <rect class="accent" x="13.6" y="2.2" width="9" height="17" rx="1.4" transform="rotate(16 18.1 10.7)"/>
+          <path d="M4.5 14.8H27.5V25H4.5Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+        </svg>
+        <span class="zh">卡槽</span>
+        <span class="en">Cistrel</span>
+      </div>
+      <p style="margin-top:14px">同一图形下的第二组名字：卡槽更硬件、更直白；Cistrel 是 cista（匣）的缩略造词，作为更独特的备选。两组的图形语言不变。</p>
+    </div>
+    <div class="mono" style="font-size:14px;line-height:1.9">
+      字标规则<br>
+      中文：PingFang SC / Noto Sans SC，字重 500，字距 0.1em<br>
+      英文：等宽栈，字重 400，字距 0.04em<br>
+      清空区：不小于图形短边的 20%<br>
+      最小尺寸：图形 24px，横排字标高度 16px<br>
+      简繁同字：信槽 / 信槽
+    </div>
+  </section>
+
+  <section class="cols">
+    <div>
+      <h3>为什么是这条线</h3>
+      <ul>
+        <li>「槽」比「匣」更强调位置和动作：不是收藏，而是插入与取出。</li>
+        <li>橙色卡片是唯一动作，槽口用负空间围成匣，图形在小尺寸下仍然成立。</li>
+        <li>技术图纸的气质与开发者工具箱更近，能把「本地工具」讲清楚。</li>
+        <li>卡片倾斜 16°，让静态图形有一个明确的方向。</li>
+      </ul>
+    </div>
+    <div>
+      <h3>风险</h3>
+      <ul>
+        <li>「卡槽」在中文里首先想到 SIM 卡或内存卡，需要副标把语义拉回文本。</li>
+        <li>Sulci 在英语里偏解剖学，普通用户不会知道它意为「沟、槽」。</li>
+        <li>卡片与槽口的关系需要足够留白，否则 24px 下会糊成一团。</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span>六格总览：thumbs.html</span>
+    <span>待选定方向后输出 SVG 母版、PNG 导出与 brand-spec 更新</span>
+  </footer>
+
+</div>
+</body>
+</html>

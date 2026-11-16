@@ -17,7 +17,7 @@ import java.awt.Dimension
 fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
-        title = "Clipbox",
+        title = "Theca",
         state = rememberWindowState(size = DpSize(1000.dp, 700.dp))
     ) {
         // 最小尺寸只能通过 AWT 窗口设置，Compose 的 rememberWindowState 不支持下限

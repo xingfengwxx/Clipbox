@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>六格总览 · 品牌方向对照</title>
+<style>
+  :root{
+    --bg:#e9e4d6; --paper:#fbf9f3; --ink:#191712; --ink2:#5b5446;
+    --line:#c6bda6; --accent:#a8430f;
+    --mono:Menlo,Consolas,"Courier New",monospace;
+    --sans:"PingFang SC","Noto Sans SC",-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-font-smoothing:antialiased}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.6}
+  .wrap{max-width:1240px;margin:0 auto;padding:36px 44px 56px}
+  .mono{font-family:var(--mono);font-size:12px;color:var(--ink2)}
+  header{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+  header h1{font-size:26px;font-weight:600;letter-spacing:.04em;margin-top:4px}
+  header .tag{font-family:var(--mono);font-size:14px;color:var(--ink2);text-align:right}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);border-left:1px solid var(--line);margin-top:2px}
+  .col{display:flex;flex-direction:column;border-right:1px solid var(--line)}
+  .tile{padding:24px 22px 22px;background:var(--paper);min-height:210px;display:flex;flex-direction:column;justify-content:space-between}
+  .tile + .tile{border-top:1px solid var(--line)}
+  .tile .top{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .tile .mark{flex:0 0 auto}
+  .tile .dir{font-family:var(--mono);font-size:12px;color:var(--ink2);text-align:right;line-height:1.5}
+  .tile .names{margin-top:22px}
+  .tile .zh{font-size:28px;font-weight:500;letter-spacing:.1em;line-height:1.2}
+  .tile .en{font-family:var(--mono);font-size:14px;color:var(--accent);margin-top:2px}
+  .tile .cue{font-size:14px;color:var(--ink2);margin-top:10px}
+  .foot{display:flex;justify-content:space-between;gap:24px;padding-top:20px;font-family:var(--mono);font-size:12px;color:var(--ink2)}
+  .accent{fill:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="mono">客户端品牌提案</div>
+      <h1>六格总览</h1>
+    </div>
+    <div class="tag">三个方向 × 两个名字配对<br>2026-11-16</div>
+  </header>
+
+  <div class="grid">
+    <div class="col">
+    <div class="tile">
+      <div class="top">
+        <svg class="mark" viewBox="0 0 32 32" width="52" height="52" aria-label="字匣">
+          <g fill="none" stroke="currentColor"><rect x="4" y="6" width="24" height="20" rx="2" stroke-width="2"/><path d="M16 6V26M4 16H28" stroke-width="1.6"/></g>
+          <rect x="15.2" y="-0.8" width="15.2" height="15.2" rx="2.4" fill="#fbf9f3"/>
+          <rect class="accent" x="17" y="1" width="11" height="11" rx="1.5"/>
+        </svg>
+        <div class="dir">方向一｜匣<br>活字档案</div>
+      </div>
+      <div class="names">
+        <div class="zh">字匣</div>
+        <div class="en">Theca</div>
+        <div class="cue">字格抽出一枚字，橙色是正在取用的那一格</div>
+      </div>
+    </div>
+
+    <div class="tile">
+      <div class="top">
+        <svg class="mark" viewBox="0 0 32 32" width="52" height="52" aria-label="帖匣">
+          <g fill="none" stroke="currentColor"><rect x="4" y="6" width="24" height="20" rx="2" stroke-width="2"/><path d="M16 6V26M4 16H28" stroke-width="1.6"/></g>
+          <rect x="15.2" y="-0.8" width="15.2" height="15.2" rx="2.4" fill="#fbf9f3"/>
+          <rect class="accent" x="17" y="1" width="11" height="11" rx="1.5"/>
+        </svg>
+        <div class="dir">方向一｜匣<br>活字档案</div>
+      </div>
+      <div class="names">
+        <div class="zh">帖匣</div>
+        <div class="en">Capsel</div>
+        <div class="cue">同一图形，换一张更偏便笺的皮</div>
+      </div>
+    </div>
+    </div>
+
+    <div class="col">
+    <div class="tile">
+      <div class="top">
+        <svg class="mark" viewBox="0 0 32 32" width="52" height="52" aria-label="信格">
+          <g fill="none" stroke="currentColor"><rect x="4" y="4.5" width="12" height="8.5" rx="1.8" stroke-width="2"/><rect x="16" y="19" width="12" height="8.5" rx="1.8" stroke-width="2"/><path d="M10 13V23.5H16" stroke-width="1.6"/></g>
+          <circle class="accent" cx="10" cy="18.2" r="2.6"/>
+        </svg>
+        <div class="dir">方向二｜格<br>调度仪器</div>
+      </div>
+      <div class="names">
+        <div class="zh">信格</div>
+        <div class="en">Casier</div>
+        <div class="cue">两个分格与一条传递线，橙点在途中</div>
+      </div>
+    </div>
+
+    <div class="tile">
+      <div class="top">
+        <svg class="mark" viewBox="0 0 32 32" width="52" height="52" aria-label="字格">
+          <g fill="none" stroke="currentColor"><rect x="4" y="4.5" width="12" height="8.5" rx="1.8" stroke-width="2"/><rect x="16" y="19" width="12" height="8.5" rx="1.8" stroke-width="2"/><path d="M10 13V23.5H16" stroke-width="1.6"/></g>
+          <circle class="accent" cx="10" cy="18.2" r="2.6"/>
+        </svg>
+        <div class="dir">方向二｜格<br>调度仪器</div>
+      </div>
+      <div class="names">
+        <div class="zh">字格</div>
+        <div class="en">Cistora</div>
+        <div class="cue">同一图形，名字更贴近「字」本身</div>
+      </div>
+    </div>
+    </div>
+
+    <div class="col">
+    <div class="tile">
+      <div class="top">
+        <svg class="mark" viewBox="0 0 32 32" width="52" height="52" aria-label="信槽">
+          <rect class="accent" x="13.6" y="2.2" width="9" height="17" rx="1.4" transform="rotate(16 18.1 10.7)"/>
+          <path d="M4.5 14.8H27.5V25H4.5Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+        </svg>
+        <div class="dir">方向三｜槽<br>卡槽</div>
+      </div>
+      <div class="names">
+        <div class="zh">信槽</div>
+        <div class="en">Sulci</div>
+        <div class="cue">一张橙色卡片插入槽口，槽口围成匣</div>
+      </div>
+    </div>
+
+    <div class="tile">
+      <div class="top">
+        <svg class="mark" viewBox="0 0 32 32" width="52" height="52" aria-label="卡槽">
+          <rect class="accent" x="13.6" y="2.2" width="9" height="17" rx="1.4" transform="rotate(16 18.1 10.7)"/>
+          <path d="M4.5 14.8H27.5V25H4.5Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+        </svg>
+        <div class="dir">方向三｜槽<br>卡槽</div>
+      </div>
+      <div class="names">
+        <div class="zh">卡槽</div>
+        <div class="en">Cistrel</div>
+        <div class="cue">同一图形，名字更硬件、更直白</div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <footer class="foot">
+    <span>方向全文：D1.html / D2.html / D3.html</span>
+    <span>待选定方向后输出全套资产</span>
+  </footer>
+</div>
+</body>
+</html>

@@ -18,10 +18,13 @@ design/
 ├── Clipbox 三端设计.html   # 主交付：展板 + 24 手机屏 + 2 桌面态 + 4 分享页态 + tokens + REQ 覆盖
 ├── 分享页.html             # 独立只读分享页（正常 / 已过期 / 已使用 / 无效）
 ├── README.md               # 本文件
-├── brand-spec.md           # 品牌与资产规范（自建提案）
-├── direction-approved.md   # 方向选择记录（用户原话）
+├── brand-spec.md           # 字匣 Theca 品牌与资产规范
+├── brand/                  # 字标、启动图标母版、导出位图、命名与方向记录
+├── direction-approved.md   # 三端设计方向选择记录（用户原话）
 └── shots/                  # 展板与单屏截图留档
 ```
+
+> 品牌名：中文「字匣」、英文「Theca」；`Clipbox` 保留为工程代号（包名、Bundle ID、URL Scheme、目录名不变）。命名依据见 `brand/naming.md`，资产规范见 `brand-spec.md`。设计稿里的示例剪贴内容仍可能出现 `Clipbox` 字样，属示例文本，不是品牌露出。
 
 ## 屏幕地图
 
@@ -138,9 +141,10 @@ design/
 - **设备框**：手机端以 Pixel 形态 Android 框呈现；iOS 与 Android 共享 Compose Multiplatform UI，本次不单独出 iPhone 框。
 - **桌面框**：以 macOS 窗口呈现，行为按文档覆盖 Windows / macOS / Linux。
 - **示例域名**：设计稿与分享链接统一使用 `https://clip.example.com`，仅作视觉演示；v1.0.0 学习版实际使用 `http://<SERVER_IP>:8080`（无域名、无 TLS），见 ADR-0003。最终交付需保留「未加密连接，仅用于学习」警示的展示位置。
-- **品牌资产**：产品无既有 logo / 色板 / VI，字标、图标与色板均为本次提案，详见 `brand-spec.md`。
+- **品牌资产**：产品无既有 logo / 色板 / VI；2026-11-16 定稿中英品牌「字匣 / Theca」，图形、字标、启动图标与色板均为本次提案，详见 `brand-spec.md` 与 `brand/`。
+- **品牌显示**：Android / iOS 桌面名与分享页页脚按系统语言显示「字匣」或「Theca」；Desktop 窗口标题固定 `Theca`。设计稿中的设备框、示例剪贴内容不做批量替换。
 - **分享页语言**：主文件中的分享页样本跟随全局语言；独立 `分享页.html` 固定简体中文，便于对照评审。
-- **方向记录**：三方向门展示了 C1 仪器清单、C4 剪贴卡片架、C5 硬件面板三版，用户选定 C1，记录见 `direction-approved.md`。
+- **方向记录**：三端设计的三方向门展示了 C1 仪器清单、C4 剪贴卡片架、C5 硬件面板三版，用户选定 C1，记录见 `direction-approved.md`；品牌三方向门记录见 `brand/direction-approved.md`。
 
 ## 验证记录
 

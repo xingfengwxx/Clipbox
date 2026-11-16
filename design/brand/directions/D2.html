@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>品牌方向二 · 调度仪器 · 信格 / Casier</title>
+<style>
+  :root{
+    --bg:#17150f; --panel:#1e1b14; --panel2:#262218;
+    --ink:#ede9dc; --ink2:#b7b0a0; --line:#3a352b;
+    --accent:#e8823f; --paper:#fbf9f3;
+    --mono:Menlo,Consolas,"Courier New",monospace;
+    --sans:"PingFang SC","Noto Sans SC",-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-font-smoothing:antialiased}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.65}
+  .wrap{max-width:1240px;margin:0 auto;padding:36px 44px 56px}
+  .mono{font-family:var(--mono);font-size:12px;letter-spacing:.01em;color:var(--ink2)}
+  .bar{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+  .bar h1{font-size:28px;font-weight:600;letter-spacing:.04em;margin-top:4px}
+  .bar .tag{font-family:var(--mono);font-size:14px;color:var(--ink2);text-align:right}
+  .hero{display:grid;grid-template-columns:1.2fr 1fr;gap:52px;align-items:center;padding:46px 0 34px}
+  .hero .lockup{display:flex;align-items:center;gap:26px}
+  .names{display:flex;flex-direction:column;gap:4px}
+  .zh-name{font-size:58px;font-weight:500;letter-spacing:.12em;line-height:1.1}
+  .en-name{font-family:var(--mono);font-size:54px;font-weight:400;letter-spacing:-.02em;line-height:1.1;color:var(--accent)}
+  .pinyin{font-family:var(--mono);font-size:12px;color:var(--ink2);margin-top:6px}
+  .meta p{font-size:15px;margin-bottom:16px;color:var(--ink)}
+  .rows{border-top:1px solid var(--line)}
+  .row{display:grid;grid-template-columns:92px 1fr;gap:16px;padding:8px 0;border-bottom:1px solid var(--line)}
+  .row dt{font-family:var(--mono);font-size:12px;color:var(--ink2)}
+  .row dd{font-size:14px}
+  .route{padding:30px 0 38px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .route-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:28px}
+  .route-head h2{font-size:18px;font-weight:600;letter-spacing:.04em}
+  .track{position:relative;height:92px}
+  .track .line{position:absolute;left:0;right:0;top:34px;height:1px;background:var(--line)}
+  .track .stops{display:grid;grid-template-columns:repeat(3,1fr);height:100%}
+  .stop{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between}
+  .stop .dot{width:9px;height:9px;border:1px solid var(--ink2);background:var(--bg);border-radius:50%;margin-top:30px}
+  .stop.on .dot{background:var(--accent);border-color:var(--accent)}
+  .stop .lbl{font-family:var(--mono);font-size:12px;color:var(--ink2)}
+  .stop .val{font-size:14px}
+  .sect{padding:34px 0;border-bottom:1px solid var(--line)}
+  .sect-head{display:flex;justify-content:space-between;align-items:baseline;gap:24px;margin-bottom:22px}
+  .sect-head h2{font-size:18px;font-weight:600;letter-spacing:.04em}
+  .sizes{display:flex;align-items:flex-end;gap:52px;flex-wrap:wrap}
+  .size{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .size .cap{font-family:var(--mono);font-size:12px;color:var(--ink2)}
+  .usage{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .swatch{padding:26px 24px;display:flex;align-items:center;justify-content:center;gap:20px;min-height:150px;border-radius:10px;border:1px solid var(--line)}
+  .swatch .lbl{font-family:var(--mono);font-size:12px;align-self:flex-start;margin-left:auto;color:var(--ink2)}
+  .sw-ink{background:var(--panel)}
+  .sw-paper{background:var(--paper);color:#191712;border-color:#d0caba}
+  .sw-paper .lbl{color:#5b5446}
+  .sw-mono{background:var(--panel2)}
+  .masks{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .mask{display:flex;flex-direction:column;align-items:center;gap:12px;padding:22px;background:var(--panel);border-radius:10px;border:1px solid var(--line)}
+  .mask .cap{font-family:var(--mono);font-size:12px;color:var(--ink2)}
+  .alt{display:grid;grid-template-columns:1fr 1.1fr;gap:48px;align-items:center;padding:34px 0}
+  .alt .pair{display:flex;align-items:center;gap:18px}
+  .alt .pair .zh{font-size:34px;font-weight:500;letter-spacing:.12em}
+  .alt .pair .en{font-family:var(--mono);font-size:17px;color:var(--accent)}
+  .alt p{font-size:14px}
+  .cols{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;padding:34px 0 8px}
+  .cols h3{font-size:15px;font-weight:600;margin-bottom:10px;letter-spacing:.04em}
+  .cols ul{list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14px}
+  .cols li{padding-left:14px;position:relative}
+  .cols li::before{content:"";position:absolute;left:0;top:9px;width:5px;height:5px;background:var(--accent)}
+  .foot{display:flex;justify-content:space-between;gap:24px;padding-top:24px;font-family:var(--mono);font-size:14px;color:var(--ink2)}
+  .accent{fill:var(--accent)}
+  .mono-mark .accent{fill:currentColor}
+  .sw-paper .accent{fill:#a8430f}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="bar">
+    <div>
+      <div class="mono">品牌方向二 / 格</div>
+      <h1>调度仪器</h1>
+    </div>
+    <div class="tag">中英命名与图形提案<br>客户端品牌提案 · 2026-11-16</div>
+  </header>
+
+  <section class="hero">
+    <div>
+      <div class="lockup">
+        <svg viewBox="0 0 32 32" width="104" height="104" aria-label="信格图形">
+          <g fill="none" stroke="currentColor" stroke-linejoin="round">
+            <rect x="4" y="4.5" width="12" height="8.5" rx="1.8" stroke-width="2"/>
+            <rect x="16" y="19" width="12" height="8.5" rx="1.8" stroke-width="2"/>
+            <path d="M10 13V23.5H16" stroke-width="1.6"/>
+          </g>
+          <circle class="accent" cx="10" cy="18.2" r="2.6"/>
+        </svg>
+        <div class="names">
+          <span class="zh-name">信格</span>
+          <span class="en-name">Casier</span>
+          <span class="pinyin">xìn gé / ka-zee-ay</span>
+        </div>
+      </div>
+      <p style="margin-top:26px;font-size:16px;max-width:540px">一条文本投进一个格，再从另一个格取出。图形是两个错位的分格与一条传递线，橙点是正在路上的那一条——不画设备，也不画箭头。</p>
+    </div>
+    <div class="meta">
+      <dl class="rows">
+        <div class="row"><dt>中文名</dt><dd>信格</dd></div>
+        <div class="row"><dt>英文名</dt><dd>Casier（法语：分格架、投递格）</dd></div>
+        <div class="row"><dt>备选</dt><dd>字格 / Cistora</dd></div>
+        <div class="row"><dt>语义</dt><dd>分格、投递、按位取用</dd></div>
+        <div class="row"><dt>气质</dt><dd>深色调度台、等宽读数、单一橙点</dd></div>
+        <div class="row"><dt>可用性</dt><dd>初筛未见同名产品；Casier 在法语区是常用词，待定稿复核</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="route">
+    <div class="route-head">
+      <h2>传递线</h2>
+      <span class="mono">发送 → 历史 → 复制，同一条线上的三个位置</span>
+    </div>
+    <div class="track">
+      <div class="line"></div>
+      <div class="stops">
+        <div class="stop on">
+          <div class="dot"></div>
+          <span class="val">在 A 设备发送</span>
+          <span class="lbl">写入本地库，再进待发队列</span>
+        </div>
+        <div class="stop">
+          <div class="dot"></div>
+          <span class="val">落到历史</span>
+          <span class="lbl">按服务端序号排定先后</span>
+        </div>
+        <div class="stop">
+          <div class="dot"></div>
+          <span class="val">在 B 设备复制</span>
+          <span class="lbl">取用后仍在历史里</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sect">
+    <div class="sect-head">
+      <h2>尺寸</h2>
+      <span class="mono">24 / 48 / 96 / 160，实际像素渲染</span>
+    </div>
+    <div class="sizes">
+      <div class="size">
+        <svg viewBox="0 0 32 32" width="24" height="24" aria-label="24px">
+          <g fill="none" stroke="currentColor"><rect x="4" y="4.5" width="12" height="8.5" rx="1.8" stroke-width="2"/><rect x="16" y="19" width="12" height="8.5" rx="1.8" stroke-width="2"/><path d="M10 13V23.5H16" stroke-width="1.6"/></g>
+          <circle class="accent" cx="10" cy="18.2" r="2.6"/>
+        </svg>
+        <span class="cap">24 px</span>
+      </div>
+      <div class="size">
+        <svg viewBox="0 0 32 32" width="48" height="48" aria-label="48px">
+          <g fill="none" stroke="currentColor"><rect x="4" y="4.5" width="12" height="8.5" rx="1.8" stroke-width="2"/><rect x="16" y="19" width="12" height="8.5" rx="1.8" stroke-width="2"/><path d="M10 13V23.5H16" stroke-width="1.6"/></g>
+          <circle class="accent" cx="10" cy="18.2" r="2.6"/>
+        </svg>
+        <span class="cap">48 px</span>
+      </div>
+      <div class="size">
+        <svg viewBox="0 0 32 32" width="96" height="96" aria-label="96px">
+          <g fill="none" stroke="currentColor"><rect x="4" y="4.5" width="12" height="8.5" rx="1.8" stroke-width="2"/><rect x="16" y="19" width="12" height="8.5" rx="1.8" stroke-width="2"/><path d="M10 13V23.5H16" stroke-width="1.6"/></g>
+          <circle class="accent" cx="10" cy="18.2" r="2.6"/>
+        </svg>
+        <span class="cap">96 px</span>
+      </div>
+      <div class="size">
+        <div style="width:160px;height:160px;border-radius:26px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center">
+          <svg viewBox="0 0 32 32" width="110" height="110" aria-label="160px">
+            <g fill="none" stroke="#191712"><rect x="4" y="4.5" width="12" height="8.5" rx="1.8" stroke-width="2"/><rect x="16" y="19" width="12" height="8.5" rx="1.8" stroke-width="2"/><path d="M10 13V23.5H16" stroke-width="1.6"/></g>
+            <circle cx="10" cy="18.2" r="2.6" style="fill:#a8430f"/>
+          </svg>
+        </div>
+        <span class="cap">图标预览 160</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="sect">
+    <div class="sect-head">
+      <h2>用法</h2>
+      <span class="mono">墨底 / 纸底 / 单色</span>
+    </div>
+    <div class="usage">
+      <div class="swatch sw-ink">
+        <svg viewBox="0 0 32 32" width="54" height="54" aria-label="墨底">
+          <g fill="none" stroke="currentColor"><rect x="4" y="4.5" width="12" height="8.5" rx="1.8" stroke-width="2"/><rect x="16" y="19" width="12" height="8.5" rx="1.8" stroke-width="2"/><path d="M10 13V23.5H16" stroke-width="1.6"/></g>
+          <circle class="accent" cx="10" cy="18.2" r="2.6"/>
+        </svg>
+        <span class="lbl">墨底</span>
+      </div>
+      <div class="swatch sw-paper">
+        <svg viewBox="0 0 32 32" width="54" height="54" aria-label="纸底">
+          <g fill="none" stroke="currentColor"><rect x="4" y="4.5" width="12" height="8.5" rx="1.8" stroke-width="2"/><rect x="16" y="19" width="12" height="8.5" rx="1.8" stroke-width="2"/><path d="M10 13V23.5H16" stroke-width="1.6"/></g>
+          <circle class="accent" cx="10" cy="18.2" r="2.6"/>
+        </svg>
+        <span class="lbl">纸底</span>
+      </div>
+      <div class="swatch sw-mono mono-mark">
+        <svg viewBox="0 0 32 32" width="54" height="54" aria-label="单色">
+          <g fill="none" stroke="currentColor"><rect x="4" y="4.5" width="12" height="8.5" rx="1.8" stroke-width="2"/><rect x="16" y="19" width="12" height="8.5" rx="1.8" stroke-width="2"/><path d="M10 13V23.5H16" stroke-width="1.6"/></g>
+          <circle class="accent" cx="10" cy="18.2" r="2.6"/>
+        </svg>
+        <span class="lbl">单色</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="sect">
+    <div class="sect-head">
+      <h2>图标形状</h2>
+      <span class="mono" style="font-size:14px">圆角方 / 圆形 / Android 自适应安全区 66dp</span>
+    </div>
+    <div class="masks">
+      <div class="mask">
+        <div style="width:104px;height:104px;border-radius:24px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center">
+          <svg viewBox="0 0 32 32" width="66" height="66" aria-label="圆角方">
+            <g fill="none" stroke="#191712"><rect x="4" y="4.5" width="12" height="8.5" rx="1.8" stroke-width="2"/><rect x="16" y="19" width="12" height="8.5" rx="1.8" stroke-width="2"/><path d="M10 13V23.5H16" stroke-width="1.6"/></g>
+            <circle cx="10" cy="18.2" r="2.6" style="fill:#a8430f"/>
+          </svg>
+        </div>
+        <span class="cap">圆角方</span>
+      </div>
+      <div class="mask">
+        <div style="width:104px;height:104px;border-radius:50%;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center">
+          <svg viewBox="0 0 32 32" width="60" height="60" aria-label="圆形">
+            <g fill="none" stroke="#191712"><rect x="4" y="4.5" width="12" height="8.5" rx="1.8" stroke-width="2"/><rect x="16" y="19" width="12" height="8.5" rx="1.8" stroke-width="2"/><path d="M10 13V23.5H16" stroke-width="1.6"/></g>
+            <circle cx="10" cy="18.2" r="2.6" style="fill:#a8430f"/>
+          </svg>
+        </div>
+        <span class="cap">圆形</span>
+      </div>
+      <div class="mask">
+        <div style="width:104px;height:104px;border-radius:24px;background:var(--paper);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;position:relative">
+          <svg viewBox="0 0 32 32" width="64" height="64" aria-label="自适应">
+            <g fill="none" stroke="#191712"><rect x="4" y="4.5" width="12" height="8.5" rx="1.8" stroke-width="2"/><rect x="16" y="19" width="12" height="8.5" rx="1.8" stroke-width="2"/><path d="M10 13V23.5H16" stroke-width="1.6"/></g>
+            <circle cx="10" cy="18.2" r="2.6" style="fill:#a8430f"/>
+          </svg>
+          <span style="position:absolute;width:64px;height:64px;border:1px dashed #a8430f;border-radius:50%"></span>
+        </div>
+        <span class="cap">自适应安全区</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="alt">
+    <div>
+      <div class="pair">
+        <svg viewBox="0 0 32 32" width="46" height="46" aria-label="字格图形">
+          <g fill="none" stroke="currentColor"><rect x="4" y="4.5" width="12" height="8.5" rx="1.8" stroke-width="2"/><rect x="16" y="19" width="12" height="8.5" rx="1.8" stroke-width="2"/><path d="M10 13V23.5H16" stroke-width="1.6"/></g>
+          <circle class="accent" cx="10" cy="18.2" r="2.6"/>
+        </svg>
+        <span class="zh">字格</span>
+        <span class="en">Cistora</span>
+      </div>
+      <p style="margin-top:14px">同一图形下的第二组名字：字格更贴近「文本、字」本身；Cistora 由 cista（匣）加后缀构成，是一个没有既有语义的短造词。两组的图形语言不变。</p>
+    </div>
+    <div class="mono" style="font-size:14px;line-height:1.9">
+      字标规则<br>
+      中文：PingFang SC / Noto Sans SC，字重 500，字距 0.12em<br>
+      英文：等宽栈，字重 400，紧字距，可用于窗口标题与元数据<br>
+      清空区：不小于图形短边的 20%<br>
+      最小尺寸：图形 24px，横排字标高度 16px<br>
+      简繁同字：信格 / 信格
+    </div>
+  </section>
+
+  <section class="cols">
+    <div>
+      <h3>为什么是这条线</h3>
+      <ul>
+        <li>「格」是分格与定位，正好描述「一条文本有明确去处」这件事。</li>
+        <li>传递线把发送、历史、复制串成一条可读的路径，不依赖箭头或设备插画。</li>
+        <li>深色调度台与等宽读数直接继承 C1 的仪器感，落地成本最低。</li>
+        <li>橙点只有一个，和产品里「强调色只给当前状态」的规则一致。</li>
+      </ul>
+    </div>
+    <div>
+      <h3>风险</h3>
+      <ul>
+        <li>「信格」可能被先读成信箱或邮政，需要文案把「信」拉回「文本」。</li>
+        <li>Casier 在英语环境是法语借词，读音需要一次示范。</li>
+        <li>深色图标在浅色启动器上更跳，需同时验证纸底版本。</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span>六格总览：thumbs.html</span>
+    <span>待选定方向后输出 SVG 母版、PNG 导出与 brand-spec 更新</span>
+  </footer>
+
+</div>
+</body>
+</html>

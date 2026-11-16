@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="字匣 macOS 图标">
+  <title>字匣 · macOS 图标（824 圆角方，透明外边距）</title>
+  <rect x="100" y="100" width="824" height="824" rx="185" ry="185" fill="#F3F0E8"/>
+  <g transform="translate(251,260) scale(18)">
+    <path fill="#191712" d="M15.2 5H6a3 3 0 0 0-3 3v16a3 3 0 0 0 3 3h20a3 3 0 0 0 3-3V15.2h-2V25H5V7h10.2V5Z"/>
+    <path fill="none" stroke="#191712" stroke-width="1.6" d="M16 16V25M5 16H27"/>
+    <rect fill="#A8430F" x="17" y="1" width="11" height="11" rx="1.5"/>
+  </g>
+</svg>

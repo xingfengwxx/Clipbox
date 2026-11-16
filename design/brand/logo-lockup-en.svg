@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 80" width="600" height="160" role="img" aria-label="Theca">
+  <title>Theca · 横排字标</title>
+  <g transform="translate(8,12) scale(1.75)">
+    <path fill="#191712" d="M15.2 5H6a3 3 0 0 0-3 3v16a3 3 0 0 0 3 3h20a3 3 0 0 0 3-3V15.2h-2V25H5V7h10.2V5Z"/>
+    <path fill="none" stroke="#191712" stroke-width="1.6" d="M16 16V25M5 16H27"/>
+    <rect fill="#A8430F" x="17" y="1" width="11" height="11" rx="1.5"/>
+  </g>
+  <text x="84" y="54" font-family="-apple-system,BlinkMacSystemFont,Helvetica Neue,Arial,sans-serif" font-size="40" font-weight="500" letter-spacing="0.6" fill="#191712">Theca</text>
+</svg>
