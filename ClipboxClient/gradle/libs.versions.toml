@@ -7,6 +7,8 @@ serialization = "1.9.0"
 datetime = "0.7.1"
 koin = "4.1.1"
 activityCompose = "1.10.1"
+# 2.9.2 的 Gradle metadata 要求 Compose runtime 1.9.3，与当前 composeMultiplatform 精确对齐
+navigationCompose = "2.9.2"
 datastore = "1.2.1"
 ktor = "3.3.3"
 room = "2.8.5"
@@ -21,6 +23,7 @@ androidTargetSdk = "36"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+androidx-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "datetime" }

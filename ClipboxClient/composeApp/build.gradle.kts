@@ -34,6 +34,7 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.components.resources)
+            implementation(libs.androidx.navigation.compose)
             implementation(libs.koin.core)
             implementation(project(":shared"))
         }

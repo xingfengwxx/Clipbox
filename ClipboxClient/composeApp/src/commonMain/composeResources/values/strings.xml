@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">字匣</string>
-    <string name="app_placeholder">工程骨架已就绪</string>
+    <string name="nav_history">历史</string>
+    <string name="nav_toolbox">工具箱</string>
+    <string name="nav_settings">设置</string>
+    <string name="placeholder_under_construction">页面占位内容</string>
 </resources>

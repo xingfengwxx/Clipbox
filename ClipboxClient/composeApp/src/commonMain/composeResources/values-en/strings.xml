@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Theca</string>
-    <string name="app_placeholder">Project skeleton is ready</string>
+    <string name="nav_history">History</string>
+    <string name="nav_toolbox">Toolbox</string>
+    <string name="nav_settings">Settings</string>
+    <string name="placeholder_under_construction">Placeholder content</string>
 </resources>
