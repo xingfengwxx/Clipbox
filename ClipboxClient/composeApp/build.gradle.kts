@@ -7,6 +7,38 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+// 服务器地址由构建配置下发，配对页不再要求用户手输；本地验收可用 -Pclipbox.defaultServerUrl 临时覆盖
+val defaultServerUrl = providers.gradleProperty("clipbox.defaultServerUrl")
+    .getOrElse("http://117.72.121.6:8080")
+val bundledConfigDir = layout.buildDirectory.dir("generated/bundledConfig/commonMain/kotlin")
+val generateBundledConfig = tasks.register("generateBundledConfig") {
+    val url = defaultServerUrl
+    inputs.property("defaultServerUrl", url)
+    outputs.dir(bundledConfigDir)
+    doLast {
+        val file = bundledConfigDir.get()
+            .file("com/wangxingxing/clipbox/config/BundledConfig.kt")
+            .asFile
+        file.parentFile.mkdirs()
+        val escapedUrl = url.replace("\\", "\\\\").replace("\"", "\\\"")
+        file.writeText(
+            """
+            |/**
+            | * author : 王星星
+            | * date : 2026-11-16 17:10
+            | * email : 1099420259@qq.com
+            | * description : 构建期注入的默认服务器地址；由 generateBundledConfig 生成，禁止手改，本地覆盖使用 -Pclipbox.defaultServerUrl
+            | */
+            |package com.wangxingxing.clipbox.config
+            |
+            |internal object BundledConfig {
+            |    const val DEFAULT_SERVER_URL: String = "$escapedUrl"
+            |}
+            |""".trimMargin(),
+        )
+    }
+}
+
 kotlin {
     androidTarget {
         compilerOptions {
@@ -28,15 +60,18 @@ kotlin {
     }
 
     sourceSets {
-        commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(libs.androidx.navigation.compose)
-            implementation(libs.koin.core)
-            implementation(project(":shared"))
+        commonMain {
+            kotlin.srcDir(bundledConfigDir)
+            dependencies {
+                implementation(compose.runtime)
+                implementation(compose.foundation)
+                implementation(compose.material3)
+                implementation(compose.ui)
+                implementation(compose.components.resources)
+                implementation(libs.androidx.navigation.compose)
+                implementation(libs.koin.core)
+                implementation(project(":shared"))
+            }
         }
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
@@ -47,6 +82,11 @@ kotlin {
             }
         }
     }
+}
+
+// 代码生成产物需先于所有 Kotlin 编译任务存在；按任务名匹配可同时覆盖 JVM、Android 与 Native
+tasks.matching { it.name.startsWith("compile") && it.name.contains("Kotlin") }.configureEach {
+    dependsOn(generateBundledConfig)
 }
 
 android {

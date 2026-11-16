@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-16 16:29
  * email : 1099420259@qq.com
- * description : 自适应导航壳：<600dp 用底部三栏，≥600dp 用 200dp 侧栏；切换一级页时保存 / 恢复各自返回栈状态
+ * description : 自适应导航壳：<600dp 用底部三栏，≥600dp 用 200dp 侧栏；切换一级页时保存 / 恢复各自返回栈状态；配对页全屏不显示导航
  */
 package com.wangxingxing.clipbox.ui.navigation
 
@@ -51,10 +51,16 @@ private val WideLayoutMinWidth = 600.dp
 @Composable
 fun ClipboxNavigationHost(
     navController: NavHostController,
+    startDestination: String = TopLevelDestination.History.route,
+    onPaired: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
-    val selected = TopLevelDestination.fromRoute(backStackEntry?.destination?.route)
+    val currentRoute = backStackEntry?.destination?.route
+    // NavHost 首次组合时返回栈可能尚未就绪，按起始路由判断可避免配对页闪出底栏
+    val isPairing = currentRoute == PAIRING_ROUTE ||
+        (currentRoute == null && startDestination == PAIRING_ROUTE)
+    val selected = TopLevelDestination.fromRoute(currentRoute)
         ?: TopLevelDestination.History
     val colors = ClipboxTokens.colors
 
@@ -64,7 +70,14 @@ fun ClipboxNavigationHost(
             .background(colors.background)
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
-        if (maxWidth >= WideLayoutMinWidth) {
+        if (isPairing) {
+            ClipboxNavHost(
+                navController = navController,
+                startDestination = startDestination,
+                onPaired = onPaired,
+                modifier = Modifier.fillMaxSize(),
+            )
+        } else if (maxWidth >= WideLayoutMinWidth) {
             Row(Modifier.fillMaxSize()) {
                 ClipboxNavigationRail(
                     selected = selected,
@@ -72,6 +85,8 @@ fun ClipboxNavigationHost(
                 )
                 ClipboxNavHost(
                     navController = navController,
+                    startDestination = startDestination,
+                    onPaired = onPaired,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight(),
@@ -81,6 +96,8 @@ fun ClipboxNavigationHost(
             Column(Modifier.fillMaxSize()) {
                 ClipboxNavHost(
                     navController = navController,
+                    startDestination = startDestination,
+                    onPaired = onPaired,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth(),

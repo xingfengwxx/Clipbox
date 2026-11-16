@@ -5,4 +5,25 @@
     <string name="nav_toolbox">工具箱</string>
     <string name="nav_settings">設定</string>
     <string name="placeholder_under_construction">頁面預留內容</string>
+    <string name="pair_kicker">連線到你的伺服器</string>
+    <string name="pair_title">配對</string>
+    <string name="pair_description">在同一個使用者空間內配對多台裝置，文字在三端互通。</string>
+    <string name="pair_code_label">6 位配對碼</string>
+    <string name="pair_code_placeholder">000000</string>
+    <string name="pair_device_label">裝置名稱</string>
+    <string name="pair_submit">配對</string>
+    <string name="pair_submitting">配對中…</string>
+    <string name="pair_cooldown">%1$s 秒後可重試</string>
+    <string name="pair_rate_hint">配對請求依來源 IP 限速，5 次／分鐘。</string>
+    <string name="pair_note">配對碼由伺服器產生，10 分鐘內有效，只能使用一次。</string>
+    <string name="pair_insecure_warning">未加密連線，僅供學習</string>
+    <string name="pair_error_invalid_code">配對碼無效，請檢查後重試</string>
+    <string name="pair_error_code_expired">配對碼已過期，請重新取得</string>
+    <string name="pair_error_code_used">配對碼已被使用，請重新取得</string>
+    <string name="pair_error_device_name">裝置名稱需為 1–64 個字元</string>
+    <string name="pair_error_network">無法連線到伺服器，請檢查網路</string>
+    <string name="pair_error_rate_limited">嘗試過於頻繁，請稍後再試</string>
+    <string name="pair_error_server_url">伺服器位址設定不正確，請聯絡管理員</string>
+    <string name="pair_error_server">伺服器暫時無法使用，請稍後重試</string>
+    <string name="pair_expired_hint">請在伺服器管理端重新產生配對碼後再試</string>
 </resources>

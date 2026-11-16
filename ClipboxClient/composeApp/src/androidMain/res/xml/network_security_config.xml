@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 学习版按 ADR-0003 使用 HTTP / IP 直连，仅允许明文流量，不放宽证书与主机校验 -->
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>
