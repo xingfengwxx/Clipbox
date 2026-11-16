@@ -6,13 +6,15 @@
 | 更新日期 | 2026-11-13                                           |
 | 当前状态 | 立项与设计完成，尚未开始编码                         |
 | 项目代号 | clipbox（最终名称待定）                              |
-| 包名占位 | `dev.qoder.clipbox`                                  |
+| 包名占位 | `com.wangxingxing.clipbox`（v0.1 原占位 `dev.qoder.clipbox`） |
 | 目标平台 | Android + Desktop（Compose Multiplatform）；iOS 后置 |
 | 服务器   | 已有：2 核 CPU / 2GB 内存 / 3Mbps 带宽               |
 
 一句话定位：**离线优先的跨设备文本中转 + 开发者本地工具箱，服务器只承担小数据同步。**
 
 > 后续开发以本文档为基线；范围或方案有变更时，追加到文末「变更记录」。
+
+> **v1.0.0 基线提示（2026-11-16）**：本文档中关于 HTTPS / WSS、Caddy 与域名部署的描述已被 v1.0.0 学习版决定取代——实际部署为 HTTP + IP 直连、仅 server 容器，见 [ADR-0003](./adr/0003-http-ip-learning-deployment.md)。功能范围、架构与验收以 [功能需求文档](功能需求文档.md)、[api.md](api.md)、[客户端技术架构](客户端技术架构.md)、[服务端技术架构](服务端技术架构.md) 为准，开发任务见 [docs/tasks/](tasks/README.md)。
 
 ---
 
@@ -369,10 +371,10 @@ clip.example.com {
 
 ## 17. 待定事项
 
-- [ ] 应用名与包名（当前占位：clipbox / `dev.qoder.clipbox`）。
-- [ ] 域名（Caddy 签发证书需要）。
+- [x] 应用名与包名：Clipbox / `com.wangxingxing.clipbox`（服务端 `com.wangxingxing.clipbox.server`）。
+- [x] 域名：v1.0.0 学习版不使用域名，HTTP + IP 直连（ADR-0003）。
 - [ ] 是否做端到端加密（建议 P2 评估）。
-- [ ] iOS 排期（需 Mac）。
+- [ ] iOS 真机排期（模拟器构建已在 v1.0.0 范围）。
 - [ ] Android 推送通道选型（FCM vs 前台服务）。
 - [ ] 工具箱是否加入正则模板库等增强功能。
 
@@ -399,3 +401,4 @@ clip.example.com {
 | 版本 | 日期       | 变更                                                 |
 | ---- | ---------- | ---------------------------------------------------- |
 | v0.1 | 2026-11-13 | 初稿：确定产品范围、架构、API 草案、里程碑与验收标准 |
+| v0.1 修订 | 2026-11-16 | 追加 v1.0.0 基线提示：HTTP + IP 学习版部署取代 HTTPS/Caddy，包名确定为 `com.wangxingxing.clipbox`；开发以 v1.0.0 冻结文档与 `docs/tasks/` 为准 |

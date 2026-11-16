@@ -137,7 +137,7 @@ design/
 
 - **设备框**：手机端以 Pixel 形态 Android 框呈现；iOS 与 Android 共享 Compose Multiplatform UI，本次不单独出 iPhone 框。
 - **桌面框**：以 macOS 窗口呈现，行为按文档覆盖 Windows / macOS / Linux。
-- **示例域名**：分享链接统一使用 `https://clip.example.com`，仅作演示，不指向真实服务。
+- **示例域名**：设计稿与分享链接统一使用 `https://clip.example.com`，仅作视觉演示；v1.0.0 学习版实际使用 `http://<SERVER_IP>:8080`（无域名、无 TLS），见 ADR-0003。最终交付需保留「未加密连接，仅用于学习」警示的展示位置。
 - **品牌资产**：产品无既有 logo / 色板 / VI，字标、图标与色板均为本次提案，详见 `brand-spec.md`。
 - **分享页语言**：主文件中的分享页样本跟随全局语言；独立 `分享页.html` 固定简体中文，便于对照评审。
 - **方向记录**：三方向门展示了 C1 仪器清单、C4 剪贴卡片架、C5 硬件面板三版，用户选定 C1，记录见 `direction-approved.md`。

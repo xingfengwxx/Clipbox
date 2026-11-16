@@ -3,8 +3,9 @@
 | 字段 | 内容 |
 | --- | --- |
 | 文档版本 | v1.0.0 |
-| 更新日期 | 2026-11-13 |
+| 更新日期 | 2026-11-16 |
 | 状态 | 设计冻结；客户端与服务端实现的唯一接口依据 |
+| 部署基线 | 学习版 HTTP + IP 直连（`http://<SERVER_IP>:8080`），见 [ADR-0003](./adr/0003-http-ip-learning-deployment.md) |
 | 基线 | [Clipbox 项目交接文档](./Clipbox%20项目交接文档.md) v0.1 |
 | 相关 | [GLOSSARY.md](GLOSSARY.md)、[ADR-0001](./adr/0001-server-seq-change-feed.md)、[ADR-0002](./adr/0002-share-content-snapshot.md) |
 | 适用产品 | Clipbox v1.0.0 |
@@ -16,7 +17,8 @@
 
 ### 1.1 传输与编码
 
-- 正式环境只允许 HTTPS / WSS，由 Caddy 终止 TLS；明文 HTTP 仅用于本机开发。
+- v1.0 学习版使用 HTTP / WS + IP 直连，不启用 TLS（ADR-0003）；客户端对 `http://` 地址展示未加密警示，但不阻止。
+- 服务端同时接受 `http://` 与 `https://` 的 `PUBLIC_BASE_URL`，生成的分享链接跟随该配置。
 - 请求与响应均为 JSON UTF-8，`Content-Type: application/json; charset=utf-8`；不接受表单与 multipart。
 - 时间戳统一为 epoch 毫秒（int64）。
 - 剪贴记录 ID 为客户端生成的 ULID：26 个字符，Crockford Base32，统一大写，正则 `^[0-9A-HJKMNP-TV-Z]{26}$`。
@@ -71,7 +73,7 @@
 | `Retry-After` | 仅 429 响应，单位秒 |
 
 - API 不启用 CORS：客户端是原生应用，分享页与 API 同源，不需要浏览器跨域调用。
-- 服务端不信任客户端传入的 `X-Forwarded-For`，只信任 Caddy 注入的转发头。
+- 服务端直接面向客户端，不部署反向代理；客户端 IP 取自 TCP 连接，忽略请求中的 `X-Forwarded-For`。
 
 ### 1.5 错误格式
 
@@ -159,7 +161,7 @@
 示例：
 
 ```bash
-curl -sS https://clip.example.com/api/v1/pair \
+curl -sS http://203.0.113.10:8080/api/v1/pair \
   -H 'Content-Type: application/json' \
   -d '{"code":"123456","deviceName":"Pixel 8"}'
 ```
@@ -269,11 +271,11 @@ X-Admin-Token: <admin-token>
 
 ```bash
 # 首次全量同步
-curl -sS 'https://clip.example.com/api/v1/clips?since=0&limit=200' \
+curl -sS 'http://203.0.113.10:8080/api/v1/clips?since=0&limit=200' \
   -H "Authorization: Bearer $TOKEN"
 
 # 增量同步
-curl -sS 'https://clip.example.com/api/v1/clips?since=42&limit=200' \
+curl -sS 'http://203.0.113.10:8080/api/v1/clips?since=42&limit=200' \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -410,7 +412,7 @@ curl -sS 'https://clip.example.com/api/v1/clips?since=42&limit=200' \
 
 ### 4.1 连接与认证
 
-- 地址：`wss://<host>/api/v1/sync`
+- 地址：`ws://<host>:8080/api/v1/sync`（学习版）；未来启用 TLS 时改为 `wss://<host>/api/v1/sync`。
 - 连接建立后 5 秒内，客户端必须发送首帧认证；认证前不接收任何业务事件。
 
 认证请求：
@@ -562,7 +564,7 @@ curl -sS 'https://clip.example.com/api/v1/clips?since=42&limit=200' \
 ```json
 {
   "token": "9mN4pQrS6tUvWxYzA1bC2dE3fG4hJ5kL6M7nO8pQ",
-  "url": "https://clip.example.com/s/9mN4pQrS6tUvWxYzA1bC2dE3fG4hJ5kL6M7nO8pQ",
+  "url": "http://203.0.113.10:8080/s/9mN4pQrS6tUvWxYzA1bC2dE3fG4hJ5kL6M7nO8pQ",
   "expiresAt": 1730086400000
 }
 ```
@@ -571,7 +573,7 @@ curl -sS 'https://clip.example.com/api/v1/clips?since=42&limit=200' \
 
 - 服务端在创建时把剪贴正文快照写入分享记录；之后剪贴记录被删除或清理，不影响分享页（ADR-0002）。
 - 分享令牌 32 字节随机；服务端只保存 `SHA-256(token)`，令牌只在本响应出现。
-- `url` 由服务端配置的 `PUBLIC_BASE_URL` 拼接，客户端不得自行拼域名。
+- `url` 由服务端配置的 `PUBLIC_BASE_URL` 拼接，客户端必须原样展示，不得自行拼接。
 - v1.0.0 不提供分享列表、撤销或续期接口；过期后重新创建。
 - 剪贴记录不存在或已软删除：404 `NOT_FOUND`。
 
@@ -615,7 +617,7 @@ Cache-Control: no-store
 
 ## 6. GET /healthz
 
-无需认证。用于容器与 Caddy 健康检查。
+无需认证。用于容器与外部 uptime 检查。
 
 正常响应 `200 OK`：
 
@@ -673,7 +675,7 @@ Cache-Control: no-store
 | WebSocket 活跃连接 | 1 条 | 设备 ID | 新连接关闭旧连接 4001 |
 
 - 限流为单实例内存计数；服务重启后清零，可接受。
-- 真实客户端 IP 由 Caddy 注入的转发头获得；应用端口只暴露在 Docker 内网，不得直接暴露公网。
+- 真实客户端 IP 取自 TCP 连接（服务端直接暴露 `8080`，不经过反向代理）；容器需通过防火墙 / 安全组限制来源。
 - 429 响应必须带 `Retry-After`（秒），客户端优先使用该值。
 
 ## 9. 同步语义与保留规则
@@ -724,11 +726,11 @@ ULID 适合做主键与展示排序，但不适合做变更游标：离线设备
 
 ```bash
 # 1. 管理端生成配对码
-curl -sS -X POST https://clip.example.com/api/v1/admin/pairing-codes \
+curl -sS -X POST http://203.0.113.10:8080/api/v1/admin/pairing-codes \
   -H "X-Admin-Token: $ADMIN_TOKEN"
 
 # 2. 客户端配对
-curl -sS https://clip.example.com/api/v1/pair \
+curl -sS http://203.0.113.10:8080/api/v1/pair \
   -H 'Content-Type: application/json' \
   -d '{"code":"123456","deviceName":"Pixel 8"}'
 ```
@@ -737,28 +739,28 @@ curl -sS https://clip.example.com/api/v1/pair \
 
 ```bash
 # 手机创建
-curl -sS https://clip.example.com/api/v1/clips \
+curl -sS http://203.0.113.10:8080/api/v1/clips \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"id":"01J8Z6Z3K4M5N6P7Q8R9S0T1V2","content":"hello","createdAt":1730000000000}'
 
 # 桌面增量拉取
-curl -sS 'https://clip.example.com/api/v1/clips?since=0&limit=200' \
+curl -sS 'http://203.0.113.10:8080/api/v1/clips?since=0&limit=200' \
   -H "Authorization: Bearer $DESKTOP_TOKEN"
 ```
 
 ### 10.3 置顶、删除与分享
 
 ```bash
-curl -sS -X PATCH https://clip.example.com/api/v1/clips/01J8Z6Z3K4M5N6P7Q8R9S0T1V2 \
+curl -sS -X PATCH http://203.0.113.10:8080/api/v1/clips/01J8Z6Z3K4M5N6P7Q8R9S0T1V2 \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"pinned":true}'
 
-curl -sS -X DELETE https://clip.example.com/api/v1/clips/01J8Z6Z3K4M5N6P7Q8R9S0T1V2 \
+curl -sS -X DELETE http://203.0.113.10:8080/api/v1/clips/01J8Z6Z3K4M5N6P7Q8R9S0T1V2 \
   -H "Authorization: Bearer $TOKEN"
 
-curl -sS https://clip.example.com/api/v1/shares \
+curl -sS http://203.0.113.10:8080/api/v1/shares \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"clipId":"01J8Z6Z3K4M5N6P7Q8R9S0T1V2","ttlSeconds":86400,"oneTime":true}'

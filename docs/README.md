@@ -2,7 +2,7 @@
 
 离线优先的跨设备文本中转与本地工具箱。Android、iPhone / iPad 与电脑之间传文本，不必发消息给自己，也不必登录网页。界面支持简体中文、繁體中文与 English，默认简体中文。
 
-> **当前状态**：v1.0.0 设计冻结。四份设计与需求文档已完成；`ClipboxClient/` 与 `ClipboxServer/` 代码工程待按文档实现。
+> **当前状态**：v1.0.0 设计冻结（学习版基线）。四份设计与需求文档已完成，部署基线为 HTTP + IP 直连（[ADR-0003](adr/0003-http-ip-learning-deployment.md)）；`ClipboxClient/` 与 `ClipboxServer/` 代码工程待按文档实现，任务拆解见 [docs/tasks/README.md](tasks/README.md)。
 
 ## 特性
 
@@ -27,11 +27,10 @@ v1.0.0 不含：iOS / Android 后台推送与通知、移动端后台剪贴板�
 
 ```mermaid
 flowchart LR
-    Android[Clipbox Android] -->|HTTPS / WSS| Caddy[Caddy TLS]
-    iOS[Clipbox iOS] -->|HTTPS / WSS| Caddy
-    Desktop[Clipbox Desktop] -->|HTTPS / WSS| Caddy
-    Browser[浏览器] -->|HTTPS 只读| Caddy
-    Caddy --> Server[Clipbox Server<br/>Ktor + Netty]
+    Android[Clipbox Android] -->|HTTP / WS| Server[Clipbox Server]
+    iOS[Clipbox iOS] -->|HTTP / WS| Server
+    Desktop[Clipbox Desktop] -->|HTTP / WS| Server
+    Browser[浏览器] -->|HTTP 只读| Server
     Server --> SQLite[(SQLite WAL)]
     Server -->|WebSocket 广播| Android
     Server -->|WebSocket 广播| iOS
@@ -39,13 +38,14 @@ flowchart LR
 ```
 
 - 客户端：Compose Multiplatform（Android + iOS + Desktop 共享 UI 与业务代码，Compose Resources 多语言）+ Room KMP + Ktor Client，本地库是唯一数据源。
-- 服务端：Ktor + Exposed + SQLite WAL，单实例部署，目标资源 2 核 / 2GB / 3Mbps，JVM `-Xmx256m`。
+- 服务端：Ktor + Exposed + SQLite WAL，单实例直接发布 `8080`（无 Caddy / TLS），目标资源 2 核 / 2GB / 3Mbps，JVM `-Xmx256m`。
 - 同步：服务端为每次创建、置顶、删除分配单调递增的 `serverSeq`；客户端用 `since` 增量拉取，断线后自动补齐，落后于墓碑清理线时全量重同步。
 
 ## 仓库结构
 
 ```text
 ClipBox/
+├── AGENTS.md             # 实现 Agent 执行协议与硬不变量
 ├── ClipboxClient/        # 客户端 Gradle 根工程（待实现）
 │   ├── composeApp/       # Compose Multiplatform 共享 UI；src/{commonMain,androidMain,iosMain,desktopMain}
 │   └── iosApp/           # iOS SwiftUI 壳、Share Extension、Xcode 工程
@@ -58,6 +58,7 @@ ClipBox/
     ├── Clipbox 项目交接文档.md
     ├── GLOSSARY.md       # 领域术语表
     ├── README.md
+    ├── tasks/            # 任务拆解、依赖图与派单提示词
     └── adr/              # 架构决策记录
 ```
 
@@ -80,6 +81,8 @@ ClipBox/
 | [术语表](GLOSSARY.md) | 剪贴记录、同步游标、墓碑等规范用词 | 全项目术语 |
 | [ADR-0001](adr/0001-server-seq-change-feed.md) | 用 `serverSeq` 变更流替代 ULID 游标 | 同步机制决策 |
 | [ADR-0002](adr/0002-share-content-snapshot.md) | 分享保存内容快照而非记录引用 | 分享生命周期决策 |
+| [ADR-0003](adr/0003-http-ip-learning-deployment.md) | 学习版 HTTP + IP 直连部署，不启用 TLS | 部署与安全边界决策 |
+| [任务拆解](tasks/README.md) | 里程碑、依赖图、派单顺序与任务卡索引 | 开发执行计划 |
 
 ## 核心设计
 
@@ -99,18 +102,18 @@ ClipBox/
 前置：JDK 21、Docker。
 
 ```bash
-# 1. 按《服务端技术架构》§11 创建 Dockerfile、docker-compose.yml 与 Caddyfile
+# 1. 按《服务端技术架构》§11 创建 Dockerfile、docker-compose.yml（仅 server，发布 8080）
 # 2. 准备 .env
 cat > .env <<'EOF'
 ADMIN_TOKEN=<至少 32 字符的随机串>
-PUBLIC_BASE_URL=https://clip.example.com
+PUBLIC_BASE_URL=http://<SERVER_IP>:8080
 EOF
 
 # 3. 启动
 docker compose up -d --build
 
 # 4. 健康检查
-curl -sS https://clip.example.com/healthz
+curl -sS http://<SERVER_IP>:8080/healthz
 ```
 
 ### 客户端
@@ -135,7 +138,7 @@ open iosApp/iosApp.xcodeproj
 
 ```bash
 # 管理端生成一次性配对码
-curl -sS -X POST https://clip.example.com/api/v1/admin/pairing-codes \
+curl -sS -X POST http://<SERVER_IP>:8080/api/v1/admin/pairing-codes \
   -H "X-Admin-Token: $ADMIN_TOKEN"
 ```
 
@@ -143,11 +146,11 @@ curl -sS -X POST https://clip.example.com/api/v1/admin/pairing-codes \
 
 ## 安全与隐私
 
-- 正式环境仅允许 HTTPS / WSS，由 Caddy 终止 TLS。
+- 部署基线：学习版使用 HTTP + IP 直连（`http://<SERVER_IP>:8080`），不提供传输层加密；令牌与正文在公网明文传输，仅限个人学习与可信网络（ADR-0003）。客户端对 `http://` 地址展示「未加密连接，仅用于学习」警示。
 - 设备令牌与分享令牌均为 32 字节随机数，服务端只存哈希。
 - 客户端 release 默认零应用日志；debug 诊断日志开启后可包含请求 / 响应体与令牌，仅输出到本机系统日志，不上传、不落盘；正常与崩溃日志不含正文与令牌。
 - 不集成第三方日志、崩溃或行为分析 SDK。
-- 配对码一次性、10 分钟有效、按 IP 限流；管理接口需 `X-Admin-Token`，建议叠加来源 IP 限制。
+- 配对码一次性、10 分钟有效、按 IP 限流；管理接口需 `X-Admin-Token`，建议叠加防火墙来源 IP 限制。
 - 分享页转义正文并设置 CSP，令牌不出现在代理访问日志。
 - 客户端数据以明文存储于应用沙箱，v1.0.0 不含端到端加密，已在「关于」页披露。
 - 工具箱完全离线，不写历史、不上传内容、不记录输入输出日志。
