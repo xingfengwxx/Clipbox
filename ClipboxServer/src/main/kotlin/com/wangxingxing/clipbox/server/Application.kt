@@ -10,10 +10,13 @@ package com.wangxingxing.clipbox.server
 import com.wangxingxing.clipbox.server.config.AppConfig
 import com.wangxingxing.clipbox.server.config.ConfigException
 import com.wangxingxing.clipbox.server.db.DatabaseFactory
+import com.wangxingxing.clipbox.server.plugins.configureDeviceAuth
 import com.wangxingxing.clipbox.server.plugins.configureSerialization
+import com.wangxingxing.clipbox.server.routes.clipRoutes
 import com.wangxingxing.clipbox.server.routes.healthRoutes
 import com.wangxingxing.clipbox.server.routes.pairingRoutes
 import com.wangxingxing.clipbox.server.service.AdminService
+import com.wangxingxing.clipbox.server.service.ClipService
 import com.wangxingxing.clipbox.server.service.PairingService
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopped
@@ -68,8 +71,10 @@ fun Application.module(config: AppConfig, databaseFactory: DatabaseFactory? = nu
     }
 
     configureSerialization()
+    configureDeviceAuth(factory)
     routing {
         healthRoutes(factory::isHealthy)
         pairingRoutes(adminService, pairingService)
+        clipRoutes(ClipService(factory))
     }
 }
