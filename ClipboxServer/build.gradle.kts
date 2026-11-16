@@ -16,6 +16,7 @@ dependencies {
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.auth)
+    implementation(libs.ktor.server.websockets)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.logback.classic)
     implementation(libs.exposed.core)
@@ -24,6 +25,7 @@ dependencies {
     implementation(libs.sqlite.jdbc)
 
     testImplementation(libs.ktor.server.test.host)
+    testImplementation(libs.ktor.client.websockets)
     testImplementation(libs.junit.jupiter)
     testImplementation(kotlin("test"))
 }

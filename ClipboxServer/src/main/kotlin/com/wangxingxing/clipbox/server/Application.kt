@@ -16,8 +16,13 @@ import com.wangxingxing.clipbox.server.routes.clipRoutes
 import com.wangxingxing.clipbox.server.routes.healthRoutes
 import com.wangxingxing.clipbox.server.routes.pairingRoutes
 import com.wangxingxing.clipbox.server.service.AdminService
+import com.wangxingxing.clipbox.server.service.Broadcaster
 import com.wangxingxing.clipbox.server.service.ClipService
 import com.wangxingxing.clipbox.server.service.PairingService
+import com.wangxingxing.clipbox.server.ws.ConnectionRegistry
+import com.wangxingxing.clipbox.server.ws.WebSocketSettings
+import com.wangxingxing.clipbox.server.ws.configureSyncWebSockets
+import com.wangxingxing.clipbox.server.ws.syncRoutes
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.engine.embeddedServer
@@ -50,10 +55,15 @@ fun main() {
 }
 
 /**
- * 装配应用模块。数据库工厂可由测试注入；未注入时按配置的数据目录打开并执行迁移。
+ * 装配应用模块。数据库工厂、WebSocket 参数与连接注册表可由测试注入；未注入时按配置打开数据库。
  * 迁移失败必须关闭连接池后继续抛出，避免残留连接与半初始化状态。
  */
-fun Application.module(config: AppConfig, databaseFactory: DatabaseFactory? = null) {
+fun Application.module(
+    config: AppConfig,
+    databaseFactory: DatabaseFactory? = null,
+    webSocketSettings: WebSocketSettings = WebSocketSettings(),
+    connectionRegistry: ConnectionRegistry = ConnectionRegistry(),
+) {
     val factory = databaseFactory ?: DatabaseFactory.open(config.dataDir)
     try {
         factory.migrate()
@@ -72,9 +82,11 @@ fun Application.module(config: AppConfig, databaseFactory: DatabaseFactory? = nu
 
     configureSerialization()
     configureDeviceAuth(factory)
+    configureSyncWebSockets(webSocketSettings)
     routing {
         healthRoutes(factory::isHealthy)
         pairingRoutes(adminService, pairingService)
-        clipRoutes(ClipService(factory))
+        clipRoutes(ClipService(factory, Broadcaster(connectionRegistry)))
+        syncRoutes(factory, connectionRegistry, webSocketSettings)
     }
 }

@@ -2,9 +2,9 @@
  * author : 王星星
  * date : 2026-11-16 15:21
  * email : 1099420259@qq.com
- * description : 剪贴记录读写服务：读侧按 since 游标组装变更页，写侧负责创建、置顶与软删除的校验、幂等与序号分配。
+ * description : 剪贴记录读写服务：读侧按 since 游标组装变更页，写侧负责创建、置顶与软删除的校验、幂等、序号分配与提交后广播。
  *               注意：游标、syncFloor 与变更行必须在同一读事务内读取；写操作必须在同一写事务内分配并写入 server_seq；
- *                     幂等命中不得推进序号；排序只依赖 serverSeq，createdAt 不参与。
+ *                     幂等命中不得推进序号；广播只能在事务提交后、且仅在真实变更时发出；排序只依赖 serverSeq，createdAt 不参与。
  */
 package com.wangxingxing.clipbox.server.service
 
@@ -12,6 +12,7 @@ import com.wangxingxing.clipbox.server.db.ClipRepository
 import com.wangxingxing.clipbox.server.db.ClipRow
 import com.wangxingxing.clipbox.server.db.ClipSyncRow
 import com.wangxingxing.clipbox.server.db.DatabaseFactory
+import com.wangxingxing.clipbox.server.db.DeviceRepository
 import com.wangxingxing.clipbox.server.db.MetaRepository
 import com.wangxingxing.clipbox.server.db.SeqAllocator
 import io.ktor.http.HttpStatusCode
@@ -58,6 +59,7 @@ data class ClipSyncPage(
 
 class ClipService(
     private val databaseFactory: DatabaseFactory,
+    private val broadcaster: Broadcaster,
     private val now: () -> Long = System::currentTimeMillis,
 ) {
 
@@ -105,7 +107,7 @@ class ClipService(
     ): CreateClipOutcome {
         validateCreateInput(id, content, createdAt)
 
-        return databaseFactory.writeTransaction {
+        val result = databaseFactory.writeTransaction {
             val existing = ClipRepository.findById(id)
             if (existing != null) {
                 // 墓碑不可复活：旧 Outbox 重放必须得到冲突，而不是悄悄恢复一条已删除记录。
@@ -116,7 +118,10 @@ class ClipService(
                         "同 ID 记录已存在且正文不一致或已删除",
                     )
                 }
-                return@writeTransaction CreateClipOutcome(existing, created = false)
+                return@writeTransaction CreateResult(
+                    CreateClipOutcome(existing, created = false),
+                    sourceDeviceName = null,
+                )
             }
 
             val serverSeq = SeqAllocator.nextSeq()
@@ -130,37 +135,59 @@ class ClipService(
                 serverSeq = serverSeq,
             )
             ClipRepository.insert(clip)
-            CreateClipOutcome(clip, created = true)
+            CreateResult(
+                CreateClipOutcome(clip, created = true),
+                sourceDeviceName = sourceDeviceName(sourceDeviceId),
+            )
         }
+
+        // 只有首次创建产生新序号；幂等命中不广播，避免客户端收到重复事件。
+        if (result.outcome.created) {
+            broadcaster.clipCreated(result.outcome.clip, result.sourceDeviceName ?: UNKNOWN_DEVICE_NAME)
+        }
+        return result.outcome
     }
 
-    /** 置顶幂等：值相同不推进序号；不存在或已软删除按 404 处理。 */
-    suspend fun setPinned(id: String, pinned: Boolean): ClipRow =
-        databaseFactory.writeTransaction {
+    /** 置顶幂等：值相同不推进序号也不广播；不存在或已软删除按 404 处理。 */
+    suspend fun setPinned(id: String, pinned: Boolean): ClipRow {
+        val result = databaseFactory.writeTransaction {
             val existing = ClipRepository.findById(id) ?: throw clipNotFound()
             if (existing.deletedAt != null) throw clipNotFound()
             if (existing.pinned == pinned) {
-                existing
+                PinResult(existing, changed = false, sourceDeviceName = null)
             } else {
                 val serverSeq = SeqAllocator.nextSeq()
                 ClipRepository.updatePinned(id, pinned, serverSeq)
-                existing.copy(pinned = pinned, serverSeq = serverSeq)
+                val updated = existing.copy(pinned = pinned, serverSeq = serverSeq)
+                PinResult(updated, changed = true, sourceDeviceName = sourceDeviceName(updated.sourceDeviceId))
             }
         }
 
-    /** 软删除幂等：重复删除返回既有序号；从未存在的记录按 404 处理。 */
-    suspend fun delete(id: String): ClipRow =
-        databaseFactory.writeTransaction {
+        if (result.changed) {
+            broadcaster.clipUpdated(result.clip, result.sourceDeviceName ?: UNKNOWN_DEVICE_NAME)
+        }
+        return result.clip
+    }
+
+    /** 软删除幂等：重复删除返回既有序号且不广播；从未存在的记录按 404 处理。 */
+    suspend fun delete(id: String): ClipRow {
+        val result = databaseFactory.writeTransaction {
             val existing = ClipRepository.findById(id) ?: throw clipNotFound()
             if (existing.deletedAt != null) {
-                existing
+                DeleteResult(existing, deleted = false)
             } else {
                 val serverSeq = SeqAllocator.nextSeq()
                 val deletedAt = now()
                 ClipRepository.markDeleted(id, deletedAt, serverSeq)
-                existing.copy(deletedAt = deletedAt, serverSeq = serverSeq)
+                DeleteResult(existing.copy(deletedAt = deletedAt, serverSeq = serverSeq), deleted = true)
             }
         }
+
+        if (result.deleted) {
+            broadcaster.clipDeleted(result.clip.id, result.clip.serverSeq)
+        }
+        return result.clip
+    }
 
     private fun validateCreateInput(id: String, content: String, createdAt: Long) {
         if (!ULID_PATTERN.matches(id)) {
@@ -204,6 +231,26 @@ class ClipService(
         val resyncRequired: Boolean,
         val rows: List<ClipSyncRow>,
     )
+
+    private data class CreateResult(
+        val outcome: CreateClipOutcome,
+        val sourceDeviceName: String?,
+    )
+
+    private data class PinResult(
+        val clip: ClipRow,
+        val changed: Boolean,
+        val sourceDeviceName: String?,
+    )
+
+    private data class DeleteResult(
+        val clip: ClipRow,
+        val deleted: Boolean,
+    )
+
+    // 与 GET 同步联查同口径：设备缺失时使用占位名，广播不会因此失败。
+    private fun sourceDeviceName(deviceId: String?): String =
+        deviceId?.let { DeviceRepository.findById(it)?.name } ?: UNKNOWN_DEVICE_NAME
 
     companion object {
         const val UNKNOWN_DEVICE_NAME = "未知设备"
