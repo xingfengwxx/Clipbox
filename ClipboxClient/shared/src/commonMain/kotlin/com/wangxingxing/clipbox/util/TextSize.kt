@@ -10,4 +10,11 @@ object TextSize {
     const val MAX_CLIP_UTF8_BYTES: Int = 65_536
 
     fun utf8ByteCount(text: String): Int = text.encodeToByteArray().size
+
+    /** 千分位展示，设计稿里的字节计数写作 65,536。 */
+    fun formatByteCount(bytes: Int): String = bytes.toString()
+        .reversed()
+        .chunked(3)
+        .joinToString(",")
+        .reversed()
 }

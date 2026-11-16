@@ -52,7 +52,6 @@ private val WideLayoutMinWidth = 600.dp
 fun ClipboxNavigationHost(
     navController: NavHostController,
     startDestination: String = TopLevelDestination.History.route,
-    onPaired: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -74,7 +73,6 @@ fun ClipboxNavigationHost(
             ClipboxNavHost(
                 navController = navController,
                 startDestination = startDestination,
-                onPaired = onPaired,
                 modifier = Modifier.fillMaxSize(),
             )
         } else if (maxWidth >= WideLayoutMinWidth) {
@@ -86,7 +84,6 @@ fun ClipboxNavigationHost(
                 ClipboxNavHost(
                     navController = navController,
                     startDestination = startDestination,
-                    onPaired = onPaired,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight(),
@@ -97,7 +94,6 @@ fun ClipboxNavigationHost(
                 ClipboxNavHost(
                     navController = navController,
                     startDestination = startDestination,
-                    onPaired = onPaired,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth(),
@@ -111,7 +107,7 @@ fun ClipboxNavigationHost(
     }
 }
 
-private fun NavHostController.switchTo(destination: TopLevelDestination) {
+internal fun NavHostController.switchTo(destination: TopLevelDestination) {
     navigate(destination.route) {
         // 一级页共用起始页：切换时保存当前页状态，返回时恢复输入与滚动位置
         popUpTo(graph.findStartDestination().id) { saveState = true }

@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-16 17:15
  * email : 1099420259@qq.com
- * description : Android 临时依赖图；进程级单例避免同进程重复创建 DataStore，诊断日志默认值跟随 debuggable 构建
+ * description : Android 临时依赖图；进程级单例避免同进程重复创建 DataStore 与数据库，诊断日志默认值跟随 debuggable 构建
  */
 package com.wangxingxing.clipbox.di
 
@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.wangxingxing.clipbox.config.BundledConfig
 import com.wangxingxing.clipbox.repository.PairingRepository
+import com.wangxingxing.clipbox.repository.createClipRepository
 import com.wangxingxing.clipbox.settings.createSettingsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -44,6 +45,7 @@ private object AndroidAppGraph {
         return AppGraph(
             settingsRepository = settingsRepository,
             pairingRepository = PairingRepository(settingsRepository),
+            clipRepository = createClipRepository(context, settingsRepository),
             defaultServerUrl = BundledConfig.DEFAULT_SERVER_URL,
             defaultDeviceName = "Android · ${Build.MODEL}",
         )

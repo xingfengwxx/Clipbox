@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.wangxingxing.clipbox.config.BundledConfig
 import com.wangxingxing.clipbox.repository.PairingRepository
+import com.wangxingxing.clipbox.repository.createClipRepository
 import com.wangxingxing.clipbox.settings.createSettingsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,6 +29,7 @@ private object DesktopAppGraph {
         return AppGraph(
             settingsRepository = settingsRepository,
             pairingRepository = PairingRepository(settingsRepository),
+            clipRepository = createClipRepository(settingsRepository),
             defaultServerUrl = BundledConfig.DEFAULT_SERVER_URL,
             defaultDeviceName = "Desktop · ${System.getProperty("os.name")}",
         )
