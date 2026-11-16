@@ -17,6 +17,10 @@ dependencies {
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.logback.classic)
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.jdbc)
+    implementation(libs.hikaricp)
+    implementation(libs.sqlite.jdbc)
 
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.junit.jupiter)
