@@ -22,6 +22,9 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- Compose iOS 在调试二进制里强制校验本键；缺失会直接抛异常终止启动，同时该键开启高刷新率 -->
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<!-- v1.0 学习版按 ADR-0003 用 http://<SERVER_IP>:8080 直连服务端，必须放行 ATS 明文；恢复 HTTPS 后删除本例外 -->
 	<key>NSAppTransportSecurity</key>
 	<dict>
