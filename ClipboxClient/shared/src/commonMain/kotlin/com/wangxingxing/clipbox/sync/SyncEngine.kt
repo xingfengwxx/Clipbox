@@ -9,7 +9,6 @@ package com.wangxingxing.clipbox.sync
 import androidx.room.immediateTransaction
 import androidx.room.useWriterConnection
 import com.wangxingxing.clipbox.db.ClipDao
-import com.wangxingxing.clipbox.db.ClipEntity
 import com.wangxingxing.clipbox.db.ClipboxDatabase
 import com.wangxingxing.clipbox.db.MetaDao
 import com.wangxingxing.clipbox.db.MetaKeys
@@ -18,7 +17,6 @@ import com.wangxingxing.clipbox.model.ApiErrorCode
 import com.wangxingxing.clipbox.model.ApiFailure
 import com.wangxingxing.clipbox.model.ClipDto
 import com.wangxingxing.clipbox.model.SyncResponse
-import com.wangxingxing.clipbox.model.SyncState
 import com.wangxingxing.clipbox.model.WsClipEvent
 import com.wangxingxing.clipbox.network.ApiResult
 import com.wangxingxing.clipbox.network.ApiService
@@ -143,33 +141,24 @@ class SyncEngine(
         }
     }
 
-    // 返回是否真正写入或删除了本地记录；被本地待发状态保护而跳过时游标仍会前进
+    // 返回是否真正写入或删除了本地记录；本地意图受保护而跳过时游标仍会前进
     private suspend fun applyItem(clipDao: ClipDao, outboxDao: OutboxDao, item: ClipDto): Boolean {
-        if (item.deleted) {
-            if (clipDao.getById(item.id) == null) return false
-            // 本地仍有待发操作时保留，避免墓碑吞掉用户尚未同步的修改
-            if (outboxDao.opsForClip(item.id).isNotEmpty()) return false
-            clipDao.deleteById(item.id)
-            return true
-        }
         val local = clipDao.getById(item.id)
-        // 待发 / 失败记录的合并规则由 T-CORE-10 统一收口，本层不覆盖本地意图
-        if (local != null && local.syncState != SyncState.SYNCED) return false
-        clipDao.upsert(item.toEntity())
-        return true
-    }
+        val ops = if (local == null) emptyList() else outboxDao.opsForClip(item.id)
+        return when (val merged = ClipMerger.merge(local, item, ops)) {
+            is MergeResult.Upsert -> {
+                clipDao.upsert(merged.entity)
+                true
+            }
 
-    private fun ClipDto.toEntity(): ClipEntity = ClipEntity(
-        id = id,
-        content = content.orEmpty(),
-        sourceDeviceId = sourceDeviceId.orEmpty(),
-        sourceDeviceName = sourceDeviceName.orEmpty(),
-        pinned = pinned ?: false,
-        createdAt = createdAt ?: 0,
-        serverSeq = serverSeq,
-        deleted = false,
-        syncState = SyncState.SYNCED,
-    )
+            MergeResult.Delete -> {
+                clipDao.deleteById(item.id)
+                true
+            }
+
+            MergeResult.Ignore -> false
+        }
+    }
 
     private suspend fun <T> writeTransaction(
         block: suspend (ClipDao, OutboxDao, MetaDao) -> T,
