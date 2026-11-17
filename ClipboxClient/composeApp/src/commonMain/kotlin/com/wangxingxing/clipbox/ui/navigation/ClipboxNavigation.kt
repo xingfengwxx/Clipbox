@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-16 16:29
  * email : 1099420259@qq.com
- * description : 自适应导航壳：<600dp 用底部三栏，≥600dp 用 200dp 侧栏；切换一级页时保存 / 恢复各自返回栈状态；配对页与外观页全屏不显示导航；分享草稿参数原样透传；App 层观察本地记录并决定是否弹出新记录 Snackbar
+ * description : 自适应导航壳：<600dp 用底部三栏，≥600dp 用 200dp 侧栏；切换一级页时保存 / 恢复各自返回栈状态；配对页、外观页与工具详情全屏不显示导航；分享草稿参数原样透传；App 层观察本地记录并决定是否弹出新记录 Snackbar
  */
 package com.wangxingxing.clipbox.ui.navigation
 
@@ -87,6 +87,7 @@ fun ClipboxNavigationHost(
     // NavHost 首次组合时返回栈可能尚未就绪，按起始路由判断可避免全屏页闪出导航条
     val isFullScreen = currentRoute == PAIRING_ROUTE ||
         currentRoute == APPEARANCE_ROUTE ||
+        currentRoute?.startsWith(TOOL_DETAIL_PREFIX) == true ||
         (currentRoute == null && startDestination == PAIRING_ROUTE)
     val selected = TopLevelDestination.fromRoute(currentRoute)
         ?: TopLevelDestination.History

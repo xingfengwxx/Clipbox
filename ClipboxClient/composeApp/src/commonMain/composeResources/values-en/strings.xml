@@ -5,7 +5,6 @@
     <string name="nav_history">History</string>
     <string name="nav_toolbox">Toolbox</string>
     <string name="nav_settings">Settings</string>
-    <string name="placeholder_under_construction">Placeholder content</string>
     <string name="pair_kicker">Connect to your server</string>
     <string name="pair_title">Pairing</string>
     <string name="pair_description">Pair several devices in one space. Text flows between all of them.</string>
@@ -203,4 +202,26 @@
     <string name="appearance_preview_device">This device</string>
     <string name="appearance_preview_time">Just now</string>
     <string name="appearance_note">Simplified Chinese on first launch; your choice after that.</string>
+    <string name="tool_kicker">Local computation only. No network, no history.</string>
+    <string name="tool_tag">Local</string>
+    <string name="tool_local_note">Tool results never enter history and never sync.</string>
+    <string name="tool_json">JSON formatter</string>
+    <string name="tool_json_desc">Format, minify, validate</string>
+    <string name="tool_base64">Base64 codec</string>
+    <string name="tool_base64_desc">Standard and URL-safe</string>
+    <string name="tool_url">URL encoder</string>
+    <string name="tool_url_desc">Component and full URL</string>
+    <string name="tool_time">Timestamp</string>
+    <string name="tool_time_desc">Seconds, millis, ISO 8601</string>
+    <string name="tool_regex">Regex tester</string>
+    <string name="tool_regex_desc">Highlights and groups</string>
+    <string name="tool_back">Back</string>
+    <string name="tool_input">Input</string>
+    <string name="tool_output">Output</string>
+    <string name="tool_copy">Copy</string>
+    <string name="tool_clear">Clear</string>
+    <string name="tool_copied">Copied</string>
+    <string name="tool_limit">%1$s / 100 KiB</string>
+    <string name="tool_limit_badge">100 KiB</string>
+    <string name="tool_over_limit">Over the 100 KiB limit</string>
 </resources>

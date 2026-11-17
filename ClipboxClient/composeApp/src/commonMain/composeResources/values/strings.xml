@@ -5,7 +5,6 @@
     <string name="nav_history">历史</string>
     <string name="nav_toolbox">工具箱</string>
     <string name="nav_settings">设置</string>
-    <string name="placeholder_under_construction">页面占位内容</string>
     <string name="pair_kicker">连接到你的服务器</string>
     <string name="pair_title">配对</string>
     <string name="pair_description">在同一用户空间内配对多台设备，文本在三端互通。</string>
@@ -195,4 +194,26 @@
     <string name="appearance_preview_device">本机</string>
     <string name="appearance_preview_time">刚刚</string>
     <string name="appearance_note">首次启动固定为简体中文，之后以你的选择为准。</string>
+    <string name="tool_kicker">纯本地计算，不联网、不写历史</string>
+    <string name="tool_tag">本地</string>
+    <string name="tool_local_note">工具结果不会写入历史记录，也不参与同步。</string>
+    <string name="tool_json">JSON 格式化</string>
+    <string name="tool_json_desc">格式化、压缩与校验</string>
+    <string name="tool_base64">Base64 编解码</string>
+    <string name="tool_base64_desc">标准与 URL-safe</string>
+    <string name="tool_url">URL 编解码</string>
+    <string name="tool_url_desc">组件编码与整串编码</string>
+    <string name="tool_time">时间戳转换</string>
+    <string name="tool_time_desc">秒、毫秒与 ISO 8601</string>
+    <string name="tool_regex">正则测试</string>
+    <string name="tool_regex_desc">匹配高亮与分组</string>
+    <string name="tool_back">返回</string>
+    <string name="tool_input">输入</string>
+    <string name="tool_output">输出</string>
+    <string name="tool_copy">复制</string>
+    <string name="tool_clear">清空</string>
+    <string name="tool_copied">已复制</string>
+    <string name="tool_limit">%1$s / 100 KiB</string>
+    <string name="tool_limit_badge">100 KiB</string>
+    <string name="tool_over_limit">超过 100 KiB 上限</string>
 </resources>
