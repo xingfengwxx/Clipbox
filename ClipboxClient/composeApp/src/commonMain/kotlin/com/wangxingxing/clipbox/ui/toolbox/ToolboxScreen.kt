@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-17 16:20
  * email : 1099420259@qq.com
- * description : 工具箱 S15：五张工具卡与本地说明；未配对也可进入。正则以外的工具均已接真实计算，正则以 ToolScaffold 骨架占位，由后续工具卡替换。
+ * description : 工具箱 S15：五张工具卡与本地说明；未配对也可进入。五个工具均已接真实计算。
  *               注意：本页不依赖同步、数据库或网络，卡片只做本地导航
  */
 package com.wangxingxing.clipbox.ui.toolbox
@@ -31,10 +31,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -52,6 +48,7 @@ import com.wangxingxing.clipbox.resources.tool_tag
 import com.wangxingxing.clipbox.ui.navigation.TopLevelDestination
 import com.wangxingxing.clipbox.ui.toolbox.base64.Base64ToolRoute
 import com.wangxingxing.clipbox.ui.toolbox.json.JsonToolRoute
+import com.wangxingxing.clipbox.ui.toolbox.regex.RegexToolRoute
 import com.wangxingxing.clipbox.ui.toolbox.timestamp.TimestampToolRoute
 import com.wangxingxing.clipbox.ui.toolbox.url.UrlToolRoute
 import com.wangxingxing.clipbox.ui.theme.ClipboxShapes
@@ -116,33 +113,8 @@ fun ToolDetailRoute(
         ToolId.Base64 -> Base64ToolRoute(onBack = onBack, modifier = modifier)
         ToolId.Url -> UrlToolRoute(onBack = onBack, modifier = modifier)
         ToolId.Time -> TimestampToolRoute(onBack = onBack, modifier = modifier)
-        ToolId.Regex -> SkeletonToolRoute(
-            toolId = toolId,
-            onBack = onBack,
-            modifier = modifier,
-        )
+        ToolId.Regex -> RegexToolRoute(onBack = onBack, modifier = modifier)
     }
-}
-
-// 正则工具尚未实现，先保留输入原样进入输出的骨架，用于验证复制与清空
-@Composable
-private fun SkeletonToolRoute(
-    toolId: ToolId,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    var input by rememberSaveable(toolId) { mutableStateOf("") }
-    val overLimit = rememberInputByteCount(input) > ToolInputLimit.MAX_BYTES
-    val output = if (overLimit) "" else input
-    ToolScaffold(
-        title = stringResource(toolId.title),
-        onBack = onBack,
-        input = input,
-        onInputChange = { input = it },
-        output = output,
-        onClear = {},
-        modifier = modifier,
-    )
 }
 
 @Composable

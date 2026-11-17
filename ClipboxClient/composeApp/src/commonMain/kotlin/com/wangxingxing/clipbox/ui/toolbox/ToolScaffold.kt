@@ -3,6 +3,7 @@
  * date : 2026-11-17 16:20
  * email : 1099420259@qq.com
  * description : 五个工具页共用的 S15 骨架：返回、标题、100 KiB 上限、输入与字节计数、结果面板、复制与清空、错误区；
+ *               header 供正则等需要第二个输入区的工具插入内容，outputContent 供富文本结果替换默认纯文本面板；
  *               复制只经 ClipboardService 写系统剪贴板，页面自身不写历史、不联网。输入超限时由调用方跳过计算并清空输出
  */
 package com.wangxingxing.clipbox.ui.toolbox
@@ -96,6 +97,8 @@ fun ToolScaffold(
     modifier: Modifier = Modifier,
     outputError: Boolean = false,
     outputStatus: String? = null,
+    header: @Composable ColumnScope.() -> Unit = {},
+    outputContent: (@Composable () -> Unit)? = null,
     options: @Composable ColumnScope.() -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
 ) {
@@ -123,6 +126,7 @@ fun ToolScaffold(
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = spacing.l, vertical = spacing.m),
             ) {
+                header()
                 IoLabel(
                     label = stringResource(Res.string.tool_input),
                     trailing = stringResource(
@@ -183,15 +187,25 @@ fun ToolScaffold(
                         .border(1.dp, colors.line, ToolFieldShape)
                         .padding(horizontal = spacing.m, vertical = spacing.m),
                 ) {
-                    Text(
-                        text = output,
-                        modifier = Modifier.verticalScroll(rememberScrollState()),
-                        style = ClipboxTokens.typography.mono.copy(
-                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                            lineHeight = MaterialTheme.typography.bodySmall.lineHeight,
-                            color = if (outputError) colors.danger else colors.ink,
-                        ),
-                    )
+                    if (outputContent != null) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .verticalScroll(rememberScrollState()),
+                        ) {
+                            outputContent()
+                        }
+                    } else {
+                        Text(
+                            text = output,
+                            modifier = Modifier.verticalScroll(rememberScrollState()),
+                            style = ClipboxTokens.typography.mono.copy(
+                                fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                                lineHeight = MaterialTheme.typography.bodySmall.lineHeight,
+                                color = if (outputError) colors.danger else colors.ink,
+                            ),
+                        )
+                    }
                 }
                 Row(
                     modifier = Modifier

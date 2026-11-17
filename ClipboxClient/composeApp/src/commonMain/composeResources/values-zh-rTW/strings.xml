@@ -243,4 +243,14 @@
     <string name="tool_iso">ISO 8601</string>
     <string name="tool_time_error">不是合法的時間戳記或日期</string>
     <string name="tool_time_range">時間超出可表示範圍</string>
+    <string name="tool_pattern">正規表達式</string>
+    <string name="tool_groups">分組</string>
+    <string name="tool_regex_ignore_case">忽略大小寫</string>
+    <string name="tool_regex_multiline">多行</string>
+    <string name="tool_regex_dotall">點匹配換行</string>
+    <string name="tool_regex_no_match">沒有符合</string>
+    <string name="tool_regex_invalid">正規表達式不合法</string>
+    <plurals name="tool_regex_matches">
+        <item quantity="other">%1$d 處符合</item>
+    </plurals>
 </resources>

@@ -251,4 +251,15 @@
     <string name="tool_iso">ISO 8601</string>
     <string name="tool_time_error">Not a valid timestamp or date</string>
     <string name="tool_time_range">Out of the supported time range</string>
+    <string name="tool_pattern">Pattern</string>
+    <string name="tool_groups">Groups</string>
+    <string name="tool_regex_ignore_case">Ignore case</string>
+    <string name="tool_regex_multiline">Multiline</string>
+    <string name="tool_regex_dotall">Dot all</string>
+    <string name="tool_regex_no_match">No matches</string>
+    <string name="tool_regex_invalid">Invalid pattern</string>
+    <plurals name="tool_regex_matches">
+        <item quantity="one">%1$d match</item>
+        <item quantity="other">%1$d matches</item>
+    </plurals>
 </resources>
