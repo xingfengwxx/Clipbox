@@ -48,7 +48,8 @@ final class ClipboxUITests: XCTestCase {
         XCTAssertTrue(placeholder.waitForExistence(timeout: 20))
 
         // 3. 发送与键盘避让：键盘弹出时发送按钮仍需在键盘上方可点
-        let composer = app.textViews.element(boundBy: 0)
+        // 历史页顶部已有搜索输入框，发送器是第二个文本输入
+        let composer = app.textViews.element(boundBy: 1)
         composer.tap()
         let keyboard = app.keyboards.firstMatch
         XCTAssertTrue(keyboard.waitForExistence(timeout: 10))

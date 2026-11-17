@@ -212,11 +212,13 @@ flowchart LR
 
 | 工作流 | 卡片 | 状态 | 提交 |
 | --- | --- | --- | --- |
-| Server | T-S-01…T-S-11 | 待开始 | — |
-| Client Core | T-CORE-01…T-CORE-15 | 待开始 | — |
-| Client UI | T-UI-01…T-UI-20 | 待开始 | — |
-| iOS | T-IOS-01…T-IOS-09 | 待开始 | — |
+| Server | T-S-01…T-S-11 | 已完成 | `e57aed5`（T-S-11）；M2 Gate 见 [m2-gate.md](m2-gate.md) |
+| Client Core | T-CORE-01…T-CORE-15 | 进行中（01–10、14 已完成） | `7c685c6`（T-CORE-10） |
+| Client UI | T-UI-01…T-UI-20 | 进行中（01–07、17、18 已完成） | `99a290e`（T-UI-07） |
+| iOS | T-IOS-01…T-IOS-09 | 进行中（01–07 已完成） | `6ec524b`（T-IOS-07） |
 | Release | T-REL-01…T-REL-08 | 待开始 | — |
+
+> M2 已于 2026-11-17 通过（证据见 [m2-gate.md](m2-gate.md)）；下一张为 T-CORE-11。
 
 ## 7. 统一 DoD
 
