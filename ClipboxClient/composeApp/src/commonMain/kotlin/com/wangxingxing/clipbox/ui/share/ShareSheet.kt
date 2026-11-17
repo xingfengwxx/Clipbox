@@ -320,7 +320,7 @@ fun ShareSheet(
                     onClick = onBack,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(44.dp),
+                        .height(48.dp),
                 ) {
                     Text(
                         text = stringResource(Res.string.share_result_back),

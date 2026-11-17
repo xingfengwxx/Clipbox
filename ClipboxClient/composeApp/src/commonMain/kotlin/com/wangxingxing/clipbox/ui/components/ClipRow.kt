@@ -37,6 +37,7 @@ import com.wangxingxing.clipbox.model.Clip
 import com.wangxingxing.clipbox.model.SyncState
 import com.wangxingxing.clipbox.resources.Res
 import com.wangxingxing.clipbox.resources.history_act_more
+import com.wangxingxing.clipbox.resources.history_act_copy
 import com.wangxingxing.clipbox.resources.history_act_pin
 import com.wangxingxing.clipbox.resources.history_act_unpin
 import com.wangxingxing.clipbox.resources.history_bytes
@@ -73,11 +74,12 @@ fun ClipRow(
         clip.sourceDeviceName.isBlank() -> stringResource(Res.string.history_device_unknown)
         else -> clip.sourceDeviceName
     }
+    val copyActionLabel = stringResource(Res.string.history_act_copy)
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onCopy)
+            .clickable(onClickLabel = copyActionLabel, onClick = onCopy)
             .padding(horizontal = spacing.l, vertical = spacing.s),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

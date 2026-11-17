@@ -158,7 +158,7 @@ fun Composer(
             if (overLimit) {
                 OutlinedButton(
                     onClick = { onCopyInstead(value) },
-                    modifier = Modifier.height(44.dp),
+                    modifier = Modifier.height(48.dp),
                     shape = shape,
                     border = BorderStroke(1.dp, colors.line),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.ink),
@@ -175,7 +175,7 @@ fun Composer(
             if (onPaste != null) {
                 OutlinedButton(
                     onClick = onPaste,
-                    modifier = Modifier.height(44.dp),
+                    modifier = Modifier.height(48.dp),
                     shape = shape,
                     border = BorderStroke(1.dp, colors.line),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.ink),
@@ -192,7 +192,7 @@ fun Composer(
             Button(
                 onClick = onSend,
                 enabled = canSend,
-                modifier = Modifier.height(44.dp),
+                modifier = Modifier.height(48.dp),
                 shape = shape,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = colors.accent,

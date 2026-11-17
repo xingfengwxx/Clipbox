@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -508,14 +509,19 @@ private fun SearchBar(
                 color = colors.ink3,
             )
             Spacer(Modifier.width(spacing.s))
-            Text(
-                text = stringResource(Res.string.history_search_clear),
+            Box(
                 modifier = Modifier
+                    .heightIn(min = 48.dp)
                     .clickable { onQueryChange("") }
-                    .padding(vertical = 8.dp),
-                style = MaterialTheme.typography.labelMedium,
-                color = colors.ink2,
-            )
+                    .padding(horizontal = spacing.xs),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(Res.string.history_search_clear),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colors.ink2,
+                )
+            }
         }
     }
 }

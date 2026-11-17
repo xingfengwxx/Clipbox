@@ -599,16 +599,21 @@ private fun ActionRow(
             color = colors.ink,
         )
         Spacer(Modifier.weight(1f))
-        Text(
-            text = stringResource(if (loading) Res.string.settings_sync_busy else Res.string.settings_sync_now),
+        Box(
             modifier = Modifier
+                .heightIn(min = 48.dp)
                 .background(if (enabled || loading) colors.panel2 else colors.panel, shape)
                 .border(1.dp, colors.line, shape)
                 .clickable(enabled = enabled, onClick = onClick)
-                .padding(horizontal = spacing.m, vertical = spacing.s),
-            style = MaterialTheme.typography.labelMedium,
-            color = if (enabled) colors.ink else colors.ink3,
-        )
+                .padding(horizontal = spacing.m),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = stringResource(if (loading) Res.string.settings_sync_busy else Res.string.settings_sync_now),
+                style = MaterialTheme.typography.labelMedium,
+                color = if (enabled) colors.ink else colors.ink3,
+            )
+        }
     }
 }
 

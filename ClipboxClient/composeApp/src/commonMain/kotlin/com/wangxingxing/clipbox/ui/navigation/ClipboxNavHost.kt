@@ -13,6 +13,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.savedstate.read
 import com.wangxingxing.clipbox.ui.history.HistoryRoute
 import com.wangxingxing.clipbox.ui.pairing.PairingRoute
 import com.wangxingxing.clipbox.ui.settings.AppearanceRoute
@@ -67,7 +68,7 @@ fun ClipboxNavHost(
             route = TOOL_DETAIL_ROUTE,
             arguments = listOf(navArgument("toolId") { type = NavType.StringType }),
         ) { entry ->
-            val tool = ToolId.fromSegment(entry.arguments?.getString("toolId"))
+            val tool = ToolId.fromSegment(entry.arguments?.read { getStringOrNull("toolId") })
             if (tool == null) {
                 // 未知工具 id 不渲染空页，直接退回工具箱
                 navController.popBackStack()
