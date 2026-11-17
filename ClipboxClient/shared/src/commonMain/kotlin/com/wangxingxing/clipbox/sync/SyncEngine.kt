@@ -21,6 +21,7 @@ import com.wangxingxing.clipbox.model.WsClipEvent
 import com.wangxingxing.clipbox.network.ApiResult
 import com.wangxingxing.clipbox.network.ApiService
 import com.wangxingxing.clipbox.settings.SettingsRepository
+import com.wangxingxing.clipbox.util.clipNowMillis
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -30,6 +31,7 @@ class SyncEngine(
     private val settingsRepository: SettingsRepository,
     private val syncMutex: Mutex = Mutex(),
     private val statusReporter: SyncStatusReporter = SyncStatusReporter.None,
+    private val clock: () -> Long = ::clipNowMillis,
 ) : SyncGateway {
 
     /**
@@ -90,6 +92,7 @@ class SyncEngine(
             if (!advanced) break
         }
         database.clipDao().trimNonPinned()
+        database.metaDao().put(MetaKeys.LAST_SYNC_AT, clock())
         return PullResult.Success(appliedItems = appliedItems, lastSeq = since, resynced = false)
     }
 
@@ -119,6 +122,7 @@ class SyncEngine(
             if (!advanced) break
         }
         database.clipDao().trimNonPinned()
+        database.metaDao().put(MetaKeys.LAST_SYNC_AT, clock())
         return PullResult.Success(appliedItems = appliedItems, lastSeq = since, resynced = true)
     }
 

@@ -57,20 +57,42 @@ class SyncCoordinator(
         socket.onBackground()
     }
 
-    /** 状态条重试与手动同步：先 REST 增量拉取，再唤醒 Outbox 与 WS，重复触发不会并发改库 */
-    suspend fun syncNow() {
+    /** 状态条重试与手动同步：先 REST 增量拉取，再实际重放 Outbox，重复触发由 SyncRepository 合并 */
+    suspend fun syncNow(): SyncNowResult {
         statusReporter.onSyncing()
-        when (val result = syncEngine.pull()) {
-            is PullResult.Success -> statusReporter.onSynced()
-            is PullResult.Failure -> if (result.failure is ApiFailure.Unauthorized) {
-                statusReporter.onUnauthorized()
-            } else {
-                statusReporter.onOffline()
+        val result = when (val pull = syncEngine.pull()) {
+            is PullResult.Success -> {
+                val report = outboxWorker.replayDue()
+                if (report.waitingForPairing) {
+                    statusReporter.onUnauthorized()
+                    SyncNowResult.WaitingForPairing
+                } else {
+                    statusReporter.onSynced()
+                    SyncNowResult.Success(
+                        appliedItems = pull.appliedItems,
+                        resynced = pull.resynced,
+                        outboxApplied = report.applied,
+                    )
+                }
             }
 
-            PullResult.WaitingForPairing -> statusReporter.onUnauthorized()
+            is PullResult.Failure -> {
+                if (pull.failure is ApiFailure.Unauthorized) {
+                    statusReporter.onUnauthorized()
+                } else {
+                    statusReporter.onOffline()
+                }
+                SyncNowResult.Failure(pull.failure)
+            }
+
+            PullResult.WaitingForPairing -> {
+                statusReporter.onUnauthorized()
+                SyncNowResult.WaitingForPairing
+            }
         }
+        // 拉取失败时仍唤醒 Outbox 的重试循环，让队列按自身退避策略继续尝试
         outboxWorker.requestReplay()
         socket.requestConnect()
+        return result
     }
 }

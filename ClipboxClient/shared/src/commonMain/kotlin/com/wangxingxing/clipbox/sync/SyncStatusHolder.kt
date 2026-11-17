@@ -31,49 +31,58 @@ interface SyncStatusReporter {
     }
 }
 
+internal enum class SyncConnection { Idle, Syncing, Resyncing, Connected, Offline, Unauthorized }
+
+/**
+ * 同步状态的唯一优先级推导；UI 只能消费结果，不能把 Pending / Offline 等自行拼接成第二套状态。
+ */
+internal fun resolveSyncStatus(
+    connection: SyncConnection,
+    pending: Int,
+    failed: Int,
+): SyncStatus = when {
+    connection == SyncConnection.Unauthorized -> SyncStatus.Unauthorized
+    connection == SyncConnection.Resyncing -> SyncStatus.Resyncing
+    connection == SyncConnection.Syncing -> SyncStatus.Syncing
+    // 离线优先于计数展示：用户先要知道当前没有网络，而不是还有多少条没发
+    connection == SyncConnection.Offline -> SyncStatus.Offline
+    failed > 0 -> SyncStatus.Failed(failed)
+    pending > 0 -> SyncStatus.Pending(pending)
+    else -> SyncStatus.Idle
+}
+
 class SyncStatusHolder(
     database: ClipboxDatabase,
     scope: CoroutineScope,
 ) : SyncStatusReporter {
 
-    private enum class Connection { Idle, Syncing, Resyncing, Connected, Offline, Unauthorized }
-
-    private val connection = MutableStateFlow(Connection.Idle)
+    private val connection = MutableStateFlow(SyncConnection.Idle)
 
     val status: StateFlow<SyncStatus> = combine(
         connection,
         database.outboxDao().observePendingCount(),
         database.outboxDao().observeFailedCount(),
     ) { conn, pending, failed ->
-        when {
-            conn == Connection.Unauthorized -> SyncStatus.Unauthorized
-            conn == Connection.Resyncing -> SyncStatus.Resyncing
-            conn == Connection.Syncing -> SyncStatus.Syncing
-            // 离线优先于计数展示：用户先要知道当前没有网络，而不是还有多少条没发
-            conn == Connection.Offline -> SyncStatus.Offline
-            failed > 0 -> SyncStatus.Failed(failed)
-            pending > 0 -> SyncStatus.Pending(pending)
-            else -> SyncStatus.Idle
-        }
+        resolveSyncStatus(conn, pending, failed)
     }.stateIn(scope, SharingStarted.Eagerly, SyncStatus.Idle)
 
     override fun onSyncing() {
-        connection.value = Connection.Syncing
+        connection.value = SyncConnection.Syncing
     }
 
     override fun onResyncing() {
-        connection.value = Connection.Resyncing
+        connection.value = SyncConnection.Resyncing
     }
 
     override fun onSynced() {
-        connection.value = Connection.Connected
+        connection.value = SyncConnection.Connected
     }
 
     override fun onOffline() {
-        connection.value = Connection.Offline
+        connection.value = SyncConnection.Offline
     }
 
     override fun onUnauthorized() {
-        connection.value = Connection.Unauthorized
+        connection.value = SyncConnection.Unauthorized
     }
 }

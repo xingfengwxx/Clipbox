@@ -8,12 +8,17 @@ package com.wangxingxing.clipbox.db
 
 import androidx.room.Dao
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MetaDao {
 
     @Query("SELECT COALESCE((SELECT value FROM meta WHERE `key` = :key), 0)")
     suspend fun get(key: String): Long
+
+    // 未写入过时返回 null，调用方可据此区分“从未同步”和“同步时间为 0”
+    @Query("SELECT value FROM meta WHERE `key` = :key")
+    fun observe(key: String): Flow<Long?>
 
     @Query("INSERT OR REPLACE INTO meta (`key`, value) VALUES (:key, :value)")
     suspend fun put(key: String, value: Long)

@@ -15,6 +15,8 @@ import com.wangxingxing.clipbox.network.createSyncWebSocketClient
 import com.wangxingxing.clipbox.repository.ClipLookup
 import com.wangxingxing.clipbox.repository.ClipRepository
 import com.wangxingxing.clipbox.repository.ShareRepository
+import com.wangxingxing.clipbox.repository.SyncNowRunner
+import com.wangxingxing.clipbox.repository.SyncRepository
 import com.wangxingxing.clipbox.settings.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.sync.Mutex
@@ -22,6 +24,7 @@ import kotlinx.coroutines.sync.Mutex
 class SyncRuntime internal constructor(
     val clipRepository: ClipRepository,
     val shareRepository: ShareRepository,
+    val syncRepository: SyncRepository,
     val outboxWorker: OutboxWorker,
     val syncCoordinator: SyncCoordinator,
     val syncStatusHolder: SyncStatusHolder,
@@ -80,9 +83,14 @@ internal fun buildSyncRuntime(
         socket = socket,
         statusReporter = statusHolder,
     )
+    val syncRepository = SyncRepository(
+        metaDao = database.metaDao(),
+        runner = SyncNowRunner { coordinator.syncNow() },
+    )
     return SyncRuntime(
         clipRepository = clipRepository,
         shareRepository = shareRepository,
+        syncRepository = syncRepository,
         outboxWorker = outboxWorker,
         syncCoordinator = coordinator,
         syncStatusHolder = statusHolder,
