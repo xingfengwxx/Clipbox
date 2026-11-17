@@ -42,6 +42,8 @@ class ClipRepository(
             clips.map { it.toModel() }
         }
 
+    suspend fun findClip(id: String): Clip? = database.clipDao().getById(id)?.toModel()
+
     suspend fun send(content: String): SendResult {
         val trimmed = content.trim()
         if (trimmed.isEmpty()) return SendResult.Empty
