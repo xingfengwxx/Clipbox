@@ -11,15 +11,25 @@
 		F000000000000000000000B0 /* iOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSApp.swift; sourceTree = "<group>"; };
 		F000000000000000000000B1 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		F000000000000000000000B2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F000000000000000000000C0 /* ClipboxUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboxUITests.swift; sourceTree = "<group>"; };
+		F000000000000000000000C1 /* iosAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXBuildFile section */
 		F000000000000000000000B3 /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F000000000000000000000B0 /* iOSApp.swift */; };
 		F000000000000000000000B4 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F000000000000000000000B1 /* ContentView.swift */; };
+		F000000000000000000000C2 /* ClipboxUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F000000000000000000000C0 /* ClipboxUITests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		F000000000000000000000B6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F000000000000000000000C5 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +43,7 @@
 			isa = PBXGroup;
 			children = (
 				F000000000000000000000AD /* iosApp */,
+				F000000000000000000000C3 /* iosAppUITests */,
 				F000000000000000000000AC /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +52,7 @@
 			isa = PBXGroup;
 			children = (
 				F000000000000000000000AF /* iosApp.app */,
+				F000000000000000000000C1 /* iosAppUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -53,6 +65,14 @@
 				F000000000000000000000B2 /* Info.plist */,
 			);
 			path = iosApp;
+			sourceTree = "<group>";
+		};
+		F000000000000000000000C3 /* iosAppUITests */ = {
+			isa = PBXGroup;
+			children = (
+				F000000000000000000000C0 /* ClipboxUITests.swift */,
+			);
+			path = iosAppUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -76,6 +96,24 @@
 			productReference = F000000000000000000000AF /* iosApp.app */;
 			productType = "com.apple.product-type.application";
 		};
+		F000000000000000000000C4 /* iosAppUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F000000000000000000000CC /* Build configuration list for PBXNativeTarget "iosAppUITests" */;
+			buildPhases = (
+				F000000000000000000000C7 /* Sources */,
+				F000000000000000000000C5 /* Frameworks */,
+				F000000000000000000000C6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F000000000000000000000C8 /* PBXTargetDependency */,
+			);
+			name = iosAppUITests;
+			productName = iosAppUITests;
+			productReference = F000000000000000000000C1 /* iosAppUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -88,6 +126,10 @@
 				TargetAttributes = {
 					F000000000000000000000AE = {
 						CreatedOnToolsVersion = 16.0;
+					};
+					F000000000000000000000C4 = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = F000000000000000000000AE;
 					};
 				};
 			};
@@ -105,12 +147,20 @@
 			projectRoot = "";
 			targets = (
 				F000000000000000000000AE /* iosApp */,
+				F000000000000000000000C4 /* iosAppUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		F000000000000000000000B7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F000000000000000000000C6 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -151,7 +201,33 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F000000000000000000000C7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F000000000000000000000C2 /* ClipboxUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXContainerItemProxy section */
+		F000000000000000000000C9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F000000000000000000000AA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F000000000000000000000AE;
+			remoteInfo = iosApp;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		F000000000000000000000C8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F000000000000000000000AE /* iosApp */;
+			targetProxy = F000000000000000000000C9 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		F000000000000000000000BB /* Debug */ = {
@@ -241,6 +317,48 @@
 			};
 			name = Release;
 		};
+		F000000000000000000000CA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wangxingxing.clipbox.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = iosApp;
+			};
+			name = Debug;
+		};
+		F000000000000000000000CB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wangxingxing.clipbox.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = iosApp;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -258,6 +376,15 @@
 			buildConfigurations = (
 				F000000000000000000000BD /* Debug */,
 				F000000000000000000000BE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F000000000000000000000CC /* Build configuration list for PBXNativeTarget "iosAppUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F000000000000000000000CA /* Debug */,
+				F000000000000000000000CB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
