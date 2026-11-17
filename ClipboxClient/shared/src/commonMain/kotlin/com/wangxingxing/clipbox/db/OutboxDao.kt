@@ -48,4 +48,8 @@ interface OutboxDao {
 
     @Query("SELECT COUNT(DISTINCT clipId) FROM outbox WHERE lastErrorCode IS NOT NULL")
     fun observeFailedCount(): Flow<Int>
+
+    // 解绑时清空本机待发队列，避免旧账户的操作在新会话重放
+    @Query("DELETE FROM outbox")
+    suspend fun deleteAll()
 }

@@ -9,6 +9,7 @@
     <string name="pair_kicker">Connect to your server</string>
     <string name="pair_title">Pairing</string>
     <string name="pair_description">Pair several devices in one space. Text flows between all of them.</string>
+    <string name="pair_server_label">Server address</string>
     <string name="pair_code_label">6-digit code</string>
     <string name="pair_code_placeholder">000000</string>
     <string name="pair_device_label">Device name</string>
@@ -24,7 +25,7 @@
     <string name="pair_error_device_name">Device name must be 1–64 characters.</string>
     <string name="pair_error_network">Cannot reach the server. Check your network.</string>
     <string name="pair_error_rate_limited">Too many attempts. Try again later.</string>
-    <string name="pair_error_server_url">The server address is misconfigured. Contact the administrator.</string>
+    <string name="pair_error_server_url">Invalid server address</string>
     <string name="pair_error_server">The server is unavailable. Try again later.</string>
     <string name="pair_expired_hint">Generate a new pairing code on the server and try again.</string>
     <string name="history_sync_paired">Paired</string>
@@ -105,4 +106,8 @@
     <string name="clipboard_empty">No text in the clipboard</string>
     <string name="clipboard_auto_paste_failed">Auto-copy failed, please copy manually</string>
     <string name="clipboard_auto_send_too_large">Clipboard content exceeds 64 KiB and was not sent automatically</string>
+    <string name="startup_loading">Starting…</string>
+    <string name="startup_failed_title">Failed to start</string>
+    <string name="startup_failed_body">Local storage could not be initialized. Restart the app and try again.</string>
+    <string name="startup_retry">Retry</string>
 </resources>

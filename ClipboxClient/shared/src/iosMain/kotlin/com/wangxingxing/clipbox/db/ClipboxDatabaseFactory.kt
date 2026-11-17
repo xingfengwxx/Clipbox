@@ -35,3 +35,6 @@ fun createClipboxDatabaseBuilder(): RoomDatabase.Builder<ClipboxDatabase> {
 
     return Room.databaseBuilder<ClipboxDatabase>(name = "$directory/$DATABASE_NAME")
 }
+
+/** 平台注入入口：构建器类型只留在 shared 内，避免 composeApp 直接依赖 Room API */
+fun createClipboxDatabase(): ClipboxDatabase = buildClipboxDatabase(createClipboxDatabaseBuilder())

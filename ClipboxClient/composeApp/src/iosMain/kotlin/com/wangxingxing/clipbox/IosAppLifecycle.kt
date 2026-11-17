@@ -9,7 +9,6 @@
  */
 package com.wangxingxing.clipbox
 
-import com.wangxingxing.clipbox.di.iosAppGraph
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,7 +24,7 @@ object IosAppLifecycle {
 
     /** scenePhase == .active：唤醒补拉与 WS，并检查分享扩展是否留下新草稿。 */
     fun onForeground() {
-        iosAppGraph().syncCoordinator.onForeground()
+        IosAppBootstrap.container.onForeground()
         checkShareDraft()
     }
 
@@ -36,7 +35,7 @@ object IosAppLifecycle {
 
     /** scenePhase == .background：立即断开 WS 并停止重连；.inactive 不调用，避免切换控制中心时断连。 */
     fun onBackground() {
-        iosAppGraph().syncCoordinator.onBackground()
+        IosAppBootstrap.container.onBackground()
     }
 
     /** 用户确认发送后清除草稿文件与待预填状态；未配对时不调用，草稿继续保留。 */

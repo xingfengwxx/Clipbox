@@ -92,5 +92,9 @@ class SyncRepositoryTest {
         override suspend fun put(key: String, value: Long) {
             values.value = values.value + (key to value)
         }
+
+        override suspend fun clearAll() {
+            values.value = emptyMap()
+        }
     }
 }

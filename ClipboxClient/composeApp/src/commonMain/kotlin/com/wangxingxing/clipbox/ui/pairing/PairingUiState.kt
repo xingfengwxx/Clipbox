@@ -10,6 +10,7 @@ import com.wangxingxing.clipbox.repository.PAIRING_CODE_LENGTH
 import com.wangxingxing.clipbox.repository.PairingError
 
 data class PairingUiState(
+    val serverUrl: String = "",
     val code: String = "",
     val deviceName: String = "",
     val isSubmitting: Boolean = false,
@@ -20,6 +21,7 @@ data class PairingUiState(
     val canSubmit: Boolean
         get() = !isSubmitting &&
             cooldownSeconds == 0 &&
+            serverUrl.isNotBlank() &&
             code.length == PAIRING_CODE_LENGTH &&
             deviceName.trim().isNotEmpty()
 }

@@ -72,6 +72,10 @@ interface ClipDao {
     )
     suspend fun trimNonPinned(keep: Int = DEFAULT_NON_PINNED_LIMIT): Int
 
+    // 解绑时清空本机历史；服务端数据不删除，重新配对后由增量拉取重建
+    @Query("DELETE FROM clips")
+    suspend fun deleteAll()
+
     companion object {
         const val DEFAULT_NON_PINNED_LIMIT = 200
     }

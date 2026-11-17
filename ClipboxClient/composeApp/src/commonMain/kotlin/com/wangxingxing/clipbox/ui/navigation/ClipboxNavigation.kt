@@ -48,11 +48,14 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.wangxingxing.clipbox.di.LocalAppGraph
 import com.wangxingxing.clipbox.model.SyncStatus
+import com.wangxingxing.clipbox.repository.ClipRepository
 import com.wangxingxing.clipbox.resources.Res
 import com.wangxingxing.clipbox.resources.history_received_new
 import com.wangxingxing.clipbox.resources.history_view_new
+import com.wangxingxing.clipbox.settings.SettingsRepository
+import com.wangxingxing.clipbox.sync.SyncStatusHolder
+import com.wangxingxing.clipbox.ui.history.HistoryViewportState
 import com.wangxingxing.clipbox.ui.theme.ClipboxTokens
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -61,6 +64,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 
 // 架构 §7.1：<600dp 底部导航，≥600dp 左侧 NavigationRail
 private val WideLayoutMinWidth = 600.dp
@@ -86,14 +90,17 @@ fun ClipboxNavigationHost(
     val selected = TopLevelDestination.fromRoute(currentRoute)
         ?: TopLevelDestination.History
     val colors = ClipboxTokens.colors
-    val graph = LocalAppGraph.current
+    val viewport = koinInject<HistoryViewportState>()
+    val syncStatusHolder = koinInject<SyncStatusHolder>()
+    val clipRepository = koinInject<ClipRepository>()
+    val settingsRepository = koinInject<SettingsRepository>()
     val snackbarHostState = remember { SnackbarHostState() }
     val receivedNewLabel = stringResource(Res.string.history_received_new)
     val viewLabel = stringResource(Res.string.history_view_new)
     // 提示延迟 500ms 展示，路由与顶部状态必须在展示与点击时取最新值
     val currentRouteState = rememberUpdatedState(currentRoute)
 
-    LaunchedEffect(graph) {
+    LaunchedEffect(clipRepository, settingsRepository) {
         // 同批到达只提示一次；缓冲满时丢弃旧触发，新事件替换旧提示而不堆叠
         val hintTriggers = MutableSharedFlow<Unit>(
             extraBufferCapacity = 1,
@@ -102,9 +109,9 @@ fun ClipboxNavigationHost(
         launch {
             hintTriggers.debounce(HINT_BATCH_MILLIS).collect {
                 val onHistoryAtTop = currentRouteState.value == TopLevelDestination.History.route &&
-                    graph.historyViewport.isAtTop
+                    viewport.isAtTop
                 // 重同步会整体重建列表，不算新记录
-                if (onHistoryAtTop || graph.syncStatusHolder.status.value is SyncStatus.Resyncing) {
+                if (onHistoryAtTop || syncStatusHolder.status.value is SyncStatus.Resyncing) {
                     return@collect
                 }
                 snackbarHostState.currentSnackbarData?.dismiss()
@@ -116,7 +123,7 @@ fun ClipboxNavigationHost(
                 }
                 if (result == SnackbarResult.ActionPerformed) {
                     navController.switchTo(TopLevelDestination.History)
-                    graph.historyViewport.requestScrollToTop()
+                    viewport.requestScrollToTop()
                 }
             }
         }
@@ -125,8 +132,8 @@ fun ClipboxNavigationHost(
         val knownIds = mutableSetOf<String>()
         var firstEmission = true
         combine(
-            graph.clipRepository.observeClips(),
-            graph.settingsRepository.settings,
+            clipRepository.observeClips(),
+            settingsRepository.settings,
         ) { clips, settings -> clips to settings.deviceId.orEmpty() }
             .collect { (clips, selfDeviceId) ->
                 val ids = clips.mapTo(mutableSetOf()) { it.id }

@@ -19,3 +19,7 @@ fun createClipboxDatabaseBuilder(context: Context): RoomDatabase.Builder<Clipbox
         name = dbFile.absolutePath,
     )
 }
+
+/** 平台注入入口：构建器类型只留在 shared 内，避免 composeApp 直接依赖 Room API */
+fun createClipboxDatabase(context: Context): ClipboxDatabase =
+    buildClipboxDatabase(createClipboxDatabaseBuilder(context))

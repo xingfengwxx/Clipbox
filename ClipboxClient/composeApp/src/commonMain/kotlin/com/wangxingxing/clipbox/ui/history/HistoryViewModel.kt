@@ -6,6 +6,8 @@
  */
 package com.wangxingxing.clipbox.ui.history
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.wangxingxing.clipbox.model.Clip
 import com.wangxingxing.clipbox.repository.ClipRepository
 import com.wangxingxing.clipbox.repository.SendResult
@@ -13,7 +15,6 @@ import com.wangxingxing.clipbox.settings.SettingsRepository
 import com.wangxingxing.clipbox.sync.OutboxWorker
 import com.wangxingxing.clipbox.sync.SyncCoordinator
 import com.wangxingxing.clipbox.sync.SyncStatusHolder
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
@@ -36,8 +37,7 @@ class HistoryViewModel(
     private val outboxWorker: OutboxWorker,
     syncStatusHolder: SyncStatusHolder,
     private val syncCoordinator: SyncCoordinator,
-    private val scope: CoroutineScope,
-) {
+) : ViewModel() {
 
     private val query = MutableStateFlow("")
 
@@ -62,7 +62,7 @@ class HistoryViewModel(
             syncStatus = status,
         )
     }.stateIn(
-        scope = scope,
+        scope = viewModelScope,
         // 切到其它一级页时暂停观察，返回后由 Room 立即补发最新列表
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = HistoryUiState(),
@@ -81,7 +81,7 @@ class HistoryViewModel(
     fun send(content: String) {
         if (isSending) return
         isSending = true
-        scope.launch {
+        viewModelScope.launch {
             try {
                 when (clipRepository.send(content)) {
                     is SendResult.Success -> {
@@ -99,27 +99,27 @@ class HistoryViewModel(
     }
 
     fun setPinned(id: String, pinned: Boolean) {
-        scope.launch {
+        viewModelScope.launch {
             if (clipRepository.pin(id, pinned)) outboxWorker.requestReplay()
         }
     }
 
     fun delete(id: String) {
-        scope.launch {
+        viewModelScope.launch {
             // 记录已被删除或不存在时无需重放；删除确认只由 UI 负责
             if (clipRepository.delete(id)) outboxWorker.requestReplay()
         }
     }
 
     fun retry(id: String) {
-        scope.launch {
+        viewModelScope.launch {
             if (clipRepository.retry(id)) outboxWorker.requestReplay()
         }
     }
 
     // 状态条重试：先 REST 补拉再唤醒 Outbox 与 WS，失败只反映在状态条上，不打断当前操作
     fun syncNow() {
-        scope.launch { syncCoordinator.syncNow() }
+        viewModelScope.launch { syncCoordinator.syncNow() }
     }
 
     private companion object {

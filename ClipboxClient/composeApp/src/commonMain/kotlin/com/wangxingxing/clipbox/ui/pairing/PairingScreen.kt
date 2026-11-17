@@ -33,8 +33,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
@@ -44,7 +42,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.wangxingxing.clipbox.di.LocalAppGraph
+import com.wangxingxing.clipbox.app.AppContainer
 import com.wangxingxing.clipbox.repository.PairingError
 import com.wangxingxing.clipbox.resources.Res
 import com.wangxingxing.clipbox.resources.pair_code_label
@@ -65,36 +63,30 @@ import com.wangxingxing.clipbox.resources.pair_insecure_warning
 import com.wangxingxing.clipbox.resources.pair_kicker
 import com.wangxingxing.clipbox.resources.pair_note
 import com.wangxingxing.clipbox.resources.pair_rate_hint
+import com.wangxingxing.clipbox.resources.pair_server_label
 import com.wangxingxing.clipbox.resources.pair_submit
 import com.wangxingxing.clipbox.resources.pair_submitting
 import com.wangxingxing.clipbox.resources.pair_title
 import com.wangxingxing.clipbox.ui.theme.ClipboxTokens
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun PairingRoute(
-    onPaired: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val graph = LocalAppGraph.current
-    val scope = rememberCoroutineScope()
-    val viewModel = remember(graph) {
-        PairingViewModel(
-            repository = graph.pairingRepository,
-            serverUrl = graph.defaultServerUrl,
-            defaultDeviceName = graph.defaultDeviceName,
-            scope = scope,
-        )
-    }
+fun PairingRoute(modifier: Modifier = Modifier) {
+    val viewModel: PairingViewModel = koinViewModel()
+    val container = koinInject<AppContainer>()
     val state by viewModel.state.collectAsState()
 
-    LaunchedEffect(viewModel) {
-        viewModel.pairedEvents.collect { onPaired() }
+    LaunchedEffect(viewModel, container) {
+        // 配对成功后设置里已有新令牌与地址，必须重建会话；导航随会话版本变化重置到历史页
+        viewModel.pairedEvents.collect { container.refreshSession() }
     }
 
     PairingScreen(
         state = state,
+        onServerUrlChange = viewModel::onServerUrlChange,
         onCodeChange = viewModel::onCodeChange,
         onDeviceNameChange = viewModel::onDeviceNameChange,
         onSubmit = viewModel::submit,
@@ -105,6 +97,7 @@ fun PairingRoute(
 @Composable
 private fun PairingScreen(
     state: PairingUiState,
+    onServerUrlChange: (String) -> Unit,
     onCodeChange: (String) -> Unit,
     onDeviceNameChange: (String) -> Unit,
     onSubmit: () -> Unit,
@@ -155,6 +148,17 @@ private fun PairingScreen(
                 )
 
                 Spacer(Modifier.height(spacing.xl))
+                FieldLabel(stringResource(Res.string.pair_server_label))
+                Spacer(Modifier.height(6.dp))
+                PairingTextField(
+                    value = state.serverUrl,
+                    onValueChange = onServerUrlChange,
+                    placeholder = "",
+                    keyboardType = KeyboardType.Uri,
+                    textStyle = typography.mono.copy(fontSize = 14.sp, color = colors.ink),
+                )
+
+                Spacer(Modifier.height(spacing.l))
                 FieldLabel(stringResource(Res.string.pair_code_label))
                 Spacer(Modifier.height(6.dp))
                 PairingTextField(

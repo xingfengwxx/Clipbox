@@ -22,4 +22,8 @@ interface MetaDao {
 
     @Query("INSERT OR REPLACE INTO meta (`key`, value) VALUES (:key, :value)")
     suspend fun put(key: String, value: Long)
+
+    // 解绑时清空游标等元数据；服务端数据不受影响
+    @Query("DELETE FROM meta")
+    suspend fun clearAll()
 }

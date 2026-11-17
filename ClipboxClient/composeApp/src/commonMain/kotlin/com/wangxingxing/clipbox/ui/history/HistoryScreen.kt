@@ -63,13 +63,16 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.wangxingxing.clipbox.app.AppContainer
+import com.wangxingxing.clipbox.clipboard.ClipboardController
 import com.wangxingxing.clipbox.clipboard.ClipboardEvent
-import com.wangxingxing.clipbox.di.LocalAppGraph
 import com.wangxingxing.clipbox.model.Clip
 import com.wangxingxing.clipbox.model.SyncState
 import com.wangxingxing.clipbox.model.SyncStatus
 import com.wangxingxing.clipbox.platform.ClipboardReadResult
+import com.wangxingxing.clipbox.platform.ClipboardService
 import com.wangxingxing.clipbox.platform.ClipboardWriteResult
+import com.wangxingxing.clipbox.repository.ShareRepository
 import com.wangxingxing.clipbox.resources.Res
 import com.wangxingxing.clipbox.resources.app_name
 import com.wangxingxing.clipbox.resources.clipboard_auto_paste_failed
@@ -112,6 +115,8 @@ import com.wangxingxing.clipbox.util.clipNowMillis
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 private const val TIME_REFRESH_MILLIS = 30_000L
 
@@ -123,18 +128,13 @@ fun HistoryRoute(
     onShareDraftConsumed: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val graph = LocalAppGraph.current
+    val viewModel: HistoryViewModel = koinViewModel()
     val scope = rememberCoroutineScope()
-    val viewModel = remember(graph) {
-        HistoryViewModel(
-            clipRepository = graph.clipRepository,
-            settingsRepository = graph.settingsRepository,
-            outboxWorker = graph.outboxWorker,
-            syncStatusHolder = graph.syncStatusHolder,
-            syncCoordinator = graph.syncCoordinator,
-            scope = scope,
-        )
-    }
+    val viewport = koinInject<HistoryViewportState>()
+    val shareRepository = koinInject<ShareRepository>()
+    val clipboardService = koinInject<ClipboardService>()
+    val clipboardController = koinInject<ClipboardController>()
+    val isDesktop = koinInject<AppContainer>().isDesktop
     val state by viewModel.state.collectAsState()
     var selectedClip by remember { mutableStateOf<Clip?>(null) }
     var clipToDelete by remember { mutableStateOf<Clip?>(null) }
@@ -150,7 +150,6 @@ fun HistoryRoute(
         }
     }
     val listState = rememberLazyListState()
-    val viewport = graph.historyViewport
     // 顶部状态只由历史页上报；App 层据此决定是否弹新记录提示，避免猜测滚动位置
     val atTop by remember(listState) {
         derivedStateOf {
@@ -163,10 +162,9 @@ fun HistoryRoute(
         if (viewport.consumeScrollToTopRequest()) listState.animateScrollToItem(0)
     }
     val snackbarHostState = remember { SnackbarHostState() }
-    val shareHolder = remember(graph, scope) { ShareStateHolder(graph.shareRepository, scope) }
+    val shareHolder = remember(shareRepository, scope) { ShareStateHolder(shareRepository, scope) }
     val shareState = shareHolder.state
     // 读写统一走平台剪贴板服务；移动端只在用户显式点击复制/粘贴时访问
-    val clipboardService = graph.clipboardService
     val copiedMessage = stringResource(Res.string.history_copied)
     val copyFailedMessage = stringResource(Res.string.clipboard_write_failed)
     val pasteFailedMessage = stringResource(Res.string.clipboard_read_failed)
@@ -220,8 +218,8 @@ fun HistoryRoute(
         }
     }
     // 自动粘贴失败与自动发送超限只做提示，不重试写入、不修改记录
-    LaunchedEffect(graph.clipboardController, autoPasteFailedMessage, autoSendTooLargeMessage) {
-        graph.clipboardController.events.collect { event ->
+    LaunchedEffect(clipboardController, autoPasteFailedMessage, autoSendTooLargeMessage) {
+        clipboardController.events.collect { event ->
             when (event) {
                 ClipboardEvent.AutoPasteFailed ->
                     snackbarHostState.showSnackbar(autoPasteFailedMessage)
@@ -232,7 +230,7 @@ fun HistoryRoute(
         }
     }
     // 移动端显式粘贴：只填充输入框，不自动发送；有草稿时追加到末尾避免覆盖用户输入
-    val onPaste: (() -> Unit)? = if (graph.isDesktop) {
+    val onPaste: (() -> Unit)? = if (isDesktop) {
         null
     } else {
         {

@@ -6,6 +6,8 @@
  */
 package com.wangxingxing.clipbox.ui.pairing
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.wangxingxing.clipbox.repository.DEVICE_NAME_MAX_LENGTH
 import com.wangxingxing.clipbox.repository.PAIRING_CODE_LENGTH
 import com.wangxingxing.clipbox.repository.PairResult
@@ -13,7 +15,6 @@ import com.wangxingxing.clipbox.repository.PairingError
 import com.wangxingxing.clipbox.repository.PairingRepository
 import com.wangxingxing.clipbox.settings.isInsecureServerUrl
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -27,15 +28,15 @@ import kotlinx.coroutines.launch
 
 class PairingViewModel(
     private val repository: PairingRepository,
-    private val serverUrl: String,
+    initialServerUrl: String,
     defaultDeviceName: String,
-    private val scope: CoroutineScope,
-) {
+) : ViewModel() {
 
     private val _state = MutableStateFlow(
         PairingUiState(
+            serverUrl = initialServerUrl,
             deviceName = defaultDeviceName,
-            insecure = isInsecureServerUrl(serverUrl),
+            insecure = isInsecureServerUrl(initialServerUrl),
         )
     )
     val state: StateFlow<PairingUiState> = _state.asStateFlow()
@@ -48,6 +49,16 @@ class PairingViewModel(
     fun onCodeChange(raw: String) {
         val digits = raw.filter { it.isDigit() }.take(PAIRING_CODE_LENGTH)
         _state.update { it.copy(code = digits, error = null) }
+    }
+
+    fun onServerUrlChange(value: String) {
+        _state.update {
+            it.copy(
+                serverUrl = value,
+                insecure = isInsecureServerUrl(value),
+                error = null,
+            )
+        }
     }
 
     fun onDeviceNameChange(value: String) {
@@ -64,10 +75,10 @@ class PairingViewModel(
         }
 
         _state.update { it.copy(isSubmitting = true, error = null) }
-        scope.launch {
+        viewModelScope.launch {
             val result = try {
                 repository.pair(
-                    serverUrl = serverUrl,
+                    serverUrl = current.serverUrl,
                     code = current.code,
                     deviceName = current.deviceName,
                 )
@@ -95,7 +106,7 @@ class PairingViewModel(
     private fun startCooldown(retryAfterSeconds: Long?) {
         cooldownJob?.cancel()
         val seconds = (retryAfterSeconds ?: DEFAULT_COOLDOWN_SECONDS).coerceAtLeast(1L).toInt()
-        cooldownJob = scope.launch {
+        cooldownJob = viewModelScope.launch {
             _state.update { it.copy(cooldownSeconds = seconds) }
             repeat(seconds) {
                 delay(1_000)

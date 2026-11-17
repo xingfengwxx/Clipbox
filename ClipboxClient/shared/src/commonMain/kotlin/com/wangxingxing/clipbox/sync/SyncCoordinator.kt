@@ -57,6 +57,11 @@ class SyncCoordinator(
         socket.onBackground()
     }
 
+    /** 解绑或会话关闭时停止重连；Outbox 与令牌观察由会话作用域取消统一回收 */
+    fun stop() {
+        socket.stop()
+    }
+
     /** 状态条重试与手动同步：先 REST 增量拉取，再实际重放 Outbox，重复触发由 SyncRepository 合并 */
     suspend fun syncNow(): SyncNowResult {
         statusReporter.onSyncing()

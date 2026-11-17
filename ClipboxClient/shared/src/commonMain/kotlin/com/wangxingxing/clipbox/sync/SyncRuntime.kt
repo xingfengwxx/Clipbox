@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-17 13:30
  * email : 1099420259@qq.com
- * description : 共享同步运行时装配；每次进程只构建一个数据库、一个 ApiService 与一把同步锁，供 SyncEngine / OutboxWorker / SyncSocket 共用。注意：服务器地址在构建期固定为 defaultServerUrl，M2 不支持运行期改址，改址需要重建整个运行时
+ * description : 单个会话的同步运行时装配；数据库、ApiService、WS 客户端与一把同步锁只在本会话内共享。注意：服务器地址由调用方按当前设置传入，改址、配对与解绑都必须关闭旧运行时并新建
  */
 package com.wangxingxing.clipbox.sync
 
@@ -21,6 +21,7 @@ import com.wangxingxing.clipbox.repository.ShareRepository
 import com.wangxingxing.clipbox.repository.SyncNowRunner
 import com.wangxingxing.clipbox.repository.SyncRepository
 import com.wangxingxing.clipbox.settings.SettingsRepository
+import io.ktor.client.HttpClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.sync.Mutex
 
@@ -33,11 +34,27 @@ class SyncRuntime internal constructor(
     val syncStatusHolder: SyncStatusHolder,
     val clipboardService: ClipboardService,
     val clipboardController: ClipboardController,
-)
+    private val apiClient: HttpClient,
+    private val socketClient: HttpClient,
+) {
+
+    /** 解绑前先停 WS 与剪贴板监听；Outbox 与令牌观察随会话协程取消一起结束 */
+    fun stopSync() {
+        syncCoordinator.stop()
+        clipboardController.stop()
+    }
+
+    /** 关闭网络客户端；调用方必须先取消会话协程，避免仍有请求在途 */
+    fun close() {
+        stopSync()
+        apiClient.close()
+        socketClient.close()
+    }
+}
 
 /**
  * 平台工厂负责构建 Room（Android 需要 Context），其余对象在此统一装配。
- * 由平台工厂在进程级单例中调用一次；scope 必须是长生命周期协程作用域。
+ * scope 是单个会话的作用域；会话关闭时由调用方取消它。
  */
 internal fun buildSyncRuntime(
     database: ClipboxDatabase,
@@ -50,16 +67,12 @@ internal fun buildSyncRuntime(
 ): SyncRuntime {
     val syncMutex = Mutex()
     val statusHolder = SyncStatusHolder(database, scope)
-    // 开关跟随 DataStore，重启后无需重新绑定
-    appLogger.observe(settingsRepository, scope)
     // 令牌每次请求时读取，重新配对后无需重建客户端
-    val apiService = ApiService(
-        createApiHttpClient(
-            serverUrl = defaultServerUrl,
-            tokenProvider = { settingsRepository.current().deviceToken },
-        ),
-        logger = appLogger,
+    val apiClient = createApiHttpClient(
+        serverUrl = defaultServerUrl,
+        tokenProvider = { settingsRepository.current().deviceToken },
     )
+    val apiService = ApiService(apiClient, logger = appLogger)
     val syncEngine = SyncEngine(
         database = database,
         apiService = apiService,
@@ -74,9 +87,9 @@ internal fun buildSyncRuntime(
         syncMutex = syncMutex,
     )
     val clipRepository = ClipRepository(database, settingsRepository)
-    // WS 客户端随进程存活，没有关闭入口；长连接断开由 SyncSocket 负责
+    val socketClient = createSyncWebSocketClient(defaultServerUrl)
     val socket = SyncSocket(
-        transport = KtorSyncSocketTransport(createSyncWebSocketClient(defaultServerUrl)),
+        transport = KtorSyncSocketTransport(socketClient),
         gateway = syncEngine,
         settingsRepository = settingsRepository,
         defaultServerUrl = defaultServerUrl,
@@ -117,5 +130,7 @@ internal fun buildSyncRuntime(
         syncStatusHolder = statusHolder,
         clipboardService = clipboardService,
         clipboardController = clipboardController,
+        apiClient = apiClient,
+        socketClient = socketClient,
     )
 }
