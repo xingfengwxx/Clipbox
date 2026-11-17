@@ -76,6 +76,7 @@
     <string name="history_sync_pending_count">待同步 %1$d 筆</string>
     <string name="history_sync_failed_count">失敗 %1$d 筆</string>
     <string name="history_received_new">收到新紀錄</string>
+    <string name="history_share_draft_replaced">已替換為新的分享內容</string>
     <string name="history_view_new">查看</string>
     <string name="share_sheet_title">產生分享連結</string>
     <string name="share_tier_1h">1 小時</string>

@@ -87,6 +87,7 @@ import com.wangxingxing.clipbox.resources.history_search_count
 import com.wangxingxing.clipbox.resources.history_search_empty_body
 import com.wangxingxing.clipbox.resources.history_search_empty_title
 import com.wangxingxing.clipbox.resources.history_search_placeholder
+import com.wangxingxing.clipbox.resources.history_share_draft_replaced
 import com.wangxingxing.clipbox.resources.history_share_offline
 import com.wangxingxing.clipbox.resources.history_share_requires_sync
 import com.wangxingxing.clipbox.resources.history_sync_paired
@@ -133,12 +134,8 @@ fun HistoryRoute(
     var selectedClip by remember { mutableStateOf<Clip?>(null) }
     var clipToDelete by remember { mutableStateOf<Clip?>(null) }
     var draft by rememberSaveable { mutableStateOf("") }
-    // 只有新的分享正文到达才覆盖草稿；null 表示没有待处理分享，不能清掉用户正在编辑的内容
-    LaunchedEffect(incomingShareDraft) {
-        if (!incomingShareDraft.isNullOrEmpty()) {
-            draft = incomingShareDraft
-        }
-    }
+    // 每次分享草稿预填后递增，驱动发送器请求焦点
+    var shareDraftFocusToken by remember { mutableStateOf(0) }
     // 未配对分享按 REQ-PAIR-008 直达配对页；同一份草稿只自动跳一次，用户取消后不再强推
     var pairingPrompted by rememberSaveable(incomingShareDraft) { mutableStateOf(false) }
     LaunchedEffect(state.isLoaded, state.paired, incomingShareDraft) {
@@ -173,6 +170,18 @@ fun HistoryRoute(
     val shareRequiresSync = stringResource(Res.string.history_share_requires_sync)
     val shareOffline = stringResource(Res.string.history_share_offline)
     val shareLinkCopied = stringResource(Res.string.share_link_copied)
+    val shareDraftReplaced = stringResource(Res.string.history_share_draft_replaced)
+    // 只有新的分享正文到达才覆盖草稿；null 表示没有待处理分享，不能清掉用户正在编辑的内容
+    LaunchedEffect(incomingShareDraft) {
+        if (!incomingShareDraft.isNullOrEmpty()) {
+            // 新分享覆盖已有输入时提示一次；同一草稿的重复到达已在平台层按 id + createdAt 去重
+            if (draft.isNotEmpty() && draft != incomingShareDraft) {
+                scope.launch { snackbarHostState.showSnackbar(shareDraftReplaced) }
+            }
+            draft = incomingShareDraft
+            shareDraftFocusToken++
+        }
+    }
     // 事件收集器只启动一次，用最新回调避免 Activity 重建后仍引用旧闭包
     val latestOnShareDraftConsumed by rememberUpdatedState(onShareDraftConsumed)
 
@@ -211,6 +220,7 @@ fun HistoryRoute(
             onOpenSettings = onOpenSettings,
             onPair = onPair,
             listState = listState,
+            focusRequestToken = shareDraftFocusToken,
         )
         selectedClip?.let { clip ->
             val shareReason = when {
@@ -298,6 +308,7 @@ private fun HistoryScreen(
     onOpenSettings: () -> Unit,
     onPair: () -> Unit,
     listState: LazyListState,
+    focusRequestToken: Int = 0,
     modifier: Modifier = Modifier,
 ) {
     val colors = ClipboxTokens.colors
@@ -351,6 +362,7 @@ private fun HistoryScreen(
                             onSend = onSend,
                             onCopyInstead = onCopy,
                             maxHeight = composerMaxHeight,
+                            focusRequestToken = focusRequestToken,
                             modifier = Modifier.padding(
                                 start = spacing.l,
                                 top = spacing.l,

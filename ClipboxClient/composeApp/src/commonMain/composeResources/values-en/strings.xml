@@ -76,6 +76,7 @@
     <string name="history_sync_pending_count">%1$d pending</string>
     <string name="history_sync_failed_count">%1$d failed</string>
     <string name="history_received_new">New clip received</string>
+    <string name="history_share_draft_replaced">Replaced with the newly shared text</string>
     <string name="history_view_new">View</string>
     <string name="share_sheet_title">Create share link</string>
     <string name="share_tier_1h">1 hour</string>

@@ -9,6 +9,12 @@ struct iOSApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                // 分享扩展写入草稿后经 clipbox://share 唤起；深链只触发本地草稿检查，不携带任何正文或令牌
+                .onOpenURL { url in
+                    if url.scheme == "clipbox" {
+                        IosAppLifecycle.shared.onOpenShareUrl()
+                    }
+                }
         }
         .onChange(of: scenePhase) { phase in
             switch phase {

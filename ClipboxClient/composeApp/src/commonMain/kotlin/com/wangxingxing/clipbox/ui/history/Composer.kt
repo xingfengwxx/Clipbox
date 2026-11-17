@@ -27,8 +27,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -56,6 +61,7 @@ fun Composer(
     onCopyInstead: (String) -> Unit,
     maxHeight: Dp,
     modifier: Modifier = Modifier,
+    focusRequestToken: Int = 0,
 ) {
     val colors = ClipboxTokens.colors
     val spacing = ClipboxTokens.spacing
@@ -72,6 +78,15 @@ fun Composer(
     }
     // 输入区最多占屏幕 1/3，超出后由输入框内部滚动，保证列表始终可见
     val textMaxHeight = (maxHeight - ComposerChromeHeight).coerceAtLeast(72.dp)
+    // 分享草稿预填后请求焦点；token 递增才触发，普通输入不抢焦点
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(focusRequestToken) {
+        if (focusRequestToken > 0) {
+            // 输入框可能随配对状态首次出现，等首帧布局完成再请求焦点
+            withFrameNanos { }
+            runCatching { focusRequester.requestFocus() }
+        }
+    }
 
     Column(
         modifier = modifier
@@ -103,7 +118,8 @@ fun Composer(
             onValueChange = onValueChange,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 72.dp, max = textMaxHeight),
+                .heightIn(min = 72.dp, max = textMaxHeight)
+                .focusRequester(focusRequester),
             textStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.ink),
             cursorBrush = SolidColor(colors.accent),
             decorationBox = { innerTextField ->

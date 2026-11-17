@@ -76,6 +76,7 @@
     <string name="history_sync_pending_count">待同步 %1$d 条</string>
     <string name="history_sync_failed_count">失败 %1$d 条</string>
     <string name="history_received_new">收到新记录</string>
+    <string name="history_share_draft_replaced">已替换为新的分享内容</string>
     <string name="history_view_new">查看</string>
     <string name="share_sheet_title">生成分享链接</string>
     <string name="share_tier_1h">1 小时</string>
