@@ -70,4 +70,25 @@
     <string name="history_delete_body">刪除後無法復原，所有裝置都會移除。</string>
     <string name="history_delete_confirm">刪除</string>
     <string name="history_cancel">取消</string>
+    <string name="share_sheet_title">產生分享連結</string>
+    <string name="share_tier_1h">1 小時</string>
+    <string name="share_tier_24h">24 小時</string>
+    <string name="share_tier_7d">7 天</string>
+    <string name="share_tier_one_time">閱後即焚</string>
+    <string name="share_tier_one_time_hint">首次開啟後失效</string>
+    <string name="share_generate">產生連結</string>
+    <string name="share_generating">產生中…</string>
+    <string name="share_error_not_synced">同步後可分享</string>
+    <string name="share_error_offline">網路不可用，請檢查連線</string>
+    <string name="share_error_unauthorized">配對已失效，請重新配對</string>
+    <string name="share_error_rate_limited">操作過於頻繁，請稍後再試</string>
+    <string name="share_error_retry">服務暫時無法使用，請重試</string>
+    <string name="share_error_failed">產生失敗，請重試</string>
+    <string name="share_result_title">連結已產生</string>
+    <string name="share_result_expires">到期時間：%1$s</string>
+    <string name="share_result_one_time">一次性連結，首次開啟後失效</string>
+    <string name="share_result_reusable">有效期內可重複存取</string>
+    <string name="share_copy_link">複製連結</string>
+    <string name="share_link_copied">連結已複製</string>
+    <string name="share_result_back">換一個有效期</string>
 </resources>

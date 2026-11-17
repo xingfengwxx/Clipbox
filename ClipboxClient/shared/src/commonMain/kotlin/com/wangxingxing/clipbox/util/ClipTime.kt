@@ -39,12 +39,16 @@ fun clipTimeLabel(
         elapsed < MINUTE_MILLIS -> ClipTimeLabel.JustNow
         elapsed < HOUR_MILLIS -> ClipTimeLabel.MinutesAgo((elapsed / MINUTE_MILLIS).toInt())
         elapsed < DAY_MILLIS -> ClipTimeLabel.HoursAgo((elapsed / HOUR_MILLIS).toInt())
-        else -> ClipTimeLabel.Absolute(formatAbsolute(createdAtMillis, timeZone))
+        else -> ClipTimeLabel.Absolute(formatAbsoluteTime(createdAtMillis, timeZone))
     }
 }
 
+/** 按本地时区输出 yyyy-MM-dd HH:mm；分享到期时间等只需绝对时间的场景直接复用。 */
 @OptIn(ExperimentalTime::class)
-private fun formatAbsolute(epochMillis: Long, timeZone: TimeZone): String {
+fun formatAbsoluteTime(
+    epochMillis: Long,
+    timeZone: TimeZone = TimeZone.currentSystemDefault(),
+): String {
     val local = Instant.fromEpochMilliseconds(epochMillis).toLocalDateTime(timeZone)
     return buildString {
         append(local.year.toString().padStart(4, '0'))

@@ -91,10 +91,13 @@ import com.wangxingxing.clipbox.resources.history_share_requires_sync
 import com.wangxingxing.clipbox.resources.history_sync_paired
 import com.wangxingxing.clipbox.resources.history_sync_unpaired
 import com.wangxingxing.clipbox.resources.nav_settings
+import com.wangxingxing.clipbox.resources.share_link_copied
 import com.wangxingxing.clipbox.ui.components.ClipActionsSheet
 import com.wangxingxing.clipbox.ui.components.ClipRow
 import com.wangxingxing.clipbox.ui.components.ConfirmDialog
 import com.wangxingxing.clipbox.ui.navigation.NavIcons
+import com.wangxingxing.clipbox.ui.share.ShareSheet
+import com.wangxingxing.clipbox.ui.share.ShareStateHolder
 import com.wangxingxing.clipbox.ui.theme.ClipboxTokens
 import com.wangxingxing.clipbox.util.clipNowMillis
 import kotlinx.coroutines.delay
@@ -143,6 +146,8 @@ fun HistoryRoute(
     }
     val listState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val shareHolder = remember(graph, scope) { ShareStateHolder(graph.shareRepository, scope) }
+    val shareState = shareHolder.state
     // CMP 1.9 的跨端剪贴板仍是 LocalClipboardManager；T-CORE-12 落地后收敛到剪贴板服务
     val clipboard = LocalClipboardManager.current
     val copiedMessage = stringResource(Res.string.history_copied)
@@ -152,6 +157,7 @@ fun HistoryRoute(
     val deleteConfirm = stringResource(Res.string.history_delete_confirm)
     val shareRequiresSync = stringResource(Res.string.history_share_requires_sync)
     val shareOffline = stringResource(Res.string.history_share_offline)
+    val shareLinkCopied = stringResource(Res.string.share_link_copied)
     // 事件收集器只启动一次，用最新回调避免 Activity 重建后仍引用旧闭包
     val latestOnShareDraftConsumed by rememberUpdatedState(onShareDraftConsumed)
 
@@ -210,8 +216,11 @@ fun HistoryRoute(
                     selectedClip = null
                     viewModel.setPinned(clip.id, !clip.pinned)
                 },
-                // 分享面板负责生成与展示链接，接入后在此传入打开回调；当前保持入口禁用
-                onShare = null,
+                // 分享面板负责生成与展示链接，未同步/离线的禁用原因由 operation sheet 判定
+                onShare = {
+                    selectedClip = null
+                    shareHolder.open(clip.id)
+                },
                 onRetry = {
                     selectedClip = null
                     viewModel.retry(clip.id)
@@ -232,6 +241,22 @@ fun HistoryRoute(
                     viewModel.delete(clip.id)
                 },
                 onDismiss = { clipToDelete = null },
+            )
+        }
+        if (shareState.visible) {
+            ShareSheet(
+                state = shareState,
+                syncStatus = state.syncStatus,
+                onSelectTier = shareHolder::selectTier,
+                onGenerate = shareHolder::generate,
+                onBack = shareHolder::backToOptions,
+                onCopyLink = { url ->
+                    // 先收起弹层，Snackbar 才不会被弹层遮挡；结果保留，可再次打开查看
+                    shareHolder.dismiss()
+                    clipboard.setText(AnnotatedString(url))
+                    scope.launch { snackbarHostState.showSnackbar(shareLinkCopied) }
+                },
+                onDismiss = shareHolder::dismiss,
             )
         }
         SnackbarHost(
