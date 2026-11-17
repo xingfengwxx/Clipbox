@@ -38,6 +38,7 @@ class ClipboardController(
     private val realtimeCreated: SharedFlow<ClipDto>,
     private val isDesktop: Boolean,
     private val clock: () -> Long = ::clipNowMillis,
+    private val wakeOutbox: () -> Unit = {},
 ) {
 
     private val guard = ClipboardGuard()
@@ -116,7 +117,11 @@ class ClipboardController(
         lastTooLargeHash = null
         if (guard.shouldSkipUpload(text, clock())) return
         when (clipRepository.send(text)) {
-            is SendResult.Success -> guard.onSent(text)
+            is SendResult.Success -> {
+                guard.onSent(text)
+                // 自动发送没有 UI 调用方，必须显式唤醒重放循环，否则记录会滞留到下一次用户操作
+                wakeOutbox()
+            }
             SendResult.TooLarge -> reportTooLarge(text)
             SendResult.Empty -> Unit
         }

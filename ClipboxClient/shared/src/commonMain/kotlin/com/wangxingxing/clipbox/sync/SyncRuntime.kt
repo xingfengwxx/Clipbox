@@ -119,6 +119,7 @@ internal fun buildSyncRuntime(
         clipboardService = clipboardService,
         realtimeCreated = socket.realtimeCreated,
         isDesktop = isDesktop,
+        wakeOutbox = outboxWorker::requestReplay,
     )
     clipboardController.start()
     return SyncRuntime(

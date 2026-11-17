@@ -10,7 +10,7 @@
 
 - 首次启动固定简体中文，不跟随系统语言；选择写入 DataStore，重启保持。
 - 语言切换通过注入 `ComposeEnvironment` 实现，只重载资源，不修改系统 Locale，不重建导航。
-- 三套 `strings.xml` 均为 171 条 `<string>` + 8 组 `<plurals>`，key 集合完全一致（校验脚本见 T-UI-10 验收记录）。
+- 三套 `strings.xml` 均为 226 条 `<string>` + 9 组 `<plurals>`（共 235 个 key），key 集合完全一致；统计口径为 T-UI-20 Gate 复核。下表只列关键文案，不是全量清单。
 - 语言名称本身使用自称，不翻译：`简体中文` / `繁體中文` / `English`。
 - iOS 分享扩展的 `Localizable.strings` 在 T-IOS-08 补齐，本表只覆盖 Compose 端。
 
