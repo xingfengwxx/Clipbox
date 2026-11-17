@@ -28,10 +28,12 @@ import com.wangxingxing.clipbox.server.routes.SERVER_VERSION
 import com.wangxingxing.clipbox.server.routes.clipRoutes
 import com.wangxingxing.clipbox.server.routes.healthRoutes
 import com.wangxingxing.clipbox.server.routes.pairingRoutes
+import com.wangxingxing.clipbox.server.routes.shareRoutes
 import com.wangxingxing.clipbox.server.service.AdminService
 import com.wangxingxing.clipbox.server.service.Broadcaster
 import com.wangxingxing.clipbox.server.service.ClipService
 import com.wangxingxing.clipbox.server.service.PairingService
+import com.wangxingxing.clipbox.server.service.ShareService
 import com.wangxingxing.clipbox.server.ws.ConnectionRegistry
 import com.wangxingxing.clipbox.server.ws.WebSocketSettings
 import com.wangxingxing.clipbox.server.ws.configureSyncWebSockets
@@ -123,6 +125,7 @@ fun Application.module(
         healthRoutes(factory::isHealthy)
         pairingRoutes(adminService, pairingService)
         clipRoutes(ClipService(factory, broadcaster))
+        shareRoutes(ShareService(factory, config.publicBaseUrl))
         syncRoutes(
             factory,
             connectionRegistry,
