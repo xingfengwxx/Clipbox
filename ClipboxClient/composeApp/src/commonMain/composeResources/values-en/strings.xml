@@ -70,6 +70,13 @@
     <string name="history_delete_body">This can\'t be undone and removes it from every device.</string>
     <string name="history_delete_confirm">Delete</string>
     <string name="history_cancel">Cancel</string>
+    <string name="history_sync_syncing">Syncing</string>
+    <string name="history_sync_synced">Synced</string>
+    <string name="history_sync_offline">Offline</string>
+    <string name="history_sync_pending_count">%1$d pending</string>
+    <string name="history_sync_failed_count">%1$d failed</string>
+    <string name="history_received_new">New clip received</string>
+    <string name="history_view_new">View</string>
     <string name="share_sheet_title">Create share link</string>
     <string name="share_tier_1h">1 hour</string>
     <string name="share_tier_24h">24 hours</string>

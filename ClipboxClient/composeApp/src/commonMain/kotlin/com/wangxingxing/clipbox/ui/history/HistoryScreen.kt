@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-16 18:05
  * email : 1099420259@qq.com
- * description : 历史页 S01 / S02：顶栏、已配对才显示的发送器、置顶与全部两组记录、未配对与已配对两种空态；只消费 HistoryUiState，不访问 Room 或 ApiService；分享草稿只负责预填与发送后清除
+ * description : 历史页 S01 / S02 / S04：顶栏、同步状态条、已配对才显示的发送器、置顶与全部两组记录、未配对与已配对两种空态；只消费 HistoryUiState，不访问 Room 或 ApiService；上报列表顶部状态并消费 App 层的回顶请求；分享草稿只负责预填与发送后清除
  */
 package com.wangxingxing.clipbox.ui.history
 
@@ -42,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -95,6 +96,7 @@ import com.wangxingxing.clipbox.resources.share_link_copied
 import com.wangxingxing.clipbox.ui.components.ClipActionsSheet
 import com.wangxingxing.clipbox.ui.components.ClipRow
 import com.wangxingxing.clipbox.ui.components.ConfirmDialog
+import com.wangxingxing.clipbox.ui.components.SyncStatusBar
 import com.wangxingxing.clipbox.ui.navigation.NavIcons
 import com.wangxingxing.clipbox.ui.share.ShareSheet
 import com.wangxingxing.clipbox.ui.share.ShareStateHolder
@@ -123,6 +125,7 @@ fun HistoryRoute(
             settingsRepository = graph.settingsRepository,
             outboxWorker = graph.outboxWorker,
             syncStatusHolder = graph.syncStatusHolder,
+            syncCoordinator = graph.syncCoordinator,
             scope = scope,
         )
     }
@@ -145,6 +148,18 @@ fun HistoryRoute(
         }
     }
     val listState = rememberLazyListState()
+    val viewport = graph.historyViewport
+    // 顶部状态只由历史页上报；App 层据此决定是否弹新记录提示，避免猜测滚动位置
+    val atTop by remember(listState) {
+        derivedStateOf {
+            listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
+        }
+    }
+    LaunchedEffect(atTop) { viewport.updateAtTop(atTop) }
+    LaunchedEffect(viewport.scrollToTopVersion) {
+        // 回顶请求只消费一次；普通返回历史页时由 rememberSaveable 恢复原滚动位置
+        if (viewport.consumeScrollToTopRequest()) listState.animateScrollToItem(0)
+    }
     val snackbarHostState = remember { SnackbarHostState() }
     val shareHolder = remember(graph, scope) { ShareStateHolder(graph.shareRepository, scope) }
     val shareState = shareHolder.state
@@ -192,6 +207,7 @@ fun HistoryRoute(
             onCopy = copyText,
             onTogglePin = { clip -> viewModel.setPinned(clip.id, !clip.pinned) },
             onMore = { selectedClip = it },
+            onSyncNow = viewModel::syncNow,
             onOpenSettings = onOpenSettings,
             onPair = onPair,
             listState = listState,
@@ -278,6 +294,7 @@ private fun HistoryScreen(
     onCopy: (String) -> Unit,
     onTogglePin: (Clip) -> Unit,
     onMore: (Clip) -> Unit,
+    onSyncNow: () -> Unit,
     onOpenSettings: () -> Unit,
     onPair: () -> Unit,
     listState: LazyListState,
@@ -293,6 +310,11 @@ private fun HistoryScreen(
     ) {
         HistoryTopBar(paired = state.paired, onOpenSettings = onOpenSettings)
         HorizontalDivider(thickness = 1.dp, color = colors.ink)
+        SyncStatusBar(
+            status = state.syncStatus,
+            paired = state.paired,
+            onRetry = onSyncNow,
+        )
         SearchBar(
             query = state.query,
             resultCount = if (state.searching) state.clips.size else null,

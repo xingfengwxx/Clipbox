@@ -15,6 +15,7 @@ import com.wangxingxing.clipbox.settings.SettingsRepository
 import com.wangxingxing.clipbox.sync.OutboxWorker
 import com.wangxingxing.clipbox.sync.SyncCoordinator
 import com.wangxingxing.clipbox.sync.SyncStatusHolder
+import com.wangxingxing.clipbox.ui.history.HistoryViewportState
 
 internal class AppGraph(
     val settingsRepository: SettingsRepository,
@@ -26,7 +27,10 @@ internal class AppGraph(
     val syncStatusHolder: SyncStatusHolder,
     val defaultServerUrl: String,
     val defaultDeviceName: String,
-)
+) {
+    // 历史页列表的顶部状态与回顶请求由 App 层与历史页共享，避免 App 层猜测滚动位置
+    val historyViewport = HistoryViewportState()
+}
 
 internal val LocalAppGraph = staticCompositionLocalOf<AppGraph> {
     error("AppGraph is not provided")

@@ -70,6 +70,13 @@
     <string name="history_delete_body">刪除後無法復原，所有裝置都會移除。</string>
     <string name="history_delete_confirm">刪除</string>
     <string name="history_cancel">取消</string>
+    <string name="history_sync_syncing">同步中</string>
+    <string name="history_sync_synced">已同步</string>
+    <string name="history_sync_offline">離線</string>
+    <string name="history_sync_pending_count">待同步 %1$d 筆</string>
+    <string name="history_sync_failed_count">失敗 %1$d 筆</string>
+    <string name="history_received_new">收到新紀錄</string>
+    <string name="history_view_new">查看</string>
     <string name="share_sheet_title">產生分享連結</string>
     <string name="share_tier_1h">1 小時</string>
     <string name="share_tier_24h">24 小時</string>

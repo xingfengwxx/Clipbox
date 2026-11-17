@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-16 16:29
  * email : 1099420259@qq.com
- * description : 自适应导航壳：<600dp 用底部三栏，≥600dp 用 200dp 侧栏；切换一级页时保存 / 恢复各自返回栈状态；配对页全屏不显示导航；分享草稿参数原样透传
+ * description : 自适应导航壳：<600dp 用底部三栏，≥600dp 用 200dp 侧栏；切换一级页时保存 / 恢复各自返回栈状态；配对页全屏不显示导航；分享草稿参数原样透传；App 层观察本地记录并决定是否弹出新记录 Snackbar
  */
 package com.wangxingxing.clipbox.ui.navigation
 
@@ -27,10 +27,16 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -42,11 +48,27 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.wangxingxing.clipbox.di.LocalAppGraph
+import com.wangxingxing.clipbox.model.SyncStatus
+import com.wangxingxing.clipbox.resources.Res
+import com.wangxingxing.clipbox.resources.history_received_new
+import com.wangxingxing.clipbox.resources.history_view_new
 import com.wangxingxing.clipbox.ui.theme.ClipboxTokens
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import org.jetbrains.compose.resources.stringResource
 
 // 架构 §7.1：<600dp 底部导航，≥600dp 左侧 NavigationRail
 private val WideLayoutMinWidth = 600.dp
+private val BottomBarHeight = 64.dp
+
+// 同一批新记录在窗口内只提示一次；提示展示 3 秒后自动消失
+private const val HINT_BATCH_MILLIS = 500L
+private const val HINT_DURATION_MILLIS = 3_000L
 
 @Composable
 fun ClipboxNavigationHost(
@@ -64,6 +86,63 @@ fun ClipboxNavigationHost(
     val selected = TopLevelDestination.fromRoute(currentRoute)
         ?: TopLevelDestination.History
     val colors = ClipboxTokens.colors
+    val graph = LocalAppGraph.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val receivedNewLabel = stringResource(Res.string.history_received_new)
+    val viewLabel = stringResource(Res.string.history_view_new)
+    // 提示延迟 500ms 展示，路由与顶部状态必须在展示与点击时取最新值
+    val currentRouteState = rememberUpdatedState(currentRoute)
+
+    LaunchedEffect(graph) {
+        // 同批到达只提示一次；缓冲满时丢弃旧触发，新事件替换旧提示而不堆叠
+        val hintTriggers = MutableSharedFlow<Unit>(
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        )
+        launch {
+            hintTriggers.debounce(HINT_BATCH_MILLIS).collect {
+                val onHistoryAtTop = currentRouteState.value == TopLevelDestination.History.route &&
+                    graph.historyViewport.isAtTop
+                // 重同步会整体重建列表，不算新记录
+                if (onHistoryAtTop || graph.syncStatusHolder.status.value is SyncStatus.Resyncing) {
+                    return@collect
+                }
+                snackbarHostState.currentSnackbarData?.dismiss()
+                val result = withTimeoutOrNull(HINT_DURATION_MILLIS) {
+                    snackbarHostState.showSnackbar(
+                        message = receivedNewLabel,
+                        actionLabel = viewLabel,
+                    )
+                }
+                if (result == SnackbarResult.ActionPerformed) {
+                    navController.switchTo(TopLevelDestination.History)
+                    graph.historyViewport.requestScrollToTop()
+                }
+            }
+        }
+
+        // 只统计新增记录，并排除本机发送与首次加载；列表整体缩减视为重同步基线
+        val knownIds = mutableSetOf<String>()
+        var firstEmission = true
+        combine(
+            graph.clipRepository.observeClips(),
+            graph.settingsRepository.settings,
+        ) { clips, settings -> clips to settings.deviceId.orEmpty() }
+            .collect { (clips, selfDeviceId) ->
+                val ids = clips.mapTo(mutableSetOf()) { it.id }
+                if (firstEmission) {
+                    firstEmission = false
+                    knownIds.addAll(ids)
+                    return@collect
+                }
+                val added = clips.filter { it.id !in knownIds }
+                val reset = knownIds.isNotEmpty() && ids.size < knownIds.size
+                knownIds.clear()
+                knownIds.addAll(ids)
+                if (reset || added.isEmpty()) return@collect
+                if (added.any { it.sourceDeviceId != selfDeviceId }) hintTriggers.tryEmit(Unit)
+            }
+    }
 
     BoxWithConstraints(
         modifier = modifier
@@ -112,6 +191,20 @@ fun ClipboxNavigationHost(
                 )
             }
         }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(
+                    start = ClipboxTokens.spacing.l,
+                    end = ClipboxTokens.spacing.l,
+                    bottom = if (maxWidth >= WideLayoutMinWidth) {
+                        ClipboxTokens.spacing.l
+                    } else {
+                        BottomBarHeight + ClipboxTokens.spacing.l
+                    },
+                ),
+        )
     }
 }
 
@@ -139,7 +232,7 @@ private fun ClipboxBottomBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(64.dp),
+                .height(BottomBarHeight),
         ) {
             TopLevelDestination.entries.forEachIndexed { index, destination ->
                 if (index > 0) {

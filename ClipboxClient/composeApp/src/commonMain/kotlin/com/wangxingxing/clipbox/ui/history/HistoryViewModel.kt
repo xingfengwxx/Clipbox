@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-16 18:05
  * email : 1099420259@qq.com
- * description : 历史页状态机：把设置流、本地记录流、300ms 防抖搜索与同步状态合并为展示状态；发送、置顶、删除、重试只调用 ClipRepository，写入成功后显式唤醒 Outbox 立即重放
+ * description : 历史页状态机：把设置流、本地记录流、300ms 防抖搜索与同步状态合并为展示状态；发送、置顶、删除、重试只调用 ClipRepository，写入成功后显式唤醒 Outbox 立即重放；状态条重试经 SyncCoordinator 先补拉再唤醒同步
  */
 package com.wangxingxing.clipbox.ui.history
 
@@ -11,6 +11,7 @@ import com.wangxingxing.clipbox.repository.ClipRepository
 import com.wangxingxing.clipbox.repository.SendResult
 import com.wangxingxing.clipbox.settings.SettingsRepository
 import com.wangxingxing.clipbox.sync.OutboxWorker
+import com.wangxingxing.clipbox.sync.SyncCoordinator
 import com.wangxingxing.clipbox.sync.SyncStatusHolder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -34,6 +35,7 @@ class HistoryViewModel(
     settingsRepository: SettingsRepository,
     private val outboxWorker: OutboxWorker,
     syncStatusHolder: SyncStatusHolder,
+    private val syncCoordinator: SyncCoordinator,
     private val scope: CoroutineScope,
 ) {
 
@@ -113,6 +115,11 @@ class HistoryViewModel(
         scope.launch {
             if (clipRepository.retry(id)) outboxWorker.requestReplay()
         }
+    }
+
+    // 状态条重试：先 REST 补拉再唤醒 Outbox 与 WS，失败只反映在状态条上，不打断当前操作
+    fun syncNow() {
+        scope.launch { syncCoordinator.syncNow() }
     }
 
     private companion object {
