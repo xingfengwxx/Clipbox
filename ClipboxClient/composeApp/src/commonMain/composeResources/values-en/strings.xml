@@ -224,4 +224,14 @@
     <string name="tool_limit">%1$s / 100 KiB</string>
     <string name="tool_limit_badge">100 KiB</string>
     <string name="tool_over_limit">Over the 100 KiB limit</string>
+    <string name="tool_format">Format</string>
+    <string name="tool_minify">Minify</string>
+    <string name="tool_validate">Validate</string>
+    <string name="tool_json_ok">Valid JSON</string>
+    <string name="tool_json_error">Line %1$d, column %2$d: %3$s</string>
+    <string name="tool_json_reason_early_end">The JSON ends too early</string>
+    <string name="tool_json_reason_brace">A comma or closing brace is missing</string>
+    <string name="tool_json_reason_colon">A colon is missing</string>
+    <string name="tool_json_reason_quote">A string is missing its closing quote</string>
+    <string name="tool_json_reason_syntax">JSON syntax error</string>
 </resources>

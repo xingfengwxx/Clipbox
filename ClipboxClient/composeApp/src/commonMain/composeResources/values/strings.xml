@@ -216,4 +216,14 @@
     <string name="tool_limit">%1$s / 100 KiB</string>
     <string name="tool_limit_badge">100 KiB</string>
     <string name="tool_over_limit">超过 100 KiB 上限</string>
+    <string name="tool_format">格式化</string>
+    <string name="tool_minify">压缩</string>
+    <string name="tool_validate">校验</string>
+    <string name="tool_json_ok">JSON 合法</string>
+    <string name="tool_json_error">第 %1$d 行第 %2$d 列：%3$s</string>
+    <string name="tool_json_reason_early_end">JSON 提前结束</string>
+    <string name="tool_json_reason_brace">缺少逗号或右括号</string>
+    <string name="tool_json_reason_colon">缺少冒号</string>
+    <string name="tool_json_reason_quote">字符串缺少引号</string>
+    <string name="tool_json_reason_syntax">JSON 语法错误</string>
 </resources>

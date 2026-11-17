@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-17 16:20
  * email : 1099420259@qq.com
- * description : 工具箱 S15：五张工具卡与本地说明；未配对也可进入。工具详情占位页复用 ToolScaffold 验证输入、输出、复制与清空链路，真实计算由 T-UI-12…16 替换。
+ * description : 工具箱 S15：五张工具卡与本地说明；未配对也可进入。JSON 工具接真实计算，其余工具暂复用 ToolScaffold 骨架，由后续工具卡替换。
  *               注意：本页不依赖同步、数据库或网络，卡片只做本地导航
  */
 package com.wangxingxing.clipbox.ui.toolbox
@@ -50,6 +50,7 @@ import com.wangxingxing.clipbox.resources.tool_kicker
 import com.wangxingxing.clipbox.resources.tool_local_note
 import com.wangxingxing.clipbox.resources.tool_tag
 import com.wangxingxing.clipbox.ui.navigation.TopLevelDestination
+import com.wangxingxing.clipbox.ui.toolbox.json.JsonToolRoute
 import com.wangxingxing.clipbox.ui.theme.ClipboxShapes
 import com.wangxingxing.clipbox.ui.theme.ClipboxTokens
 import org.jetbrains.compose.resources.stringResource
@@ -107,9 +108,25 @@ fun ToolDetailRoute(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    when (toolId) {
+        ToolId.Json -> JsonToolRoute(onBack = onBack, modifier = modifier)
+        ToolId.Base64, ToolId.Url, ToolId.Time, ToolId.Regex -> SkeletonToolRoute(
+            toolId = toolId,
+            onBack = onBack,
+            modifier = modifier,
+        )
+    }
+}
+
+// 其余工具卡尚未实现，先保留输入原样进入输出的骨架，用于验证复制与清空
+@Composable
+private fun SkeletonToolRoute(
+    toolId: ToolId,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     var input by rememberSaveable(toolId) { mutableStateOf("") }
     val overLimit = rememberInputByteCount(input) > ToolInputLimit.MAX_BYTES
-    // 骨架阶段输入原样进入输出，用于验证复制与清空；各工具卡会替换为真实计算
     val output = if (overLimit) "" else input
     ToolScaffold(
         title = stringResource(toolId.title),
