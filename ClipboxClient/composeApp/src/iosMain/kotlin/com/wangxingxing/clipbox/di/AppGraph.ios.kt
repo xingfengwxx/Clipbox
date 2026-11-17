@@ -2,7 +2,8 @@
  * author : 王星星
  * date : 2026-11-16 17:15
  * email : 1099420259@qq.com
- * description : iOS 临时依赖图；进程级单例避免重复创建数据库与 WS 连接，设备名由 IosDeviceInfo 提供，服务器地址按二进制是否为 debug 区分
+ * description : iOS 临时依赖图；进程级单例避免重复创建数据库与 WS 连接，设备名由 IosDeviceInfo 提供，服务器地址按二进制是否为 debug 区分。
+ *               注意：Compose 与宿主生命周期桥必须复用同一单例，否则会出现两条 WS 连接与两个数据库。
  */
 package com.wangxingxing.clipbox.di
 
@@ -21,6 +22,9 @@ import kotlin.native.Platform
 
 @Composable
 internal actual fun rememberAppGraph(): AppGraph = remember { IosAppGraph.instance }
+
+/** 供 IosAppLifecycle 等宿主入口取得同一进程级依赖图，避免重复创建数据库与同步运行时。 */
+internal fun iosAppGraph(): AppGraph = IosAppGraph.instance
 
 private object IosAppGraph {
 
