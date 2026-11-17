@@ -215,10 +215,10 @@ flowchart LR
 | Server | T-S-01…T-S-11 | 已完成 | `e57aed5`（T-S-11）；M2 Gate 见 [m2-gate.md](m2-gate.md) |
 | Client Core | T-CORE-01…T-CORE-15 | 已完成 | 最后一张 `fe04070`（T-CORE-15）；M3 见 [m3-gate.md](m3-gate.md) |
 | Client UI | T-UI-01…T-UI-20 | 已完成 | 最后一张 T-UI-20（M3 Gate 提交）；M3 见 [m3-gate.md](m3-gate.md) |
-| iOS | T-IOS-01…T-IOS-09 | 进行中（01–07 已完成） | `6ec524b`（T-IOS-07） |
+| iOS | T-IOS-01…T-IOS-09 | 已完成 | 最后一张 T-IOS-09（M4 Gate 提交）；M4 见 [m4-gate.md](m4-gate.md) |
 | Release | T-REL-01…T-REL-08 | 待开始 | — |
 
-> M2 已于 2026-11-17 通过（证据见 [m2-gate.md](m2-gate.md)）；M3 于同日有条件通过（证据见 [m3-gate.md](m3-gate.md)，AC-11 冲突见 D8）；下一张为 T-IOS-08。
+> M2 已于 2026-11-17 通过（证据见 [m2-gate.md](m2-gate.md)）；M3 于同日有条件通过（证据见 [m3-gate.md](m3-gate.md)，AC-11 冲突见 D8）；M4 于同日通过（证据见 [m4-gate.md](m4-gate.md)，D8 仍需在 T-REL-06 前关闭）；下一张为 T-REL-01。
 
 ## 7. 统一 DoD
 
