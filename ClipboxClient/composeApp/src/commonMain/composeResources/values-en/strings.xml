@@ -242,4 +242,13 @@
     <string name="tool_url_whole">Full URL</string>
     <string name="tool_url_plus">+ as space</string>
     <string name="tool_url_error">Invalid percent-encoding at position %1$d</string>
+    <string name="tool_auto">Auto</string>
+    <string name="tool_seconds">Seconds</string>
+    <string name="tool_millis">Millis</string>
+    <string name="tool_now">Use current time</string>
+    <string name="tool_local">Local</string>
+    <string name="tool_utc">UTC</string>
+    <string name="tool_iso">ISO 8601</string>
+    <string name="tool_time_error">Not a valid timestamp or date</string>
+    <string name="tool_time_range">Out of the supported time range</string>
 </resources>

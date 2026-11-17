@@ -234,4 +234,13 @@
     <string name="tool_url_whole">整串</string>
     <string name="tool_url_plus">+ = 空格</string>
     <string name="tool_url_error">位置 %1$d 的百分号编码不合法</string>
+    <string name="tool_auto">自动</string>
+    <string name="tool_seconds">秒</string>
+    <string name="tool_millis">毫秒</string>
+    <string name="tool_now">填入当前时间</string>
+    <string name="tool_local">本地</string>
+    <string name="tool_utc">UTC</string>
+    <string name="tool_iso">ISO 8601</string>
+    <string name="tool_time_error">不是合法的时间戳或日期</string>
+    <string name="tool_time_range">时间超出可表示范围</string>
 </resources>

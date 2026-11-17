@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-17 16:20
  * email : 1099420259@qq.com
- * description : 工具箱 S15：五张工具卡与本地说明；未配对也可进入。JSON、Base64 与 URL 接真实计算，其余工具暂复用 ToolScaffold 骨架，由后续工具卡替换。
+ * description : 工具箱 S15：五张工具卡与本地说明；未配对也可进入。正则以外的工具均已接真实计算，正则以 ToolScaffold 骨架占位，由后续工具卡替换。
  *               注意：本页不依赖同步、数据库或网络，卡片只做本地导航
  */
 package com.wangxingxing.clipbox.ui.toolbox
@@ -52,6 +52,7 @@ import com.wangxingxing.clipbox.resources.tool_tag
 import com.wangxingxing.clipbox.ui.navigation.TopLevelDestination
 import com.wangxingxing.clipbox.ui.toolbox.base64.Base64ToolRoute
 import com.wangxingxing.clipbox.ui.toolbox.json.JsonToolRoute
+import com.wangxingxing.clipbox.ui.toolbox.timestamp.TimestampToolRoute
 import com.wangxingxing.clipbox.ui.toolbox.url.UrlToolRoute
 import com.wangxingxing.clipbox.ui.theme.ClipboxShapes
 import com.wangxingxing.clipbox.ui.theme.ClipboxTokens
@@ -114,7 +115,8 @@ fun ToolDetailRoute(
         ToolId.Json -> JsonToolRoute(onBack = onBack, modifier = modifier)
         ToolId.Base64 -> Base64ToolRoute(onBack = onBack, modifier = modifier)
         ToolId.Url -> UrlToolRoute(onBack = onBack, modifier = modifier)
-        ToolId.Time, ToolId.Regex -> SkeletonToolRoute(
+        ToolId.Time -> TimestampToolRoute(onBack = onBack, modifier = modifier)
+        ToolId.Regex -> SkeletonToolRoute(
             toolId = toolId,
             onBack = onBack,
             modifier = modifier,
@@ -122,7 +124,7 @@ fun ToolDetailRoute(
     }
 }
 
-// 其余工具卡尚未实现，先保留输入原样进入输出的骨架，用于验证复制与清空
+// 正则工具尚未实现，先保留输入原样进入输出的骨架，用于验证复制与清空
 @Composable
 private fun SkeletonToolRoute(
     toolId: ToolId,
