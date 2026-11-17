@@ -49,8 +49,9 @@ fun App(
     val container = koinInject<AppContainer>()
     val startupState by container.startupState.collectAsState()
     val generation by container.generation.collectAsState()
+    val themeMode by container.themeMode.collectAsState()
 
-    ClipboxTheme {
+    ClipboxTheme(themeMode = themeMode) {
         when (startupState) {
             AppStartupState.Loading -> StartupLoading()
             is AppStartupState.Failed -> StartupFailure(onRetry = container::startAsync)

@@ -2,22 +2,27 @@
  * author : 王星星
  * date : 2026-11-17 15:42
  * email : 1099420259@qq.com
- * description : 外观与语言 S13 入口页；本卡只展示当前主题与语言并保留返回路径，三选一控件由 T-UI-09 / T-UI-10 填充
+ * description : 外观与语言 S13：主题三选一分段与预览卡片立即生效并写入设置，语言入口先保留当前值，控件由 T-UI-10 补齐
  */
 package com.wangxingxing.clipbox.ui.settings
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,12 +32,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.wangxingxing.clipbox.resources.Res
 import com.wangxingxing.clipbox.resources.appearance_back
 import com.wangxingxing.clipbox.resources.appearance_current
 import com.wangxingxing.clipbox.resources.appearance_kicker
 import com.wangxingxing.clipbox.resources.appearance_note
+import com.wangxingxing.clipbox.resources.appearance_preview_body
+import com.wangxingxing.clipbox.resources.appearance_preview_device
+import com.wangxingxing.clipbox.resources.appearance_preview_label
+import com.wangxingxing.clipbox.resources.appearance_preview_time
 import com.wangxingxing.clipbox.resources.appearance_section_language
 import com.wangxingxing.clipbox.resources.appearance_section_theme
 import com.wangxingxing.clipbox.resources.appearance_title
@@ -58,12 +69,11 @@ fun AppearanceRoute(
     val state by viewModel.state.collectAsState()
     val colors = ClipboxTokens.colors
     val spacing = ClipboxTokens.spacing
-    val themeLabel = stringResource(
-        when (state.themeMode) {
-            ThemeMode.SYSTEM -> Res.string.settings_theme_system
-            ThemeMode.LIGHT -> Res.string.settings_theme_light
-            ThemeMode.DARK -> Res.string.settings_theme_dark
-        },
+    // 选项文案全部走资源，切换语言后分段控件同步更新
+    val themeOptions = listOf(
+        ThemeMode.SYSTEM to stringResource(Res.string.settings_theme_system),
+        ThemeMode.LIGHT to stringResource(Res.string.settings_theme_light),
+        ThemeMode.DARK to stringResource(Res.string.settings_theme_dark),
     )
     val languageLabel = when (state.language) {
         AppLanguage.ZH_HANS -> stringResource(Res.string.settings_language_hans)
@@ -112,9 +122,13 @@ fun AppearanceRoute(
         HorizontalDivider(thickness = 1.dp, color = colors.ink)
 
         AppearanceSectionLabel(stringResource(Res.string.appearance_section_theme))
-        AppearanceValueRow(
-            label = stringResource(Res.string.appearance_current),
-            value = themeLabel,
+        AppearanceSegment(
+            options = themeOptions,
+            selected = state.themeMode,
+            onSelect = viewModel::setThemeMode,
+        )
+        AppearancePreviewCard(
+            deviceName = state.deviceName.ifBlank { stringResource(Res.string.appearance_preview_device) },
         )
         AppearanceSectionLabel(stringResource(Res.string.appearance_section_language))
         AppearanceValueRow(
@@ -131,6 +145,106 @@ fun AppearanceRoute(
             style = MaterialTheme.typography.bodySmall,
             color = colors.ink3,
         )
+    }
+}
+
+@Composable
+private fun <T> AppearanceSegment(
+    options: List<Pair<T, String>>,
+    selected: T,
+    onSelect: (T) -> Unit,
+) {
+    val colors = ClipboxTokens.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = ClipboxTokens.spacing.l)
+            .height(48.dp)
+            .clip(RoundedCornerShape(3.dp))
+            .border(1.dp, colors.line, RoundedCornerShape(3.dp)),
+    ) {
+        options.forEachIndexed { index, (value, label) ->
+            if (index > 0) {
+                Box(
+                    Modifier
+                        .width(1.dp)
+                        .fillMaxHeight()
+                        .background(colors.line)
+                )
+            }
+            val isSelected = value == selected
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .background(if (isSelected) colors.ink else colors.panel)
+                    .selectable(
+                        selected = isSelected,
+                        role = Role.RadioButton,
+                        onClick = { onSelect(value) },
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (isSelected) colors.background else colors.ink2,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AppearancePreviewCard(deviceName: String) {
+    val colors = ClipboxTokens.colors
+    val spacing = ClipboxTokens.spacing
+    val mono = ClipboxTokens.typography.mono
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = spacing.l, top = spacing.m, end = spacing.l)
+            .border(1.dp, colors.line)
+            .background(colors.panel)
+            .padding(spacing.m),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResource(Res.string.appearance_preview_label),
+                style = mono,
+                color = colors.ink3,
+            )
+            Spacer(Modifier.weight(1f))
+            Text(
+                text = stringResource(Res.string.appearance_current),
+                modifier = Modifier
+                    .border(1.dp, colors.accent, RoundedCornerShape(2.dp))
+                    .padding(horizontal = 5.dp, vertical = 1.dp),
+                style = mono,
+                color = colors.accent,
+            )
+        }
+        Text(
+            text = stringResource(Res.string.appearance_preview_body),
+            modifier = Modifier.padding(top = 10.dp),
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.ink,
+        )
+        HorizontalDivider(
+            modifier = Modifier.padding(top = 10.dp),
+            thickness = 1.dp,
+            color = colors.line,
+        )
+        Row(modifier = Modifier.padding(top = spacing.s)) {
+            Text(text = deviceName, style = mono, color = colors.ink3)
+            Spacer(Modifier.weight(1f))
+            Text(
+                text = stringResource(Res.string.appearance_preview_time),
+                style = mono,
+                color = colors.ink3,
+            )
+        }
     }
 }
 

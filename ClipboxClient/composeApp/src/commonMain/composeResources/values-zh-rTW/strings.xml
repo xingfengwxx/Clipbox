@@ -174,5 +174,9 @@
     <string name="appearance_section_theme">主題</string>
     <string name="appearance_section_language">語言</string>
     <string name="appearance_current">目前</string>
+    <string name="appearance_preview_label">預覽</string>
+    <string name="appearance_preview_body">把這段文字傳到書房那台 Mac。</string>
+    <string name="appearance_preview_device">本機</string>
+    <string name="appearance_preview_time">剛剛</string>
     <string name="appearance_note">首次啟動固定為簡體中文，之後以你的選擇為準。</string>
 </resources>

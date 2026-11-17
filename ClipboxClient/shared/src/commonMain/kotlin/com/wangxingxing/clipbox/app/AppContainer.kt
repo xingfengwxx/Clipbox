@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-17 18:40
  * email : 1099420259@qq.com
- * description : 应用容器：持有进程级环境（设置、日志、配对入口）与可重建的会话（数据库、同步运行时）。
+ * description : 应用容器：持有进程级环境（设置、主题、日志、配对入口）与可重建的会话（数据库、同步运行时）。
  *               注意：配对成功、服务器地址变化、解绑都必须关闭旧会话再新建；旧会话先取消协程，再关闭网络与数据库，避免残留连接与协程
  */
 package com.wangxingxing.clipbox.app
@@ -21,6 +21,7 @@ import com.wangxingxing.clipbox.repository.ShareRepository
 import com.wangxingxing.clipbox.repository.SyncRepository
 import com.wangxingxing.clipbox.settings.AppSettings
 import com.wangxingxing.clipbox.settings.SettingsRepository
+import com.wangxingxing.clipbox.settings.ThemeMode
 import com.wangxingxing.clipbox.sync.OutboxWorker
 import com.wangxingxing.clipbox.sync.SyncCoordinator
 import com.wangxingxing.clipbox.sync.SyncRuntime
@@ -106,8 +107,16 @@ class AppContainer(private val services: PlatformServices) {
     private val _generation = MutableStateFlow(0)
     val generation: StateFlow<Int> = _generation.asStateFlow()
 
+    // 主题独立于会话：切换只改根主题重组，不触发导航或数据库重建
+    private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
+    val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
+
     private val startLock = Mutex()
     private val sessionLock = Mutex()
+    private val preloadLock = Mutex()
+
+    @Volatile
+    private var settingsPreloaded = false
 
     @Volatile
     private var settingsSnapshotJob: Job? = null
@@ -135,6 +144,21 @@ class AppContainer(private val services: PlatformServices) {
         return value
     }
 
+    /**
+     * 首次组合前预载设置：主题与语言必须第一帧就按用户选择渲染，否则固定深浅色启动会先闪一帧系统外观。
+     * 平台入口在创建界面前同步调用；与 start() 共用默认值写入，重复调用无副作用。
+     */
+    suspend fun preloadSettings() {
+        preloadLock.withLock {
+            if (settingsPreloaded) return
+            settingsRepository.initialize()
+            val settings = settingsRepository.current()
+            settingsSnapshot = settings
+            _themeMode.value = settings.themeMode
+            settingsPreloaded = true
+        }
+    }
+
     fun startAsync() {
         services.appScope.launch { start() }
     }
@@ -144,17 +168,21 @@ class AppContainer(private val services: PlatformServices) {
             if (_startupState.value is AppStartupState.Ready) return
             _startupState.value = AppStartupState.Loading
             try {
-                settingsRepository.initialize()
+                preloadSettings()
                 // 诊断开关只观察一次，跨会话保持；会话重建不重复收集
                 appLogger.observe(settingsRepository, services.appScope)
                 // 快照跟随 DataStore：未配对改址后配对页预填、外观摘要都读取最新值
                 if (settingsSnapshotJob == null) {
                     settingsSnapshotJob = services.appScope.launch {
-                        settingsRepository.settings.collect { settingsSnapshot = it }
+                        settingsRepository.settings.collect {
+                            settingsSnapshot = it
+                            _themeMode.value = it.themeMode
+                        }
                     }
                 }
                 val settings = settingsRepository.current()
                 settingsSnapshot = settings
+                _themeMode.value = settings.themeMode
                 session = buildSession(settings)
                 _startupState.value = AppStartupState.Ready
             } catch (e: CancellationException) {
@@ -203,6 +231,7 @@ class AppContainer(private val services: PlatformServices) {
 
             val settings = settingsRepository.current()
             settingsSnapshot = settings
+            _themeMode.value = settings.themeMode
             startAtPairing = returnToPairing && settings.deviceToken.isNullOrEmpty()
             session = buildSession(settings)
             _generation.value += 1

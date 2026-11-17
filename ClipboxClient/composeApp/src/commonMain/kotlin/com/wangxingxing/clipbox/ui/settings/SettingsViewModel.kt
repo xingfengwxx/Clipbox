@@ -15,6 +15,7 @@ import com.wangxingxing.clipbox.repository.SyncRepository
 import com.wangxingxing.clipbox.settings.ServerUrlValidation
 import com.wangxingxing.clipbox.settings.ServerUrlValidator
 import com.wangxingxing.clipbox.settings.SettingsRepository
+import com.wangxingxing.clipbox.settings.ThemeMode
 import com.wangxingxing.clipbox.sync.SyncNowResult
 import com.wangxingxing.clipbox.sync.SyncStatusHolder
 import kotlinx.coroutines.CancellationException
@@ -137,5 +138,9 @@ class SettingsViewModel(
 
     fun setDiagnosticLogging(enabled: Boolean) {
         viewModelScope.launch { settingsRepository.setDiagnosticLoggingEnabled(enabled) }
+    }
+
+    fun setThemeMode(mode: ThemeMode) {
+        viewModelScope.launch { settingsRepository.setThemeMode(mode) }
     }
 }

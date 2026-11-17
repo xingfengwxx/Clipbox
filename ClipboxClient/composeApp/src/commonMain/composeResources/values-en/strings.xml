@@ -174,5 +174,9 @@
     <string name="appearance_section_theme">Theme</string>
     <string name="appearance_section_language">Language</string>
     <string name="appearance_current">Current</string>
+    <string name="appearance_preview_label">Preview</string>
+    <string name="appearance_preview_body">Send this text to the Mac in the study.</string>
+    <string name="appearance_preview_device">This device</string>
+    <string name="appearance_preview_time">Just now</string>
     <string name="appearance_note">Simplified Chinese on first launch; your choice after that.</string>
 </resources>

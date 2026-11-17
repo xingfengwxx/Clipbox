@@ -3,7 +3,7 @@
  * date : 2026-11-16 11:17
  * email : 1099420259@qq.com
  * description : Desktop 入口：启动 Koin 与应用容器，创建 1000×700 主窗口并限制最小 640×480；窗口关闭时先关闭会话再退出进程。
- *               注意：close 带 2 秒上限，避免 WS 或数据库收尾异常拖住退出
+ *               注意：创建界面前同步预载设置，保证首帧主题正确；close 带 2 秒上限，避免 WS 或数据库收尾异常拖住退出
  */
 package com.wangxingxing.clipbox
 
@@ -29,6 +29,8 @@ import org.koin.core.context.startKoin
 fun main() {
     val koin = startKoin { modules(desktopPlatformModule(), appModule) }.koin
     val container = koin.get<AppContainer>()
+    // 设置只读几个键，阻塞时间可忽略；先定主题再开窗，固定深浅色启动时窗口不会先闪一帧系统外观
+    runBlocking { container.preloadSettings() }
 
     application {
         // brand-spec 规定 Desktop 窗口标题固定为 Theca，三语资源同值
