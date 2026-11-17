@@ -8,9 +8,13 @@
 package com.wangxingxing.clipbox.server.db
 
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 
 data class ShareRow(
     val tokenHash: String,
@@ -41,6 +45,20 @@ object ShareRepository {
             .where { SharesTable.tokenHash eq tokenHash }
             .singleOrNull()
             ?.toShareRow()
+
+    /**
+     * 一次性分享的原子消费：只有未打开且未过期的一次性记录会被标记。
+     * 返回受影响行数；调用方必须据此判断是否真正获得了本次访问权。
+     */
+    fun markOpenedIfOneTime(tokenHash: String, now: Long): Int =
+        SharesTable.update({
+            (SharesTable.tokenHash eq tokenHash) and
+                (SharesTable.oneTime eq 1) and
+                SharesTable.openedAt.isNull() and
+                (SharesTable.expiresAt greater now)
+        }) {
+            it[openedAt] = now
+        }
 
     private fun ResultRow.toShareRow() = ShareRow(
         tokenHash = this[SharesTable.tokenHash],

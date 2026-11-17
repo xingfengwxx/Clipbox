@@ -28,6 +28,7 @@ import com.wangxingxing.clipbox.server.routes.SERVER_VERSION
 import com.wangxingxing.clipbox.server.routes.clipRoutes
 import com.wangxingxing.clipbox.server.routes.healthRoutes
 import com.wangxingxing.clipbox.server.routes.pairingRoutes
+import com.wangxingxing.clipbox.server.routes.publicShareRoutes
 import com.wangxingxing.clipbox.server.routes.shareRoutes
 import com.wangxingxing.clipbox.server.service.AdminService
 import com.wangxingxing.clipbox.server.service.Broadcaster
@@ -122,10 +123,13 @@ fun Application.module(
     configureDeviceAuth(factory, deviceRateLimiter = limiters.device)
     configureSyncWebSockets(webSocketSettings)
     routing {
+        // 创建与访问共用同一服务实例，分享 URL 拼接口径保持一致。
+        val shareService = ShareService(factory, config.publicBaseUrl)
         healthRoutes(factory::isHealthy)
         pairingRoutes(adminService, pairingService)
         clipRoutes(ClipService(factory, broadcaster))
-        shareRoutes(ShareService(factory, config.publicBaseUrl))
+        shareRoutes(shareService)
+        publicShareRoutes(shareService)
         syncRoutes(
             factory,
             connectionRegistry,

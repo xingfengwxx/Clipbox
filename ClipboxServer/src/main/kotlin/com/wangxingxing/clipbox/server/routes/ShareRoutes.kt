@@ -2,24 +2,32 @@
  * author : 王星星
  * date : 2026-11-17 11:36
  * email : 1099420259@qq.com
- * description : 分享创建路由：Bearer 认证下的 POST /api/v1/shares，解析请求并返回明文令牌、分享 URL 与过期时间。
+ * description : 分享路由：Bearer 认证下的 POST /api/v1/shares 与公开只读的 GET /s/{token}。
  *               注意：令牌只出现在成功响应中，不得写入日志或错误信息；413/415 必须原样抛出，
- *                     否则会被解析兜底吞成 400，破坏统一错误映射。
+ *                     否则会被解析兜底吞成 400，破坏统一错误映射；分享页为无脚本 HTML，CSP 逐响应追加。
  */
 package com.wangxingxing.clipbox.server.routes
 
 import com.wangxingxing.clipbox.server.plugins.DEVICE_AUTH_PROVIDER
 import com.wangxingxing.clipbox.server.plugins.respondError
+import com.wangxingxing.clipbox.server.service.SHARE_PAGE_CSP
 import com.wangxingxing.clipbox.server.service.ShareCreateFailure
+import com.wangxingxing.clipbox.server.service.SharePageRenderer
+import com.wangxingxing.clipbox.server.service.SharePageResult
 import com.wangxingxing.clipbox.server.service.ShareService
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.withCharset
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.PayloadTooLargeException
 import io.ktor.server.plugins.UnsupportedMediaTypeException
 import io.ktor.server.request.receive
+import io.ktor.server.response.header
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
@@ -79,6 +87,25 @@ fun Route.shareRoutes(shareService: ShareService) {
                 call.respondError(e.status, e.code, e.message)
             }
         }
+    }
+}
+
+/**
+ * 公开只读分享页，不经过设备认证。状态码与 api.md 一致：不存在 404，过期/已用 410；
+ * 错误页同样携带 CSP，且正文只在 [SharePageResult.Page] 分支出现。
+ */
+fun Route.publicShareRoutes(shareService: ShareService) {
+    get("/s/{token}") {
+        val token = call.parameters["token"].orEmpty()
+        val (status, html) = when (val result = shareService.openPage(token)) {
+            is SharePageResult.Page -> HttpStatusCode.OK to
+                SharePageRenderer.renderPage(result.content, result.expiresAt, result.oneTime)
+            SharePageResult.NotFound -> HttpStatusCode.NotFound to SharePageRenderer.renderNotFound()
+            SharePageResult.Expired -> HttpStatusCode.Gone to SharePageRenderer.renderExpired()
+            SharePageResult.Consumed -> HttpStatusCode.Gone to SharePageRenderer.renderConsumed()
+        }
+        call.response.header("Content-Security-Policy", SHARE_PAGE_CSP)
+        call.respondText(html, ContentType.Text.Html.withCharset(Charsets.UTF_8), status)
     }
 }
 
