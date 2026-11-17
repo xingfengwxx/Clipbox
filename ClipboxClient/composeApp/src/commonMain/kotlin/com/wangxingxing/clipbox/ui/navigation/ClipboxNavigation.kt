@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -68,6 +69,8 @@ import org.koin.compose.koinInject
 
 // 架构 §7.1：<600dp 底部导航，≥600dp 左侧 NavigationRail
 private val WideLayoutMinWidth = 600.dp
+// 宽屏只约束正文宽度，避免 iPad 横屏与桌面大窗口把列表和表单拉成整屏
+private val WideContentMaxWidth = 880.dp
 private val BottomBarHeight = 64.dp
 
 // 同一批新记录在窗口内只提示一次；提示展示 3 秒后自动消失
@@ -160,28 +163,42 @@ fun ClipboxNavigationHost(
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         if (isFullScreen) {
-            ClipboxNavHost(
-                navController = navController,
-                startDestination = startDestination,
+            Box(
                 modifier = Modifier.fillMaxSize(),
-                incomingShareDraft = incomingShareDraft,
-                onShareDraftConsumed = onShareDraftConsumed,
-            )
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                ClipboxNavHost(
+                    navController = navController,
+                    startDestination = startDestination,
+                    modifier = Modifier
+                        .widthIn(max = WideContentMaxWidth)
+                        .fillMaxSize(),
+                    incomingShareDraft = incomingShareDraft,
+                    onShareDraftConsumed = onShareDraftConsumed,
+                )
+            }
         } else if (maxWidth >= WideLayoutMinWidth) {
             Row(Modifier.fillMaxSize()) {
                 ClipboxNavigationRail(
                     selected = selected,
                     onSelect = { navController.switchTo(it) },
                 )
-                ClipboxNavHost(
-                    navController = navController,
-                    startDestination = startDestination,
+                Box(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight(),
-                    incomingShareDraft = incomingShareDraft,
-                    onShareDraftConsumed = onShareDraftConsumed,
-                )
+                    contentAlignment = Alignment.TopCenter,
+                ) {
+                    ClipboxNavHost(
+                        navController = navController,
+                        startDestination = startDestination,
+                        modifier = Modifier
+                            .widthIn(max = WideContentMaxWidth)
+                            .fillMaxSize(),
+                        incomingShareDraft = incomingShareDraft,
+                        onShareDraftConsumed = onShareDraftConsumed,
+                    )
+                }
             }
         } else {
             Column(Modifier.fillMaxSize()) {

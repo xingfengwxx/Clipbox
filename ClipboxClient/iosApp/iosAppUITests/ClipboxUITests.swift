@@ -2,8 +2,8 @@
 //  ClipboxUITests.swift
 //  iosApp
 //
-//  仅用于 T-IOS-03 的运行时验证：在 iOS 27 模拟器上驱动共享 Compose UI，覆盖配对、发送、
-//  键盘避让与底部导航。不进入 CI，不替代 T-IOS-09 的全量验收。
+//  在 iOS 27 模拟器上驱动共享 Compose UI，覆盖配对、发送、键盘避让、宽屏导航、主题与三语切换。
+//  不进入 CI，不替代 T-IOS-09 的全量验收。
 //
 
 import XCTest
@@ -68,6 +68,88 @@ final class ClipboxUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts[message].waitForExistence(timeout: 20))
         addScreenshot(named: "sent")
+    }
+
+    // 宽屏断点为 600dp：iPad 竖屏使用侧边导航，iPhone 竖屏使用底部导航；旋转后页面状态保持
+    func testAdaptiveLayoutAppearanceAndRotation() throws {
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication()
+        app.launch()
+
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        // 历史页右上角也有“设置”图标；一级导航项宽度远大于图标按钮，用它区分
+        let topLevelTab: (String) -> XCUIElement = { label in
+            let candidates = app.buttons.matching(NSPredicate(format: "label == %@", label)).allElementsBoundByIndex
+            return candidates.first { $0.frame.width > 80 } ?? app.buttons[label]
+        }
+        let settingsTab = topLevelTab("设置")
+        XCTAssertTrue(settingsTab.waitForExistence(timeout: 20))
+        if isPad {
+            XCTAssertLessThan(settingsTab.frame.minX, 240, "iPad 应使用左侧 NavigationRail")
+        } else {
+            XCTAssertGreaterThan(settingsTab.frame.width, 100, "iPhone 竖屏应使用底部导航")
+            XCTAssertGreaterThan(settingsTab.frame.minY, 300, "iPhone 底部导航应位于内容区下方")
+        }
+
+        settingsTab.tap()
+        XCTAssertTrue(app.staticTexts["设置"].waitForExistence(timeout: 5))
+
+        let languageRow = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "语言")).firstMatch
+        for _ in 0..<3 where !languageRow.isHittable {
+            app.swipeUp()
+        }
+        XCTAssertTrue(languageRow.waitForExistence(timeout: 5))
+        languageRow.tap()
+
+        XCTAssertTrue(app.staticTexts["外观与语言"].waitForExistence(timeout: 5))
+        addScreenshot(named: isPad ? "ipad-appearance-zh-hans" : "iphone-appearance-zh-hans")
+
+        let english = app.staticTexts["English"].firstMatch
+        XCTAssertTrue(english.waitForExistence(timeout: 5))
+        english.tap()
+        XCTAssertTrue(app.staticTexts["Appearance and language"].waitForExistence(timeout: 5))
+        addScreenshot(named: isPad ? "ipad-appearance-en" : "iphone-appearance-en")
+
+        let dark = app.staticTexts["Dark"].firstMatch
+        XCTAssertTrue(dark.waitForExistence(timeout: 5))
+        dark.tap()
+        addScreenshot(named: isPad ? "ipad-appearance-en-dark" : "iphone-appearance-en-dark")
+
+        let traditional = app.staticTexts["繁體中文"].firstMatch
+        XCTAssertTrue(traditional.waitForExistence(timeout: 5))
+        traditional.tap()
+        XCTAssertTrue(app.staticTexts["外觀與語言"].waitForExistence(timeout: 5))
+        addScreenshot(named: isPad ? "ipad-appearance-zh-hant-dark" : "iphone-appearance-zh-hant-dark")
+
+        XCUIDevice.shared.orientation = .landscapeLeft
+        XCTAssertTrue(app.staticTexts["外觀與語言"].waitForExistence(timeout: 5))
+        waitForRotation()
+        addScreenshot(named: isPad ? "ipad-landscape-appearance" : "iphone-landscape-appearance")
+
+        XCUIDevice.shared.orientation = .portrait
+        waitForRotation()
+        let simplified = app.staticTexts["简体中文"].firstMatch
+        XCTAssertTrue(simplified.waitForExistence(timeout: 5))
+        simplified.tap()
+        let systemTheme = app.staticTexts["跟随系统"].firstMatch
+        XCTAssertTrue(systemTheme.waitForExistence(timeout: 5))
+        systemTheme.tap()
+
+        // 返回键在旋转与语言重置后偶尔拿不到稳定语义节点；重启后回到起始页取证更可靠
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.staticTexts["字匣"].waitForExistence(timeout: 20))
+        addScreenshot(named: isPad ? "ipad-portrait-home" : "iphone-portrait-home")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        waitForRotation()
+        addScreenshot(named: isPad ? "ipad-landscape-home" : "iphone-landscape-home")
+        XCUIDevice.shared.orientation = .portrait
+        waitForRotation()
+    }
+
+    // 无头模拟器的窗口像素缓冲不随旋转改变尺寸，无法用 frame 判断完成；等待旋转动画结束后再截图
+    private func waitForRotation() {
+        Thread.sleep(forTimeInterval: 2)
     }
 
     private func tapBottomTab(_ app: XCUIApplication, _ label: String) {

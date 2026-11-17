@@ -20,6 +20,11 @@ fun MainViewController(): UIViewController {
         LaunchedEffect(Unit) {
             IosAppBootstrap.container.start()
         }
+        val language by IosAppBootstrap.container.language.collectAsState()
+        // 扩展运行在独立进程，主 App 的语言变化必须写入 App Group 才能让扩展文案同步切换
+        LaunchedEffect(language) {
+            IosAppLanguageStore.write(language.tag)
+        }
         val shareDraft by IosAppLifecycle.incomingShareDraft.collectAsState()
         App(
             incomingShareDraft = shareDraft?.text,

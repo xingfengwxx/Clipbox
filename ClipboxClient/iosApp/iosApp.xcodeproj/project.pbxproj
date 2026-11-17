@@ -18,6 +18,9 @@
 		F000000000000000000000D2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F000000000000000000000D3 /* ClipboxShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ClipboxShareExtension.entitlements; sourceTree = "<group>"; };
 		F000000000000000000000D4 /* iosApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iosApp.entitlements; sourceTree = "<group>"; };
+		F000000000000000000000E2 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		F000000000000000000000E3 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		F000000000000000000000E4 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXBuildFile section */
@@ -26,6 +29,7 @@
 		F000000000000000000000C2 /* ClipboxUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F000000000000000000000C0 /* ClipboxUITests.swift */; };
 		F000000000000000000000D5 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F000000000000000000000D1 /* ShareViewController.swift */; };
 		F000000000000000000000E1 /* ClipboxShareExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = F000000000000000000000D0 /* ClipboxShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F000000000000000000000E6 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F000000000000000000000E5 /* Localizable.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,6 +92,7 @@
 			isa = PBXGroup;
 			children = (
 				F000000000000000000000D1 /* ShareViewController.swift */,
+				F000000000000000000000E5 /* Localizable.strings */,
 				F000000000000000000000D2 /* Info.plist */,
 				F000000000000000000000D3 /* ClipboxShareExtension.entitlements */,
 			);
@@ -103,6 +108,19 @@
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
+
+/* Begin PBXVariantGroup section */
+		F000000000000000000000E5 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				F000000000000000000000E2 /* zh-Hans */,
+				F000000000000000000000E3 /* zh-Hant */,
+				F000000000000000000000E4 /* en */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin PBXNativeTarget section */
 		F000000000000000000000AE /* iosApp */ = {
@@ -188,6 +206,8 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				"zh-Hans",
+				"zh-Hant",
+				en,
 				Base,
 			);
 			mainGroup = F000000000000000000000AB;
@@ -221,6 +241,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F000000000000000000000E6 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

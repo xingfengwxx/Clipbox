@@ -1,0 +1,10 @@
+"share_sending" = "正在发送到 Clipbox…";
+"share_done" = "完成";
+"share_error_unreadable" = "无法读取分享内容";
+"share_error_plain_text_only" = "仅支持纯文本";
+"share_error_read_retry" = "无法读取分享内容，请重试";
+"share_error_too_large" = "内容超过 64 KiB，无法分享";
+"share_error_storage" = "无法访问共享存储，请检查 App Group 配置";
+"share_error_write_retry" = "写入失败，请重试";
+"share_sent" = "已发送到 Clipbox，请返回应用";
+"share_failed_format" = "分享失败：%@";

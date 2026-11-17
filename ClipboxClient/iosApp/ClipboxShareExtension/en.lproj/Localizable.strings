@@ -1,0 +1,10 @@
+"share_sending" = "Sending to Clipbox…";
+"share_done" = "Done";
+"share_error_unreadable" = "Unable to read shared content";
+"share_error_plain_text_only" = "Only plain text is supported";
+"share_error_read_retry" = "Unable to read shared content. Please try again.";
+"share_error_too_large" = "Content exceeds 64 KiB and cannot be shared.";
+"share_error_storage" = "Unable to access shared storage. Check the App Group configuration.";
+"share_error_write_retry" = "Failed to write. Please try again.";
+"share_sent" = "Sent to Clipbox. Please return to the app.";
+"share_failed_format" = "Share failed: %@";

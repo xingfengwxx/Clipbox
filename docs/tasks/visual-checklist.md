@@ -148,3 +148,63 @@ adb exec-out screencap -p > /tmp/clipbox-history.png   # 已生成
 ```
 
 模拟器视口已恢复：`wm size reset` + `wm density reset`（1080×2400 @420dpi）。
+
+## 8. T-IOS-08 iOS 宽屏、主题与三语核对
+
+日期：2026-11-17
+环境：Xcode 27.2 / iOS 27.2 模拟器；iPhone 16（393×852 pt）、iPad (A16)（820×1180 pt）。两台模拟器均先卸载 App 再安装，保证首启为简体中文、跟随系统主题。
+截图目录：`~/Documents/ClipboxM4/`（`tios08-*.png`，不提交二进制）。
+
+### 8.1 布局与旋转
+
+| 设备 / 形态 | 结论 | 截图 | 说明 |
+| --- | --- | --- | --- |
+| iPhone 16 竖屏 | 通过 | `tios08-iphone-portrait-home.png` | <600dp 使用底部三栏；历史空态、搜索与「去配对」完整 |
+| iPhone 16 横屏 | 通过 | `tios08-iphone-landscape-home.upright.png` | 宽度 ≥600dp 切换左侧 NavigationRail；历史页状态保持 |
+| iPad (A16) 竖屏 | 通过 | `tios08-ipad-portrait-home.png` | 左侧 200dp NavigationRail；内容区不再是底部导航 |
+| iPad (A16) 横屏 | 通过 | `tios08-ipad-landscape-home.upright.png` | Rail 保留；正文宽度受 880dp 上限约束，左右留白，列表不横向拉伸 |
+| 旋转状态保持 | 通过 | `tios08-iphone-landscape-appearance.upright.png`、`tios08-ipad-landscape-appearance.upright.png` | 外观页旋转后仍停留原页，主题与语言选择未丢失 |
+
+横屏说明：无头模拟器的 `XCUIScreen` 像素缓冲保持竖屏尺寸、内容旋转 90°；截图原始文件保留，另生成 `.upright.png`（逆时针旋转 90°，仅纠正方向，不修改像素内容）用于阅读。
+
+### 8.2 主题与三语
+
+| 项 | 截图 | 结论 |
+| --- | --- | --- |
+| 简体中文 · 浅色 | `tios08-iphone-appearance-zh-hans.png`、`tios08-ipad-appearance-zh-hans.png` | 主题/语言三段完整，预览卡正常 |
+| English · 浅色 | `tios08-iphone-appearance-en.png`、`tios08-ipad-appearance-en.png` | 英文长标题与说明不截断 |
+| English · 深色 | `tios08-iphone-appearance-en-dark.png`、`tios08-ipad-appearance-en-dark.png` | 深色选中段、边框、说明文字对比度正常；tokens 对比度沿用 §1.1 结论 |
+| 繁體中文 · 深色 | `tios08-iphone-appearance-zh-hant-dark.png`、`tios08-ipad-appearance-zh-hant-dark.png` | 繁體字完整，无截断或重叠 |
+
+### 8.3 分享扩展三语
+
+- `ClipboxShareExtension.appex` 内含 `zh-Hans.lproj`、`zh-Hant.lproj`、`en.lproj` 三套 `Localizable.strings`，各 10 个 `share_*` key；扩展不再硬编码中文。
+- 主 App 语言变化时通过 `IosAppLanguageStore` 写入 App Group `group.com.wangxingxing.clipbox` 的 `appLanguage`；XCUITest 切换语言期间轮询观察到值由 `zh-Hans` 变为 `zh-TW`，证明镜像随切换写入。
+- 扩展读取同一 App Group 值并映射到 `.lproj`；分享面板真实交互放到 T-IOS-09 验证。
+
+### 8.4 可访问性抽查
+
+- XCUITest 语义树中底部导航项为 130×64pt，Rail 行高 48pt，历史页顶部设置图标按钮 48×48pt，满足 ≥48dp。
+- 记录行、置顶/更多、复制/发送等标签沿用 T-UI-19 的合并语义与 `contentDescription`；VoiceOver 可读出设备、相对时间、正文与字节数。
+
+### 8.5 本卡偏差
+
+- **机型**：任务卡写 iPad (10th generation)，本机不可用；按用户决策使用 iPad (A16)。
+- **断点**：任务卡写 ≥840dp，按用户决策沿用架构与实现的 600dp。
+- **横屏截图方向**：见 8.1，原始截图 + `.upright.png` 并存。
+- **iOS 日志 API**：`IosLogSink` 使用 `NSLog` 而非 `os_log`（Kotlin/Native 绑定限制）；仅写系统日志，不落盘、不上传。本卡同时修复了 `NSLog("%@", Kotlin String)` 可变参数桥接导致的启动崩溃。
+- **扩展 UI 实机分享面板**：本卡验证资源打包与语言镜像，真实分享流程由 T-IOS-09 覆盖。
+
+### 8.6 验收记录
+
+```bash
+cd ClipboxClient
+./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64   # BUILD SUCCESSFUL
+xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp \
+  -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPad (A16)' build   # BUILD SUCCEEDED
+xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp \
+  -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16' build      # BUILD SUCCEEDED
+xcodebuild ... -only-testing:iosAppUITests/ClipboxUITests/testAdaptiveLayoutAppearanceAndRotation test
+# iPhone 16：1 passed / 0 failures / 32.434s
+# iPad (A16)：1 passed / 0 failures / 35.163s
+```

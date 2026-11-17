@@ -3,6 +3,7 @@ import UniformTypeIdentifiers
 
 // 分享扩展只负责把 text/plain 草稿写入 App Group 容器；不初始化网络、数据库或同步运行时，也不读取设备令牌。
 // 注意：容器文件名与 JSON 字段（id / text / createdAt）是主 App ShareDraftStore 的共享契约，修改必须两端同步。
+// 扩展语言跟随主 App 写入 App Group 的 appLanguage；未设置时回退简体中文，不使用系统语言。
 final class ShareViewController: UIViewController {
 
     private let appGroupIdentifier = "group.com.wangxingxing.clipbox"
@@ -24,10 +25,10 @@ final class ShareViewController: UIViewController {
         statusLabel.translatesAutoresizingMaskIntoConstraints = false
         statusLabel.numberOfLines = 0
         statusLabel.textAlignment = .center
-        statusLabel.text = "正在发送到 Clipbox…"
+        statusLabel.text = localized("share_sending")
 
         doneButton.translatesAutoresizingMaskIntoConstraints = false
-        doneButton.setTitle("完成", for: .normal)
+        doneButton.setTitle(localized("share_done"), for: .normal)
         doneButton.isHidden = true
         doneButton.addTarget(self, action: #selector(dismissExtension), for: .touchUpInside)
 
@@ -44,14 +45,14 @@ final class ShareViewController: UIViewController {
 
     private func loadSharedText() {
         guard let items = extensionContext?.inputItems as? [NSExtensionItem] else {
-            showFailure("无法读取分享内容")
+            showFailure(localized("share_error_unreadable"))
             return
         }
         let providers = items.flatMap { $0.attachments ?? [] }
         guard let provider = providers.first(where: {
             $0.hasItemConformingToTypeIdentifier(UTType.plainText.identifier)
         }) else {
-            showFailure("仅支持纯文本")
+            showFailure(localized("share_error_plain_text_only"))
             return
         }
         provider.loadItem(forTypeIdentifier: UTType.plainText.identifier, options: nil) { [weak self] item, _ in
@@ -60,7 +61,7 @@ final class ShareViewController: UIViewController {
                 if let text = Self.extractText(item) {
                     self.writeDraft(text)
                 } else {
-                    self.showFailure("无法读取分享内容，请重试")
+                    self.showFailure(self.localized("share_error_read_retry"))
                 }
             }
         }
@@ -81,13 +82,13 @@ final class ShareViewController: UIViewController {
 
     private func writeDraft(_ text: String) {
         guard text.utf8.count <= maxUtf8Bytes else {
-            showFailure("内容超过 64 KiB，无法分享")
+            showFailure(localized("share_error_too_large"))
             return
         }
         guard let containerURL = FileManager.default.containerURL(
             forSecurityApplicationGroupIdentifier: appGroupIdentifier
         ) else {
-            showFailure("无法访问共享存储，请检查 App Group 配置")
+            showFailure(localized("share_error_storage"))
             return
         }
         let draft: [String: Any] = [
@@ -101,12 +102,12 @@ final class ShareViewController: UIViewController {
             try data.write(to: fileURL, options: .atomic)
             finishWithSuccess()
         } catch {
-            showFailure("写入失败，请重试")
+            showFailure(localized("share_error_write_retry"))
         }
     }
 
     private func finishWithSuccess() {
-        statusLabel.text = "已发送到 Clipbox，请返回应用"
+        statusLabel.text = localized("share_sent")
         doneButton.isHidden = false
         guard let url = URL(string: "clipbox://share") else { return }
         extensionContext?.open(url) { [weak self] opened in
@@ -118,8 +119,26 @@ final class ShareViewController: UIViewController {
     }
 
     private func showFailure(_ reason: String) {
-        statusLabel.text = "分享失败：\(reason)"
+        statusLabel.text = String(format: localized("share_failed_format"), reason)
         doneButton.isHidden = false
+    }
+
+    private func localized(_ key: String) -> String {
+        let appLanguage = UserDefaults(suiteName: appGroupIdentifier)?.string(forKey: "appLanguage")
+        let resource: String
+        switch appLanguage {
+        case "en":
+            resource = "en"
+        case "zh-TW", "zh-Hant":
+            resource = "zh-Hant"
+        default:
+            resource = "zh-Hans"
+        }
+        guard let path = Bundle.main.path(forResource: resource, ofType: "lproj"),
+              let bundle = Bundle(path: path) else {
+            return Bundle.main.localizedString(forKey: key, value: key, table: nil)
+        }
+        return bundle.localizedString(forKey: key, value: key, table: nil)
     }
 
     @objc private func dismissExtension() {
