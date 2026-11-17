@@ -27,7 +27,9 @@ cd ClipboxClient
 ./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
 ```
 
-Android 本地联调：先 `adb reverse tcp:8080 tcp:8080`，再安装 `composeApp/build/outputs/apk/debug/composeApp-debug.apk`，App 内访问 `http://localhost:8080`。
+默认服务器地址按构建模式声明：debug 构建与 `./gradlew :composeApp:run` 使用 `http://127.0.0.1:8080`；release 构建与 DMG 产物使用 `http://117.72.121.6:8080`。
+
+Android 本地联调：先 `adb reverse tcp:8080 tcp:8080`，再安装 `composeApp/build/outputs/apk/debug/composeApp-debug.apk`。
 
 ## 版本基线
 

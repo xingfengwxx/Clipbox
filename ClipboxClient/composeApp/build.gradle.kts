@@ -7,32 +7,32 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
-// 服务器地址由构建配置下发，配对页不再要求用户手输；本地验收可用 -Pclipbox.defaultServerUrl 临时覆盖
-val defaultServerUrl = providers.gradleProperty("clipbox.defaultServerUrl")
-    .getOrElse("http://117.72.121.6:8080")
+// 默认服务器地址按构建模式声明：debug / 开发运行连本机，release / 打包产物连公网学习版
+val debugServerUrl = "http://127.0.0.1:8080"
+val releaseServerUrl = "http://117.72.121.6:8080"
 val bundledConfigDir = layout.buildDirectory.dir("generated/bundledConfig/commonMain/kotlin")
 val generateBundledConfig = tasks.register("generateBundledConfig") {
-    val url = defaultServerUrl
-    inputs.property("defaultServerUrl", url)
+    inputs.property("debugServerUrl", debugServerUrl)
+    inputs.property("releaseServerUrl", releaseServerUrl)
     outputs.dir(bundledConfigDir)
     doLast {
         val file = bundledConfigDir.get()
             .file("com/wangxingxing/clipbox/config/BundledConfig.kt")
             .asFile
         file.parentFile.mkdirs()
-        val escapedUrl = url.replace("\\", "\\\\").replace("\"", "\\\"")
         file.writeText(
             """
             |/**
             | * author : 王星星
             | * date : 2026-11-16 17:10
             | * email : 1099420259@qq.com
-            | * description : 构建期注入的默认服务器地址；由 generateBundledConfig 生成，禁止手改，本地覆盖使用 -Pclipbox.defaultServerUrl
+            | * description : 构建期注入的默认服务器地址；debug 指向本机服务端，release 指向公网学习版；由 generateBundledConfig 生成，禁止手改
             | */
             |package com.wangxingxing.clipbox.config
             |
             |internal object BundledConfig {
-            |    const val DEFAULT_SERVER_URL: String = "$escapedUrl"
+            |    fun serverUrl(isDebug: Boolean): String =
+            |        if (isDebug) "$debugServerUrl" else "$releaseServerUrl"
             |}
             |""".trimMargin(),
         )
@@ -131,4 +131,9 @@ compose.desktop {
     application {
         mainClass = "com.wangxingxing.clipbox.MainKt"
     }
+}
+
+// 桌面端没有 build type：run 任务代表开发运行，注入标记走 debug 地址；打包产物不带标记，按 release 处理
+tasks.matching { it.name == "run" }.configureEach {
+    (this as? JavaExec)?.systemProperty("clipbox.debugBuild", "true")
 }
