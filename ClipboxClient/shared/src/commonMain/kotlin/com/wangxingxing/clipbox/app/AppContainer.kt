@@ -95,6 +95,7 @@ class AppContainer(private val services: PlatformServices) {
     val defaultServerUrl: String get() = services.defaultServerUrl
     val defaultDeviceName: String get() = services.defaultDeviceName
     val isDesktop: Boolean get() = services.isDesktop
+    val isDebugBuild: Boolean get() = services.isDebugBuild
     val versionName: String get() = services.versionName
     val buildType: String get() = services.buildType
 
@@ -107,6 +108,9 @@ class AppContainer(private val services: PlatformServices) {
 
     private val startLock = Mutex()
     private val sessionLock = Mutex()
+
+    @Volatile
+    private var settingsSnapshotJob: Job? = null
 
     @Volatile
     private var session: AppSession? = null
@@ -143,6 +147,12 @@ class AppContainer(private val services: PlatformServices) {
                 settingsRepository.initialize()
                 // 诊断开关只观察一次，跨会话保持；会话重建不重复收集
                 appLogger.observe(settingsRepository, services.appScope)
+                // 快照跟随 DataStore：未配对改址后配对页预填、外观摘要都读取最新值
+                if (settingsSnapshotJob == null) {
+                    settingsSnapshotJob = services.appScope.launch {
+                        settingsRepository.settings.collect { settingsSnapshot = it }
+                    }
+                }
                 val settings = settingsRepository.current()
                 settingsSnapshot = settings
                 session = buildSession(settings)

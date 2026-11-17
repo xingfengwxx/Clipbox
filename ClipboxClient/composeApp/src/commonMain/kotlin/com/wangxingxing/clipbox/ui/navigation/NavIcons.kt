@@ -64,6 +64,16 @@ object NavIcons {
         }
     }
 
+    val Back: ImageVector = strokeIcon("Back") {
+        strokePath {
+            moveTo(7f, 3f)
+            lineTo(2.5f, 8f)
+            lineTo(7f, 13f)
+            moveTo(2.5f, 8f)
+            horizontalLineTo(13.5f)
+        }
+    }
+
     private fun strokeIcon(name: String, block: ImageVector.Builder.() -> Unit): ImageVector =
         ImageVector.Builder(
             name = name,

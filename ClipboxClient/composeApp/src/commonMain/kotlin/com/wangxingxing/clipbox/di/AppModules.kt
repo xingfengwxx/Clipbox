@@ -22,6 +22,7 @@ import com.wangxingxing.clipbox.sync.SyncStatusHolder
 import com.wangxingxing.clipbox.ui.history.HistoryViewportState
 import com.wangxingxing.clipbox.ui.history.HistoryViewModel
 import com.wangxingxing.clipbox.ui.pairing.PairingViewModel
+import com.wangxingxing.clipbox.ui.settings.SettingsViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -44,6 +45,7 @@ val appModule: Module = module {
     factory { get<AppSession>().clipboardController }
 
     viewModel { HistoryViewModel(get(), get(), get(), get(), get()) }
+    viewModel { SettingsViewModel(get(), get(), get(), get()) }
     viewModel {
         val container = get<AppContainer>()
         PairingViewModel(

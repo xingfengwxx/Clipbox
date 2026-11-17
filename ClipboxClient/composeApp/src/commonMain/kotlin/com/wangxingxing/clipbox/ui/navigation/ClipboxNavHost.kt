@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-16 16:29
  * email : 1099420259@qq.com
- * description : 应用级 NavHost：历史页接真实实现，工具箱与设置暂为占位；配对页全屏入栈，配对成功由会话重建统一回到历史页；分享草稿参数只透传给历史页
+ * description : 应用级 NavHost：历史页与设置页接真实实现，工具箱暂为占位；配对页与外观页全屏入栈；分享草稿参数只透传给历史页
  */
 package com.wangxingxing.clipbox.ui.navigation
 
@@ -13,8 +13,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.wangxingxing.clipbox.ui.history.HistoryRoute
 import com.wangxingxing.clipbox.ui.pairing.PairingRoute
+import com.wangxingxing.clipbox.ui.settings.AppearanceRoute
+import com.wangxingxing.clipbox.ui.settings.SettingsRoute
 
 const val PAIRING_ROUTE = "pairing"
+const val APPEARANCE_ROUTE = "settings/appearance"
 
 @Composable
 fun ClipboxNavHost(
@@ -44,8 +47,25 @@ fun ClipboxNavHost(
                 onShareDraftConsumed = onShareDraftConsumed,
             )
         }
+        composable(TopLevelDestination.Settings.route) {
+            SettingsRoute(
+                onOpenAppearance = {
+                    navController.navigate(APPEARANCE_ROUTE) {
+                        launchSingleTop = true
+                    }
+                },
+                onPair = {
+                    navController.navigate(PAIRING_ROUTE) {
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
+        composable(APPEARANCE_ROUTE) {
+            AppearanceRoute(onBack = { navController.popBackStack() })
+        }
         TopLevelDestination.entries
-            .filterNot { it == TopLevelDestination.History }
+            .filterNot { it == TopLevelDestination.History || it == TopLevelDestination.Settings }
             .forEach { destination ->
                 composable(destination.route) {
                     PlaceholderPage(destination)

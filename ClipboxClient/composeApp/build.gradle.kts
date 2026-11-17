@@ -81,6 +81,8 @@ kotlin {
         val desktopMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
+                // Desktop 没有系统 Main 调度器；viewModelScope 依赖它，缺少时所有交互协程会在启动即抛错
+                implementation(libs.kotlinx.coroutines.swing)
             }
         }
     }
