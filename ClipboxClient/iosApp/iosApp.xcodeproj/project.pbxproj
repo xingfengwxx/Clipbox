@@ -13,12 +13,19 @@
 		F000000000000000000000B2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F000000000000000000000C0 /* ClipboxUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboxUITests.swift; sourceTree = "<group>"; };
 		F000000000000000000000C1 /* iosAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F000000000000000000000D0 /* ClipboxShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ClipboxShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		F000000000000000000000D1 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		F000000000000000000000D2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F000000000000000000000D3 /* ClipboxShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ClipboxShareExtension.entitlements; sourceTree = "<group>"; };
+		F000000000000000000000D4 /* iosApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iosApp.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXBuildFile section */
 		F000000000000000000000B3 /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F000000000000000000000B0 /* iOSApp.swift */; };
 		F000000000000000000000B4 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F000000000000000000000B1 /* ContentView.swift */; };
 		F000000000000000000000C2 /* ClipboxUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F000000000000000000000C0 /* ClipboxUITests.swift */; };
+		F000000000000000000000D5 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F000000000000000000000D1 /* ShareViewController.swift */; };
+		F000000000000000000000E1 /* ClipboxShareExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = F000000000000000000000D0 /* ClipboxShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -36,6 +43,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F000000000000000000000D6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -43,6 +57,7 @@
 			isa = PBXGroup;
 			children = (
 				F000000000000000000000AD /* iosApp */,
+				F000000000000000000000DD /* ClipboxShareExtension */,
 				F000000000000000000000C3 /* iosAppUITests */,
 				F000000000000000000000AC /* Products */,
 			);
@@ -52,6 +67,7 @@
 			isa = PBXGroup;
 			children = (
 				F000000000000000000000AF /* iosApp.app */,
+				F000000000000000000000D0 /* ClipboxShareExtension.appex */,
 				F000000000000000000000C1 /* iosAppUITests.xctest */,
 			);
 			name = Products;
@@ -63,8 +79,19 @@
 				F000000000000000000000B0 /* iOSApp.swift */,
 				F000000000000000000000B1 /* ContentView.swift */,
 				F000000000000000000000B2 /* Info.plist */,
+				F000000000000000000000D4 /* iosApp.entitlements */,
 			);
 			path = iosApp;
+			sourceTree = "<group>";
+		};
+		F000000000000000000000DD /* ClipboxShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				F000000000000000000000D1 /* ShareViewController.swift */,
+				F000000000000000000000D2 /* Info.plist */,
+				F000000000000000000000D3 /* ClipboxShareExtension.entitlements */,
+			);
+			path = ClipboxShareExtension;
 			sourceTree = "<group>";
 		};
 		F000000000000000000000C3 /* iosAppUITests */ = {
@@ -86,15 +113,34 @@
 				F000000000000000000000B5 /* Sources */,
 				F000000000000000000000B6 /* Frameworks */,
 				F000000000000000000000B7 /* Resources */,
+				F000000000000000000000DE /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				F000000000000000000000DF /* PBXTargetDependency */,
 			);
 			name = iosApp;
 			productName = iosApp;
 			productReference = F000000000000000000000AF /* iosApp.app */;
 			productType = "com.apple.product-type.application";
+		};
+		F000000000000000000000D9 /* ClipboxShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F000000000000000000000DA /* Build configuration list for PBXNativeTarget "ClipboxShareExtension" */;
+			buildPhases = (
+				F000000000000000000000D7 /* Sources */,
+				F000000000000000000000D6 /* Frameworks */,
+				F000000000000000000000D8 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ClipboxShareExtension;
+			productName = ClipboxShareExtension;
+			productReference = F000000000000000000000D0 /* ClipboxShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 		F000000000000000000000C4 /* iosAppUITests */ = {
 			isa = PBXNativeTarget;
@@ -131,6 +177,9 @@
 						CreatedOnToolsVersion = 16.0;
 						TestTargetID = F000000000000000000000AE;
 					};
+					F000000000000000000000D9 = {
+						CreatedOnToolsVersion = 16.0;
+					};
 				};
 			};
 			buildConfigurationList = F000000000000000000000B9 /* Build configuration list for PBXProject "iosApp" */;
@@ -148,6 +197,7 @@
 			targets = (
 				F000000000000000000000AE /* iosApp */,
 				F000000000000000000000C4 /* iosAppUITests */,
+				F000000000000000000000D9 /* ClipboxShareExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -161,6 +211,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F000000000000000000000C6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F000000000000000000000D8 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -209,6 +266,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F000000000000000000000D7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F000000000000000000000D5 /* ShareViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXContainerItemProxy section */
@@ -219,13 +284,39 @@
 			remoteGlobalIDString = F000000000000000000000AE;
 			remoteInfo = iosApp;
 		};
+		F000000000000000000000E0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F000000000000000000000AA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F000000000000000000000D9;
+			remoteInfo = ClipboxShareExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F000000000000000000000DE /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				F000000000000000000000E1 /* ClipboxShareExtension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
 		F000000000000000000000C8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F000000000000000000000AE /* iosApp */;
 			targetProxy = F000000000000000000000C9 /* PBXContainerItemProxy */;
+		};
+		F000000000000000000000DF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F000000000000000000000D9 /* ClipboxShareExtension */;
+			targetProxy = F000000000000000000000E0 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -262,6 +353,7 @@
 		F000000000000000000000BD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -291,6 +383,7 @@
 		F000000000000000000000BE /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -359,6 +452,54 @@
 			};
 			name = Release;
 		};
+		F000000000000000000000DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ClipboxShareExtension/ClipboxShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ClipboxShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wangxingxing.clipbox.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F000000000000000000000DC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ClipboxShareExtension/ClipboxShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ClipboxShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.wangxingxing.clipbox.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -385,6 +526,15 @@
 			buildConfigurations = (
 				F000000000000000000000CA /* Debug */,
 				F000000000000000000000CB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F000000000000000000000DA /* Build configuration list for PBXNativeTarget "ClipboxShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F000000000000000000000DB /* Debug */,
+				F000000000000000000000DC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

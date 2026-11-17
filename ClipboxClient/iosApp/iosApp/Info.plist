@@ -20,6 +20,18 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<!-- 分享扩展写入草稿后经 clipbox://share 唤起主 App；深链不携带正文或令牌 -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.wangxingxing.clipbox</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>clipbox</string>
+			</array>
+		</dict>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<!-- Compose iOS 在调试二进制里强制校验本键；缺失会直接抛异常终止启动，同时该键开启高刷新率 -->
