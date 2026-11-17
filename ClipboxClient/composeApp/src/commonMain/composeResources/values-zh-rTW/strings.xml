@@ -34,6 +34,8 @@
     <string name="history_composer_local">本機優先，立即寫入</string>
     <string name="history_send">傳送</string>
     <string name="history_over_limit">超出 64 KiB 上限</string>
+    <string name="history_near_limit">接近 64 KiB 上限</string>
+    <string name="history_copy_instead">改為複製</string>
     <string name="history_bytes_counter">%1$s / %2$s B</string>
     <string name="history_bytes">%1$s B</string>
     <string name="history_group_pinned">置頂 %1$d</string>

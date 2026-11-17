@@ -34,6 +34,8 @@
     <string name="history_composer_local">Local first, saved to disk</string>
     <string name="history_send">Send</string>
     <string name="history_over_limit">Over the 64 KiB limit</string>
+    <string name="history_near_limit">Approaching the 64 KiB limit</string>
+    <string name="history_copy_instead">Copy instead</string>
     <string name="history_bytes_counter">%1$s / %2$s B</string>
     <string name="history_bytes">%1$s B</string>
     <string name="history_group_pinned">Pinned %1$d</string>

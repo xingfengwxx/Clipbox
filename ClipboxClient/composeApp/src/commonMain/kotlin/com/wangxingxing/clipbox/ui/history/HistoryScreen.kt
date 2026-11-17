@@ -224,6 +224,7 @@ private fun HistoryScreen(
                             value = draft,
                             onValueChange = onDraftChange,
                             onSend = onSend,
+                            onCopyInstead = onCopy,
                             maxHeight = composerMaxHeight,
                             modifier = Modifier.padding(
                                 start = spacing.l,

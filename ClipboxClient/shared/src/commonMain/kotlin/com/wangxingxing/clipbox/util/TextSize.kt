@@ -9,6 +9,9 @@ package com.wangxingxing.clipbox.util
 object TextSize {
     const val MAX_CLIP_UTF8_BYTES: Int = 65_536
 
+    /** 90% 预警线向上取整，与 UI 预警共用同一口径，避免发送器自行计算阈值 */
+    const val WARN_CLIP_UTF8_BYTES: Int = 58_983
+
     fun utf8ByteCount(text: String): Int = text.encodeToByteArray().size
 
     /** 千分位展示，设计稿里的字节计数写作 65,536。 */
