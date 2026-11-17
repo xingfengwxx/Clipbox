@@ -226,4 +226,8 @@
     <string name="tool_json_reason_colon">缺少冒号</string>
     <string name="tool_json_reason_quote">字符串缺少引号</string>
     <string name="tool_json_reason_syntax">JSON 语法错误</string>
+    <string name="tool_encode">编码</string>
+    <string name="tool_decode">解码</string>
+    <string name="tool_url_safe">URL-safe</string>
+    <string name="tool_base64_error">不是合法的 Base64 内容</string>
 </resources>

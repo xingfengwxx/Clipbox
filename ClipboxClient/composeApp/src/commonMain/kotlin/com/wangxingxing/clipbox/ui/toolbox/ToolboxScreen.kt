@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-17 16:20
  * email : 1099420259@qq.com
- * description : 工具箱 S15：五张工具卡与本地说明；未配对也可进入。JSON 工具接真实计算，其余工具暂复用 ToolScaffold 骨架，由后续工具卡替换。
+ * description : 工具箱 S15：五张工具卡与本地说明；未配对也可进入。JSON 与 Base64 接真实计算，其余工具暂复用 ToolScaffold 骨架，由后续工具卡替换。
  *               注意：本页不依赖同步、数据库或网络，卡片只做本地导航
  */
 package com.wangxingxing.clipbox.ui.toolbox
@@ -50,6 +50,7 @@ import com.wangxingxing.clipbox.resources.tool_kicker
 import com.wangxingxing.clipbox.resources.tool_local_note
 import com.wangxingxing.clipbox.resources.tool_tag
 import com.wangxingxing.clipbox.ui.navigation.TopLevelDestination
+import com.wangxingxing.clipbox.ui.toolbox.base64.Base64ToolRoute
 import com.wangxingxing.clipbox.ui.toolbox.json.JsonToolRoute
 import com.wangxingxing.clipbox.ui.theme.ClipboxShapes
 import com.wangxingxing.clipbox.ui.theme.ClipboxTokens
@@ -110,7 +111,8 @@ fun ToolDetailRoute(
 ) {
     when (toolId) {
         ToolId.Json -> JsonToolRoute(onBack = onBack, modifier = modifier)
-        ToolId.Base64, ToolId.Url, ToolId.Time, ToolId.Regex -> SkeletonToolRoute(
+        ToolId.Base64 -> Base64ToolRoute(onBack = onBack, modifier = modifier)
+        ToolId.Url, ToolId.Time, ToolId.Regex -> SkeletonToolRoute(
             toolId = toolId,
             onBack = onBack,
             modifier = modifier,

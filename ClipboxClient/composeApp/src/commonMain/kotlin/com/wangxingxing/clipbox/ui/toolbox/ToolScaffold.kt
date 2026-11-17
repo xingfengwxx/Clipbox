@@ -270,6 +270,29 @@ fun ToolActionButton(
     )
 }
 
+/** 工具页的模式开关（URL-safe、秒/毫秒、正则标志等），选中态用品牌墨色反白。 */
+@Composable
+fun ToolFlag(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = ClipboxTokens.colors
+    val spacing = ClipboxTokens.spacing
+    Text(
+        text = text,
+        modifier = modifier
+            .heightIn(min = 48.dp)
+            .background(if (selected) colors.ink else colors.panel, ToolFieldShape)
+            .border(1.dp, if (selected) colors.ink else colors.line, ToolFieldShape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = spacing.m, vertical = spacing.m),
+        style = MaterialTheme.typography.labelLarge,
+        color = if (selected) colors.background else colors.ink2,
+    )
+}
+
 @Composable
 private fun ToolTopBar(title: String, onBack: () -> Unit) {
     val colors = ClipboxTokens.colors

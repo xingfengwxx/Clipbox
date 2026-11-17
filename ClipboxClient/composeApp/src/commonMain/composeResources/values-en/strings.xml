@@ -234,4 +234,8 @@
     <string name="tool_json_reason_colon">A colon is missing</string>
     <string name="tool_json_reason_quote">A string is missing its closing quote</string>
     <string name="tool_json_reason_syntax">JSON syntax error</string>
+    <string name="tool_encode">Encode</string>
+    <string name="tool_decode">Decode</string>
+    <string name="tool_url_safe">URL-safe</string>
+    <string name="tool_base64_error">Not a valid Base64 string</string>
 </resources>
