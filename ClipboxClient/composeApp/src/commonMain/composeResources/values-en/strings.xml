@@ -53,4 +53,21 @@
     <string name="history_act_unpin">Unpin</string>
     <string name="history_act_more">More</string>
     <string name="history_copied">Copied to clipboard</string>
+    <string name="history_search_placeholder">Search local clips</string>
+    <string name="history_search_clear">Clear</string>
+    <string name="history_search_count">%1$d results</string>
+    <string name="history_search_empty_title">No matching clips</string>
+    <string name="history_search_empty_body">Try another keyword.</string>
+    <string name="history_act_copy">Copy</string>
+    <string name="history_act_share">Create share link</string>
+    <string name="history_act_retry">Retry</string>
+    <string name="history_act_delete">Delete</string>
+    <string name="history_share_requires_sync">Available after sync</string>
+    <string name="history_share_offline">Unavailable while offline</string>
+    <string name="history_state_pending">Pending sync</string>
+    <string name="history_state_failed">Failed</string>
+    <string name="history_delete_title">Delete this clip?</string>
+    <string name="history_delete_body">This can\'t be undone and removes it from every device.</string>
+    <string name="history_delete_confirm">Delete</string>
+    <string name="history_cancel">Cancel</string>
 </resources>

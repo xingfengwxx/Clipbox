@@ -8,6 +8,7 @@ package com.wangxingxing.clipbox.ui.history
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,6 +29,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -54,6 +56,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -63,9 +66,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.wangxingxing.clipbox.di.LocalAppGraph
 import com.wangxingxing.clipbox.model.Clip
+import com.wangxingxing.clipbox.model.SyncState
+import com.wangxingxing.clipbox.model.SyncStatus
 import com.wangxingxing.clipbox.resources.Res
 import com.wangxingxing.clipbox.resources.app_name
 import com.wangxingxing.clipbox.resources.history_copied
+import com.wangxingxing.clipbox.resources.history_delete_body
+import com.wangxingxing.clipbox.resources.history_delete_confirm
+import com.wangxingxing.clipbox.resources.history_delete_title
 import com.wangxingxing.clipbox.resources.history_empty_paired_body
 import com.wangxingxing.clipbox.resources.history_empty_title
 import com.wangxingxing.clipbox.resources.history_empty_unpaired_body
@@ -73,10 +81,19 @@ import com.wangxingxing.clipbox.resources.history_group_all
 import com.wangxingxing.clipbox.resources.history_group_pinned
 import com.wangxingxing.clipbox.resources.history_over_limit
 import com.wangxingxing.clipbox.resources.history_pair
+import com.wangxingxing.clipbox.resources.history_search_clear
+import com.wangxingxing.clipbox.resources.history_search_count
+import com.wangxingxing.clipbox.resources.history_search_empty_body
+import com.wangxingxing.clipbox.resources.history_search_empty_title
+import com.wangxingxing.clipbox.resources.history_search_placeholder
+import com.wangxingxing.clipbox.resources.history_share_offline
+import com.wangxingxing.clipbox.resources.history_share_requires_sync
 import com.wangxingxing.clipbox.resources.history_sync_paired
 import com.wangxingxing.clipbox.resources.history_sync_unpaired
 import com.wangxingxing.clipbox.resources.nav_settings
+import com.wangxingxing.clipbox.ui.components.ClipActionsSheet
 import com.wangxingxing.clipbox.ui.components.ClipRow
+import com.wangxingxing.clipbox.ui.components.ConfirmDialog
 import com.wangxingxing.clipbox.ui.navigation.NavIcons
 import com.wangxingxing.clipbox.ui.theme.ClipboxTokens
 import com.wangxingxing.clipbox.util.clipNowMillis
@@ -102,10 +119,13 @@ fun HistoryRoute(
             clipRepository = graph.clipRepository,
             settingsRepository = graph.settingsRepository,
             outboxWorker = graph.outboxWorker,
+            syncStatusHolder = graph.syncStatusHolder,
             scope = scope,
         )
     }
     val state by viewModel.state.collectAsState()
+    var selectedClip by remember { mutableStateOf<Clip?>(null) }
+    var clipToDelete by remember { mutableStateOf<Clip?>(null) }
     var draft by rememberSaveable { mutableStateOf("") }
     // 只有新的分享正文到达才覆盖草稿；null 表示没有待处理分享，不能清掉用户正在编辑的内容
     LaunchedEffect(incomingShareDraft) {
@@ -127,6 +147,11 @@ fun HistoryRoute(
     val clipboard = LocalClipboardManager.current
     val copiedMessage = stringResource(Res.string.history_copied)
     val overLimitMessage = stringResource(Res.string.history_over_limit)
+    val deleteTitle = stringResource(Res.string.history_delete_title)
+    val deleteBody = stringResource(Res.string.history_delete_body)
+    val deleteConfirm = stringResource(Res.string.history_delete_confirm)
+    val shareRequiresSync = stringResource(Res.string.history_share_requires_sync)
+    val shareOffline = stringResource(Res.string.history_share_offline)
     // 事件收集器只启动一次，用最新回调避免 Activity 重建后仍引用旧闭包
     val latestOnShareDraftConsumed by rememberUpdatedState(onShareDraftConsumed)
 
@@ -146,22 +171,69 @@ fun HistoryRoute(
         }
     }
 
+    val copyText: (String) -> Unit = { text ->
+        clipboard.setText(AnnotatedString(text))
+        scope.launch { snackbarHostState.showSnackbar(copiedMessage) }
+    }
+
     Box(modifier.fillMaxSize()) {
         HistoryScreen(
             state = state,
             draft = draft,
             onDraftChange = { draft = it },
+            onQueryChange = viewModel::setQuery,
             onSend = { viewModel.send(draft) },
-            onCopy = { text ->
-                clipboard.setText(AnnotatedString(text))
-                scope.launch { snackbarHostState.showSnackbar(copiedMessage) }
-            },
+            onCopy = copyText,
             onTogglePin = { clip -> viewModel.setPinned(clip.id, !clip.pinned) },
-            onMore = {},
+            onMore = { selectedClip = it },
             onOpenSettings = onOpenSettings,
             onPair = onPair,
             listState = listState,
         )
+        selectedClip?.let { clip ->
+            val shareReason = when {
+                clip.syncState != SyncState.SYNCED -> shareRequiresSync
+                state.syncStatus is SyncStatus.Offline ||
+                    state.syncStatus is SyncStatus.Unauthorized -> shareOffline
+
+                else -> null
+            }
+            ClipActionsSheet(
+                clip = clip,
+                shareDisabledReason = shareReason,
+                onDismiss = { selectedClip = null },
+                onCopy = {
+                    selectedClip = null
+                    copyText(clip.content)
+                },
+                onTogglePin = {
+                    selectedClip = null
+                    viewModel.setPinned(clip.id, !clip.pinned)
+                },
+                // 分享面板负责生成与展示链接，接入后在此传入打开回调；当前保持入口禁用
+                onShare = null,
+                onRetry = {
+                    selectedClip = null
+                    viewModel.retry(clip.id)
+                },
+                onDelete = {
+                    selectedClip = null
+                    clipToDelete = clip
+                },
+            )
+        }
+        clipToDelete?.let { clip ->
+            ConfirmDialog(
+                title = deleteTitle,
+                body = deleteBody,
+                confirmText = deleteConfirm,
+                onConfirm = {
+                    clipToDelete = null
+                    viewModel.delete(clip.id)
+                },
+                onDismiss = { clipToDelete = null },
+            )
+        }
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
@@ -176,6 +248,7 @@ private fun HistoryScreen(
     state: HistoryUiState,
     draft: String,
     onDraftChange: (String) -> Unit,
+    onQueryChange: (String) -> Unit,
     onSend: () -> Unit,
     onCopy: (String) -> Unit,
     onTogglePin: (Clip) -> Unit,
@@ -195,6 +268,11 @@ private fun HistoryScreen(
     ) {
         HistoryTopBar(paired = state.paired, onOpenSettings = onOpenSettings)
         HorizontalDivider(thickness = 1.dp, color = colors.ink)
+        SearchBar(
+            query = state.query,
+            resultCount = if (state.searching) state.clips.size else null,
+            onQueryChange = onQueryChange,
+        )
         when {
             !state.isLoaded -> Box(
                 modifier = Modifier
@@ -233,16 +311,22 @@ private fun HistoryScreen(
                             ),
                         )
                     }
-                    if (state.clips.isEmpty()) {
-                        EmptyState(
+                    when {
+                        state.searching && state.clips.isEmpty() -> SearchEmptyState(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                        )
+
+                        state.clips.isEmpty() -> EmptyState(
                             paired = state.paired,
                             onPair = onPair,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f),
                         )
-                    } else {
-                        ClipList(
+
+                        else -> ClipList(
                             state = state,
                             nowMillis = nowMillis,
                             listState = listState,
@@ -256,6 +340,93 @@ private fun HistoryScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SearchBar(
+    query: String,
+    resultCount: Int?,
+    onQueryChange: (String) -> Unit,
+) {
+    val colors = ClipboxTokens.colors
+    val spacing = ClipboxTokens.spacing
+    val typography = ClipboxTokens.typography
+    val shape = RoundedCornerShape(ClipboxTokens.radii.button)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = spacing.l, top = spacing.s, end = spacing.l)
+            .background(colors.panel, shape)
+            .border(1.dp, colors.line, shape)
+            .padding(horizontal = spacing.m),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        BasicTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            modifier = Modifier
+                .weight(1f)
+                .padding(vertical = 10.dp),
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.ink),
+            cursorBrush = SolidColor(colors.accent),
+            decorationBox = { innerTextField ->
+                Box {
+                    if (query.isEmpty()) {
+                        Text(
+                            text = stringResource(Res.string.history_search_placeholder),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.ink3,
+                        )
+                    }
+                    innerTextField()
+                }
+            },
+        )
+        if (resultCount != null) {
+            Text(
+                text = stringResource(Res.string.history_search_count, resultCount),
+                style = typography.mono,
+                color = colors.ink3,
+            )
+            Spacer(Modifier.width(spacing.s))
+            Text(
+                text = stringResource(Res.string.history_search_clear),
+                modifier = Modifier
+                    .clickable { onQueryChange("") }
+                    .padding(vertical = 8.dp),
+                style = MaterialTheme.typography.labelMedium,
+                color = colors.ink2,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SearchEmptyState(modifier: Modifier = Modifier) {
+    val colors = ClipboxTokens.colors
+    val spacing = ClipboxTokens.spacing
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        Column(
+            modifier = Modifier.padding(horizontal = spacing.xxl),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = stringResource(Res.string.history_search_empty_title),
+                style = MaterialTheme.typography.titleMedium,
+                color = colors.ink,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(spacing.s))
+            Text(
+                text = stringResource(Res.string.history_search_empty_body),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.ink2,
+                textAlign = TextAlign.Center,
+            )
         }
     }
 }

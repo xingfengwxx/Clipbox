@@ -2,10 +2,11 @@
  * author : 王星星
  * date : 2026-11-16 18:05
  * email : 1099420259@qq.com
- * description : 历史记录行：最多 3 行正文预览、来源设备与时间、字节数和置顶 / 更多入口；整行点击复制，行内按钮不触发行级点击
+ * description : 历史记录行：最多 3 行正文预览、来源设备与时间、字节数、待同步 / 失败角标和置顶 / 更多入口；整行点击复制，行内按钮不触发行级点击
  */
 package com.wangxingxing.clipbox.ui.components
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -32,6 +34,7 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wangxingxing.clipbox.model.Clip
+import com.wangxingxing.clipbox.model.SyncState
 import com.wangxingxing.clipbox.resources.Res
 import com.wangxingxing.clipbox.resources.history_act_more
 import com.wangxingxing.clipbox.resources.history_act_pin
@@ -39,6 +42,8 @@ import com.wangxingxing.clipbox.resources.history_act_unpin
 import com.wangxingxing.clipbox.resources.history_bytes
 import com.wangxingxing.clipbox.resources.history_device_local
 import com.wangxingxing.clipbox.resources.history_device_unknown
+import com.wangxingxing.clipbox.resources.history_state_failed
+import com.wangxingxing.clipbox.resources.history_state_pending
 import com.wangxingxing.clipbox.resources.history_time_hours
 import com.wangxingxing.clipbox.resources.history_time_just_now
 import com.wangxingxing.clipbox.resources.history_time_minutes
@@ -81,6 +86,7 @@ fun ClipRow(
                 style = typography.mono,
                 color = colors.ink3,
             )
+            SyncBadge(clip.syncState)
         }
         Text(
             text = clip.content,
@@ -143,6 +149,28 @@ private fun RowAction(
             modifier = Modifier.size(16.dp),
         )
     }
+}
+
+@Composable
+private fun SyncBadge(state: SyncState) {
+    if (state == SyncState.SYNCED) return
+    val colors = ClipboxTokens.colors
+    val failed = state == SyncState.FAILED_CREATE ||
+        state == SyncState.FAILED_UPDATE ||
+        state == SyncState.FAILED_DELETE
+    val color = if (failed) colors.danger else colors.warn
+
+    Text(
+        text = stringResource(
+            if (failed) Res.string.history_state_failed else Res.string.history_state_pending,
+        ),
+        modifier = Modifier
+            .padding(start = ClipboxTokens.spacing.s)
+            .border(1.dp, color, RoundedCornerShape(4.dp))
+            .padding(horizontal = 6.dp, vertical = 1.dp),
+        style = ClipboxTokens.typography.mono,
+        color = color,
+    )
 }
 
 @Composable

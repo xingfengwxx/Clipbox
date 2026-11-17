@@ -53,4 +53,21 @@
     <string name="history_act_unpin">取消置頂</string>
     <string name="history_act_more">更多</string>
     <string name="history_copied">已複製到剪貼簿</string>
+    <string name="history_search_placeholder">搜尋本機紀錄</string>
+    <string name="history_search_clear">清除</string>
+    <string name="history_search_count">找到 %1$d 筆</string>
+    <string name="history_search_empty_title">沒有符合的紀錄</string>
+    <string name="history_search_empty_body">換個關鍵字試試</string>
+    <string name="history_act_copy">複製</string>
+    <string name="history_act_share">產生分享</string>
+    <string name="history_act_retry">重試</string>
+    <string name="history_act_delete">刪除</string>
+    <string name="history_share_requires_sync">同步後可分享</string>
+    <string name="history_share_offline">離線時無法產生分享</string>
+    <string name="history_state_pending">待同步</string>
+    <string name="history_state_failed">失敗</string>
+    <string name="history_delete_title">刪除這筆紀錄？</string>
+    <string name="history_delete_body">刪除後無法復原，所有裝置都會移除。</string>
+    <string name="history_delete_confirm">刪除</string>
+    <string name="history_cancel">取消</string>
 </resources>

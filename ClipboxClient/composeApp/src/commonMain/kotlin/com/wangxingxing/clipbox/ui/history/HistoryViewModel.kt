@@ -2,40 +2,62 @@
  * author : 王星星
  * date : 2026-11-16 18:05
  * email : 1099420259@qq.com
- * description : 历史页状态机：把设置流与本地记录流合并为展示状态；发送与置顶只调用 ClipRepository，不触网、不直接访问 Room，写入成功后显式唤醒 Outbox 立即重放
+ * description : 历史页状态机：把设置流、本地记录流、300ms 防抖搜索与同步状态合并为展示状态；发送、置顶、删除、重试只调用 ClipRepository，写入成功后显式唤醒 Outbox 立即重放
  */
 package com.wangxingxing.clipbox.ui.history
 
+import com.wangxingxing.clipbox.model.Clip
 import com.wangxingxing.clipbox.repository.ClipRepository
 import com.wangxingxing.clipbox.repository.SendResult
 import com.wangxingxing.clipbox.settings.SettingsRepository
 import com.wangxingxing.clipbox.sync.OutboxWorker
+import com.wangxingxing.clipbox.sync.SyncStatusHolder
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class HistoryViewModel(
     private val clipRepository: ClipRepository,
     settingsRepository: SettingsRepository,
     private val outboxWorker: OutboxWorker,
+    syncStatusHolder: SyncStatusHolder,
     private val scope: CoroutineScope,
 ) {
+
+    private val query = MutableStateFlow("")
 
     val state: StateFlow<HistoryUiState> = combine(
         settingsRepository.settings,
         clipRepository.observeClips(),
-    ) { settings, clips ->
+        query,
+        // 只查本地 Room；防抖避免每次按键都切换查询流
+        query.debounce(SEARCH_DEBOUNCE_MILLIS).flatMapLatest { raw ->
+            if (raw.isBlank()) flowOf(emptyList()) else clipRepository.search(raw.trim())
+        },
+        syncStatusHolder.status,
+    ) { settings, clips, rawQuery, results, status ->
+        val searching = rawQuery.isNotBlank()
         HistoryUiState(
             isLoaded = true,
             paired = !settings.deviceToken.isNullOrEmpty(),
             deviceId = settings.deviceId.orEmpty(),
-            clips = clips,
+            query = rawQuery,
+            searching = searching,
+            clips = if (searching) results else clips,
+            syncStatus = status,
         )
     }.stateIn(
         scope = scope,
@@ -49,6 +71,10 @@ class HistoryViewModel(
 
     // 本地写入是毫秒级操作，仅用于拦截连点造成的重复记录
     private var isSending = false
+
+    fun setQuery(text: String) {
+        query.value = text
+    }
 
     fun send(content: String) {
         if (isSending) return
@@ -74,5 +100,22 @@ class HistoryViewModel(
         scope.launch {
             if (clipRepository.pin(id, pinned)) outboxWorker.requestReplay()
         }
+    }
+
+    fun delete(id: String) {
+        scope.launch {
+            // 记录已被删除或不存在时无需重放；删除确认只由 UI 负责
+            if (clipRepository.delete(id)) outboxWorker.requestReplay()
+        }
+    }
+
+    fun retry(id: String) {
+        scope.launch {
+            if (clipRepository.retry(id)) outboxWorker.requestReplay()
+        }
+    }
+
+    private companion object {
+        const val SEARCH_DEBOUNCE_MILLIS = 300L
     }
 }

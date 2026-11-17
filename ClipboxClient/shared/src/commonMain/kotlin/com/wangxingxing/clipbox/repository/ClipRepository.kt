@@ -42,6 +42,11 @@ class ClipRepository(
             clips.map { it.toModel() }
         }
 
+    // 只查本地库；通配符转义由 ClipDao.search 负责，调用方传原始关键词即可
+    fun search(query: String): Flow<List<Clip>> = database.clipDao().search(query).map { clips ->
+        clips.map { it.toModel() }
+    }
+
     suspend fun findClip(id: String): Clip? = database.clipDao().getById(id)?.toModel()
 
     suspend fun send(content: String): SendResult {

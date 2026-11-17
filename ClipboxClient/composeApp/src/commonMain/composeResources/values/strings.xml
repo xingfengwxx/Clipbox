@@ -53,4 +53,21 @@
     <string name="history_act_unpin">取消置顶</string>
     <string name="history_act_more">更多</string>
     <string name="history_copied">已复制到剪贴板</string>
+    <string name="history_search_placeholder">搜索本地记录</string>
+    <string name="history_search_clear">清空</string>
+    <string name="history_search_count">找到 %1$d 条</string>
+    <string name="history_search_empty_title">没有匹配的记录</string>
+    <string name="history_search_empty_body">换个关键词试试</string>
+    <string name="history_act_copy">复制</string>
+    <string name="history_act_share">生成分享</string>
+    <string name="history_act_retry">重试</string>
+    <string name="history_act_delete">删除</string>
+    <string name="history_share_requires_sync">同步后可分享</string>
+    <string name="history_share_offline">离线时无法生成分享</string>
+    <string name="history_state_pending">待同步</string>
+    <string name="history_state_failed">失败</string>
+    <string name="history_delete_title">删除这条记录？</string>
+    <string name="history_delete_body">删除后无法恢复，所有设备都会移除。</string>
+    <string name="history_delete_confirm">删除</string>
+    <string name="history_cancel">取消</string>
 </resources>
