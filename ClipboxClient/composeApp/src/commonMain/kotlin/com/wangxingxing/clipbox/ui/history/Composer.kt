@@ -46,6 +46,7 @@ import com.wangxingxing.clipbox.resources.history_composer_placeholder
 import com.wangxingxing.clipbox.resources.history_copy_instead
 import com.wangxingxing.clipbox.resources.history_near_limit
 import com.wangxingxing.clipbox.resources.history_over_limit
+import com.wangxingxing.clipbox.resources.history_paste
 import com.wangxingxing.clipbox.resources.history_send
 import com.wangxingxing.clipbox.ui.theme.ClipboxTokens
 import com.wangxingxing.clipbox.util.TextSize
@@ -61,6 +62,7 @@ fun Composer(
     onCopyInstead: (String) -> Unit,
     maxHeight: Dp,
     modifier: Modifier = Modifier,
+    onPaste: (() -> Unit)? = null,
     focusRequestToken: Int = 0,
 ) {
     val colors = ClipboxTokens.colors
@@ -164,6 +166,23 @@ fun Composer(
                 ) {
                     Text(
                         text = stringResource(Res.string.history_copy_instead),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+                Spacer(Modifier.width(spacing.s))
+            }
+            if (onPaste != null) {
+                OutlinedButton(
+                    onClick = onPaste,
+                    modifier = Modifier.height(44.dp),
+                    shape = shape,
+                    border = BorderStroke(1.dp, colors.line),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.ink),
+                    contentPadding = PaddingValues(horizontal = spacing.m),
+                ) {
+                    Text(
+                        text = stringResource(Res.string.history_paste),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Medium,
                     )

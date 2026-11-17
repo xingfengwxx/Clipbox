@@ -61,16 +61,22 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.wangxingxing.clipbox.clipboard.ClipboardEvent
 import com.wangxingxing.clipbox.di.LocalAppGraph
 import com.wangxingxing.clipbox.model.Clip
 import com.wangxingxing.clipbox.model.SyncState
 import com.wangxingxing.clipbox.model.SyncStatus
+import com.wangxingxing.clipbox.platform.ClipboardReadResult
+import com.wangxingxing.clipbox.platform.ClipboardWriteResult
 import com.wangxingxing.clipbox.resources.Res
 import com.wangxingxing.clipbox.resources.app_name
+import com.wangxingxing.clipbox.resources.clipboard_auto_paste_failed
+import com.wangxingxing.clipbox.resources.clipboard_auto_send_too_large
+import com.wangxingxing.clipbox.resources.clipboard_empty
+import com.wangxingxing.clipbox.resources.clipboard_read_failed
+import com.wangxingxing.clipbox.resources.clipboard_write_failed
 import com.wangxingxing.clipbox.resources.history_copied
 import com.wangxingxing.clipbox.resources.history_delete_body
 import com.wangxingxing.clipbox.resources.history_delete_confirm
@@ -109,7 +115,6 @@ import org.jetbrains.compose.resources.stringResource
 
 private const val TIME_REFRESH_MILLIS = 30_000L
 
-@Suppress("DEPRECATION")
 @Composable
 fun HistoryRoute(
     onOpenSettings: () -> Unit,
@@ -134,8 +139,8 @@ fun HistoryRoute(
     var selectedClip by remember { mutableStateOf<Clip?>(null) }
     var clipToDelete by remember { mutableStateOf<Clip?>(null) }
     var draft by rememberSaveable { mutableStateOf("") }
-    // 每次分享草稿预填后递增，驱动发送器请求焦点
-    var shareDraftFocusToken by remember { mutableStateOf(0) }
+    // 每次分享草稿预填或粘贴后递增，驱动发送器请求焦点
+    var composerFocusToken by remember { mutableStateOf(0) }
     // 未配对分享按 REQ-PAIR-008 直达配对页；同一份草稿只自动跳一次，用户取消后不再强推
     var pairingPrompted by rememberSaveable(incomingShareDraft) { mutableStateOf(false) }
     LaunchedEffect(state.isLoaded, state.paired, incomingShareDraft) {
@@ -160,9 +165,14 @@ fun HistoryRoute(
     val snackbarHostState = remember { SnackbarHostState() }
     val shareHolder = remember(graph, scope) { ShareStateHolder(graph.shareRepository, scope) }
     val shareState = shareHolder.state
-    // CMP 1.9 的跨端剪贴板仍是 LocalClipboardManager；T-CORE-12 落地后收敛到剪贴板服务
-    val clipboard = LocalClipboardManager.current
+    // 读写统一走平台剪贴板服务；移动端只在用户显式点击复制/粘贴时访问
+    val clipboardService = graph.clipboardService
     val copiedMessage = stringResource(Res.string.history_copied)
+    val copyFailedMessage = stringResource(Res.string.clipboard_write_failed)
+    val pasteFailedMessage = stringResource(Res.string.clipboard_read_failed)
+    val clipboardEmptyMessage = stringResource(Res.string.clipboard_empty)
+    val autoPasteFailedMessage = stringResource(Res.string.clipboard_auto_paste_failed)
+    val autoSendTooLargeMessage = stringResource(Res.string.clipboard_auto_send_too_large)
     val overLimitMessage = stringResource(Res.string.history_over_limit)
     val deleteTitle = stringResource(Res.string.history_delete_title)
     val deleteBody = stringResource(Res.string.history_delete_body)
@@ -179,7 +189,7 @@ fun HistoryRoute(
                 scope.launch { snackbarHostState.showSnackbar(shareDraftReplaced) }
             }
             draft = incomingShareDraft
-            shareDraftFocusToken++
+            composerFocusToken++
         }
     }
     // 事件收集器只启动一次，用最新回调避免 Activity 重建后仍引用旧闭包
@@ -202,8 +212,45 @@ fun HistoryRoute(
     }
 
     val copyText: (String) -> Unit = { text ->
-        clipboard.setText(AnnotatedString(text))
-        scope.launch { snackbarHostState.showSnackbar(copiedMessage) }
+        scope.launch {
+            when (clipboardService.writeText(text)) {
+                ClipboardWriteResult.Success -> snackbarHostState.showSnackbar(copiedMessage)
+                ClipboardWriteResult.Failed -> snackbarHostState.showSnackbar(copyFailedMessage)
+            }
+        }
+    }
+    // 自动粘贴失败与自动发送超限只做提示，不重试写入、不修改记录
+    LaunchedEffect(graph.clipboardController, autoPasteFailedMessage, autoSendTooLargeMessage) {
+        graph.clipboardController.events.collect { event ->
+            when (event) {
+                ClipboardEvent.AutoPasteFailed ->
+                    snackbarHostState.showSnackbar(autoPasteFailedMessage)
+
+                ClipboardEvent.AutoSendTooLarge ->
+                    snackbarHostState.showSnackbar(autoSendTooLargeMessage)
+            }
+        }
+    }
+    // 移动端显式粘贴：只填充输入框，不自动发送；有草稿时追加到末尾避免覆盖用户输入
+    val onPaste: (() -> Unit)? = if (graph.isDesktop) {
+        null
+    } else {
+        {
+            scope.launch {
+                when (val result = clipboardService.readText()) {
+                    is ClipboardReadResult.Success -> {
+                        draft = if (draft.isEmpty()) result.text else draft + "\n" + result.text
+                        composerFocusToken++
+                    }
+
+                    ClipboardReadResult.Empty ->
+                        snackbarHostState.showSnackbar(clipboardEmptyMessage)
+
+                    ClipboardReadResult.Failed ->
+                        snackbarHostState.showSnackbar(pasteFailedMessage)
+                }
+            }
+        }
     }
 
     Box(modifier.fillMaxSize()) {
@@ -214,13 +261,14 @@ fun HistoryRoute(
             onQueryChange = viewModel::setQuery,
             onSend = { viewModel.send(draft) },
             onCopy = copyText,
+            onPaste = onPaste,
             onTogglePin = { clip -> viewModel.setPinned(clip.id, !clip.pinned) },
             onMore = { selectedClip = it },
             onSyncNow = viewModel::syncNow,
             onOpenSettings = onOpenSettings,
             onPair = onPair,
             listState = listState,
-            focusRequestToken = shareDraftFocusToken,
+            focusRequestToken = composerFocusToken,
         )
         selectedClip?.let { clip ->
             val shareReason = when {
@@ -279,8 +327,15 @@ fun HistoryRoute(
                 onCopyLink = { url ->
                     // 先收起弹层，Snackbar 才不会被弹层遮挡；结果保留，可再次打开查看
                     shareHolder.dismiss()
-                    clipboard.setText(AnnotatedString(url))
-                    scope.launch { snackbarHostState.showSnackbar(shareLinkCopied) }
+                    scope.launch {
+                        when (clipboardService.writeText(url)) {
+                            ClipboardWriteResult.Success ->
+                                snackbarHostState.showSnackbar(shareLinkCopied)
+
+                            ClipboardWriteResult.Failed ->
+                                snackbarHostState.showSnackbar(copyFailedMessage)
+                        }
+                    }
                 },
                 onDismiss = shareHolder::dismiss,
             )
@@ -302,6 +357,7 @@ private fun HistoryScreen(
     onQueryChange: (String) -> Unit,
     onSend: () -> Unit,
     onCopy: (String) -> Unit,
+    onPaste: (() -> Unit)?,
     onTogglePin: (Clip) -> Unit,
     onMore: (Clip) -> Unit,
     onSyncNow: () -> Unit,
@@ -361,6 +417,7 @@ private fun HistoryScreen(
                             onValueChange = onDraftChange,
                             onSend = onSend,
                             onCopyInstead = onCopy,
+                            onPaste = onPaste,
                             maxHeight = composerMaxHeight,
                             focusRequestToken = focusRequestToken,
                             modifier = Modifier.padding(

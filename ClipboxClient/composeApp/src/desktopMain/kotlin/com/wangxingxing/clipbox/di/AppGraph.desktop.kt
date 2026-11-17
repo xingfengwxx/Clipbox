@@ -41,8 +41,11 @@ private object DesktopAppGraph {
             outboxWorker = runtime.outboxWorker,
             syncCoordinator = runtime.syncCoordinator,
             syncStatusHolder = runtime.syncStatusHolder,
+            clipboardService = runtime.clipboardService,
+            clipboardController = runtime.clipboardController,
             defaultServerUrl = serverUrl,
             defaultDeviceName = "Desktop · ${System.getProperty("os.name")}",
+            isDesktop = true,
         )
     }
 

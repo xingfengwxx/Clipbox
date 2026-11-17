@@ -36,6 +36,7 @@
     <string name="history_over_limit">超出 64 KiB 上限</string>
     <string name="history_near_limit">接近 64 KiB 上限</string>
     <string name="history_copy_instead">改為複製</string>
+    <string name="history_paste">貼上</string>
     <string name="history_bytes_counter">%1$s / %2$s B</string>
     <string name="history_bytes">%1$s B</string>
     <string name="history_group_pinned">置頂 %1$d</string>
@@ -100,4 +101,8 @@
     <string name="share_link_copied">連結已複製</string>
     <string name="share_result_back">換一個有效期</string>
     <string name="clipboard_read_failed">無法讀取剪貼簿，請重試或長按輸入框手動貼上</string>
+    <string name="clipboard_write_failed">無法寫入剪貼簿，請重試</string>
+    <string name="clipboard_empty">剪貼簿中沒有文字</string>
+    <string name="clipboard_auto_paste_failed">自動複製失敗，請手動複製</string>
+    <string name="clipboard_auto_send_too_large">剪貼簿內容超過 64 KiB，未自動傳送</string>
 </resources>

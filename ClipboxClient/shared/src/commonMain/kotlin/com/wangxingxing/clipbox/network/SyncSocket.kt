@@ -6,6 +6,7 @@
  */
 package com.wangxingxing.clipbox.network
 
+import com.wangxingxing.clipbox.model.ClipDto
 import com.wangxingxing.clipbox.model.WsAuthOk
 import com.wangxingxing.clipbox.model.WsAuthRequest
 import com.wangxingxing.clipbox.model.WsClipEvent
@@ -14,6 +15,7 @@ import com.wangxingxing.clipbox.model.WsMessageType
 import com.wangxingxing.clipbox.settings.SettingsRepository
 import com.wangxingxing.clipbox.sync.Backoff
 import com.wangxingxing.clipbox.sync.PullResult
+import com.wangxingxing.clipbox.sync.SyncEventResult
 import com.wangxingxing.clipbox.sync.SyncGateway
 import com.wangxingxing.clipbox.sync.SyncStatusReporter
 import io.ktor.client.HttpClient
@@ -32,6 +34,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -111,8 +116,12 @@ class SyncSocket(
 ) {
 
     private val wakeUps = Channel<Unit>(Channel.CONFLATED)
+    private val realtimeCreatedFlow = MutableSharedFlow<ClipDto>(extraBufferCapacity = 64)
     private var startedScope: CoroutineScope? = null
     private var loopJob: Job? = null
+
+    /** 仅包含 WS 实时到达且已成功应用到本地库的 clip.created；REST / 缺口补拉不会进入此流 */
+    val realtimeCreated: SharedFlow<ClipDto> = realtimeCreatedFlow.asSharedFlow()
 
     @Volatile
     private var foreground = true
@@ -262,7 +271,11 @@ class SyncSocket(
 
             // 先消费缓冲再持续处理实时事件；事件应用在 SyncEngine 内与 REST 共用互斥锁
             for (event in events) {
-                gateway.applyEvent(event)
+                val result = gateway.applyEvent(event)
+                // 只有真正应用成功的实时新建事件才允许触发 Desktop 自动粘贴；补拉历史不触发
+                if (result is SyncEventResult.Applied && event.type == WsMessageType.CLIP_CREATED) {
+                    realtimeCreatedFlow.tryEmit(event.data)
+                }
             }
             reader.join()
 

@@ -6,12 +6,14 @@
  */
 package com.wangxingxing.clipbox.sync
 
+import com.wangxingxing.clipbox.clipboard.ClipboardController
 import com.wangxingxing.clipbox.db.ClipboxDatabase
 import com.wangxingxing.clipbox.network.ApiService
 import com.wangxingxing.clipbox.network.KtorSyncSocketTransport
 import com.wangxingxing.clipbox.network.SyncSocket
 import com.wangxingxing.clipbox.network.createApiHttpClient
 import com.wangxingxing.clipbox.network.createSyncWebSocketClient
+import com.wangxingxing.clipbox.platform.ClipboardService
 import com.wangxingxing.clipbox.repository.ClipLookup
 import com.wangxingxing.clipbox.repository.ClipRepository
 import com.wangxingxing.clipbox.repository.ShareRepository
@@ -28,6 +30,8 @@ class SyncRuntime internal constructor(
     val outboxWorker: OutboxWorker,
     val syncCoordinator: SyncCoordinator,
     val syncStatusHolder: SyncStatusHolder,
+    val clipboardService: ClipboardService,
+    val clipboardController: ClipboardController,
 )
 
 /**
@@ -39,6 +43,8 @@ internal fun buildSyncRuntime(
     scope: CoroutineScope,
     settingsRepository: SettingsRepository,
     defaultServerUrl: String,
+    clipboardService: ClipboardService,
+    isDesktop: Boolean,
 ): SyncRuntime {
     val syncMutex = Mutex()
     val statusHolder = SyncStatusHolder(database, scope)
@@ -87,6 +93,15 @@ internal fun buildSyncRuntime(
         metaDao = database.metaDao(),
         runner = SyncNowRunner { coordinator.syncNow() },
     )
+    val clipboardController = ClipboardController(
+        scope = scope,
+        settingsRepository = settingsRepository,
+        clipRepository = clipRepository,
+        clipboardService = clipboardService,
+        realtimeCreated = socket.realtimeCreated,
+        isDesktop = isDesktop,
+    )
+    clipboardController.start()
     return SyncRuntime(
         clipRepository = clipRepository,
         shareRepository = shareRepository,
@@ -94,5 +109,7 @@ internal fun buildSyncRuntime(
         outboxWorker = outboxWorker,
         syncCoordinator = coordinator,
         syncStatusHolder = statusHolder,
+        clipboardService = clipboardService,
+        clipboardController = clipboardController,
     )
 }

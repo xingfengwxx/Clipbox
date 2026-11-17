@@ -59,8 +59,11 @@ private object AndroidAppGraph {
             outboxWorker = runtime.outboxWorker,
             syncCoordinator = runtime.syncCoordinator,
             syncStatusHolder = runtime.syncStatusHolder,
+            clipboardService = runtime.clipboardService,
+            clipboardController = runtime.clipboardController,
             defaultServerUrl = serverUrl,
             defaultDeviceName = "Android · ${Build.MODEL}",
+            isDesktop = false,
         )
     }
 

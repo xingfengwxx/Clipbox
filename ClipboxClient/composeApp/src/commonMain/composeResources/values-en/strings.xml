@@ -36,6 +36,7 @@
     <string name="history_over_limit">Over the 64 KiB limit</string>
     <string name="history_near_limit">Approaching the 64 KiB limit</string>
     <string name="history_copy_instead">Copy instead</string>
+    <string name="history_paste">Paste</string>
     <string name="history_bytes_counter">%1$s / %2$s B</string>
     <string name="history_bytes">%1$s B</string>
     <string name="history_group_pinned">Pinned %1$d</string>
@@ -100,4 +101,8 @@
     <string name="share_link_copied">Link copied</string>
     <string name="share_result_back">Choose another duration</string>
     <string name="clipboard_read_failed">Couldn\'t read the clipboard. Try again or long-press the input field to paste.</string>
+    <string name="clipboard_write_failed">Couldn\'t write to the clipboard. Try again.</string>
+    <string name="clipboard_empty">No text in the clipboard</string>
+    <string name="clipboard_auto_paste_failed">Auto-copy failed, please copy manually</string>
+    <string name="clipboard_auto_send_too_large">Clipboard content exceeds 64 KiB and was not sent automatically</string>
 </resources>

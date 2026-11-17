@@ -8,6 +8,8 @@ package com.wangxingxing.clipbox.di
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
+import com.wangxingxing.clipbox.clipboard.ClipboardController
+import com.wangxingxing.clipbox.platform.ClipboardService
 import com.wangxingxing.clipbox.repository.ClipRepository
 import com.wangxingxing.clipbox.repository.PairingRepository
 import com.wangxingxing.clipbox.repository.ShareRepository
@@ -25,8 +27,11 @@ internal class AppGraph(
     val outboxWorker: OutboxWorker,
     val syncCoordinator: SyncCoordinator,
     val syncStatusHolder: SyncStatusHolder,
+    val clipboardService: ClipboardService,
+    val clipboardController: ClipboardController,
     val defaultServerUrl: String,
     val defaultDeviceName: String,
+    val isDesktop: Boolean,
 ) {
     // 历史页列表的顶部状态与回顶请求由 App 层与历史页共享，避免 App 层猜测滚动位置
     val historyViewport = HistoryViewportState()

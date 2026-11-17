@@ -49,8 +49,11 @@ private object IosAppGraph {
             outboxWorker = runtime.outboxWorker,
             syncCoordinator = runtime.syncCoordinator,
             syncStatusHolder = runtime.syncStatusHolder,
+            clipboardService = runtime.clipboardService,
+            clipboardController = runtime.clipboardController,
             defaultServerUrl = serverUrl,
             defaultDeviceName = IosDeviceInfo.defaultDeviceName,
+            isDesktop = false,
         )
     }
 }
