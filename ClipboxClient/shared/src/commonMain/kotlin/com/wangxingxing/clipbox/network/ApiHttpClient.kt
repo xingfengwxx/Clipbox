@@ -14,6 +14,7 @@ import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
@@ -58,5 +59,19 @@ fun createApiHttpClient(
             requestTimeoutMillis = 30_000
             socketTimeoutMillis = 30_000
         }
+    }
+}
+
+// 同步长连接单独建客户端：令牌只走首帧，不能装 Bearer；
+// 也不设 request / socket 超时，避免服务端 30 秒 ping 间隔被判定为超时并断开
+fun createSyncWebSocketClient(
+    serverUrl: String,
+    engine: HttpClientEngine = defaultHttpClientEngine(),
+): HttpClient = HttpClient(engine) {
+    expectSuccess = false
+    defaultRequest { url(serverUrl) }
+    install(WebSockets)
+    install(HttpTimeout) {
+        connectTimeoutMillis = 10_000
     }
 }

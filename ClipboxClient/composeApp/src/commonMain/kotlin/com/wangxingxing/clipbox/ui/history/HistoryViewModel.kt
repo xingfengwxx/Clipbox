@@ -2,13 +2,14 @@
  * author : 王星星
  * date : 2026-11-16 18:05
  * email : 1099420259@qq.com
- * description : 历史页状态机：把设置流与本地记录流合并为展示状态；发送与置顶只调用 ClipRepository，不触网、不直接访问 Room
+ * description : 历史页状态机：把设置流与本地记录流合并为展示状态；发送与置顶只调用 ClipRepository，不触网、不直接访问 Room，写入成功后显式唤醒 Outbox 立即重放
  */
 package com.wangxingxing.clipbox.ui.history
 
 import com.wangxingxing.clipbox.repository.ClipRepository
 import com.wangxingxing.clipbox.repository.SendResult
 import com.wangxingxing.clipbox.settings.SettingsRepository
+import com.wangxingxing.clipbox.sync.OutboxWorker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +23,7 @@ import kotlinx.coroutines.launch
 class HistoryViewModel(
     private val clipRepository: ClipRepository,
     settingsRepository: SettingsRepository,
+    private val outboxWorker: OutboxWorker,
     private val scope: CoroutineScope,
 ) {
 
@@ -54,7 +56,11 @@ class HistoryViewModel(
         scope.launch {
             try {
                 when (clipRepository.send(content)) {
-                    is SendResult.Success -> _events.send(HistoryEvent.Sent)
+                    is SendResult.Success -> {
+                        outboxWorker.requestReplay()
+                        _events.send(HistoryEvent.Sent)
+                    }
+
                     SendResult.TooLarge -> _events.send(HistoryEvent.TooLarge)
                     SendResult.Empty -> Unit
                 }
@@ -65,6 +71,8 @@ class HistoryViewModel(
     }
 
     fun setPinned(id: String, pinned: Boolean) {
-        scope.launch { clipRepository.pin(id, pinned) }
+        scope.launch {
+            if (clipRepository.pin(id, pinned)) outboxWorker.requestReplay()
+        }
     }
 }

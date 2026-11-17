@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-16 17:15
  * email : 1099420259@qq.com
- * description : iOS 临时依赖图；进程级懒加载，设备名由 IosDeviceInfo 提供，诊断日志默认值待 T-CORE-13 收敛；服务器地址按二进制是否为 debug 区分
+ * description : iOS 临时依赖图；进程级单例避免重复创建数据库与 WS 连接，设备名由 IosDeviceInfo 提供，服务器地址按二进制是否为 debug 区分
  */
 package com.wangxingxing.clipbox.di
 
@@ -11,8 +11,8 @@ import androidx.compose.runtime.remember
 import com.wangxingxing.clipbox.IosDeviceInfo
 import com.wangxingxing.clipbox.config.BundledConfig
 import com.wangxingxing.clipbox.repository.PairingRepository
-import com.wangxingxing.clipbox.repository.createClipRepository
 import com.wangxingxing.clipbox.settings.createSettingsRepository
+import com.wangxingxing.clipbox.sync.createSyncRuntime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -29,12 +29,23 @@ private object IosAppGraph {
     @OptIn(ExperimentalNativeApi::class)
     private fun create(): AppGraph {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val serverUrl = BundledConfig.serverUrl(Platform.isDebugBinary)
         val settingsRepository = createSettingsRepository(scope, diagnosticLoggingDefault = true)
+        val runtime = createSyncRuntime(
+            scope = scope,
+            settingsRepository = settingsRepository,
+            defaultServerUrl = serverUrl,
+        )
+        runtime.syncCoordinator.start()
         return AppGraph(
             settingsRepository = settingsRepository,
             pairingRepository = PairingRepository(settingsRepository),
-            clipRepository = createClipRepository(settingsRepository),
-            defaultServerUrl = BundledConfig.serverUrl(Platform.isDebugBinary),
+            clipRepository = runtime.clipRepository,
+            shareRepository = runtime.shareRepository,
+            outboxWorker = runtime.outboxWorker,
+            syncCoordinator = runtime.syncCoordinator,
+            syncStatusHolder = runtime.syncStatusHolder,
+            defaultServerUrl = serverUrl,
             defaultDeviceName = IosDeviceInfo.defaultDeviceName,
         )
     }

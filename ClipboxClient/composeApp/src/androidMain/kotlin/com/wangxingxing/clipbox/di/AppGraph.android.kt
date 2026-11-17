@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-16 17:15
  * email : 1099420259@qq.com
- * description : Android 临时依赖图；进程级单例避免同进程重复创建 DataStore 与数据库，诊断日志默认值与默认服务器地址跟随 debuggable 构建
+ * description : Android 临时依赖图；进程级单例避免同进程重复创建 DataStore、数据库与 WS 连接，诊断日志默认值与默认服务器地址跟随 debuggable 构建
  */
 package com.wangxingxing.clipbox.di
 
@@ -14,8 +14,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.wangxingxing.clipbox.config.BundledConfig
 import com.wangxingxing.clipbox.repository.PairingRepository
-import com.wangxingxing.clipbox.repository.createClipRepository
 import com.wangxingxing.clipbox.settings.createSettingsRepository
+import com.wangxingxing.clipbox.sync.createSyncRuntime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -38,16 +38,28 @@ private object AndroidAppGraph {
     private fun create(context: Context): AppGraph {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         val isDebug = context.isDebuggable()
+        val serverUrl = BundledConfig.serverUrl(isDebug)
         val settingsRepository = createSettingsRepository(
             context = context,
             scope = scope,
             diagnosticLoggingDefault = isDebug,
         )
+        val runtime = createSyncRuntime(
+            context = context,
+            scope = scope,
+            settingsRepository = settingsRepository,
+            defaultServerUrl = serverUrl,
+        )
+        runtime.syncCoordinator.start()
         return AppGraph(
             settingsRepository = settingsRepository,
             pairingRepository = PairingRepository(settingsRepository),
-            clipRepository = createClipRepository(context, settingsRepository),
-            defaultServerUrl = BundledConfig.serverUrl(isDebug),
+            clipRepository = runtime.clipRepository,
+            shareRepository = runtime.shareRepository,
+            outboxWorker = runtime.outboxWorker,
+            syncCoordinator = runtime.syncCoordinator,
+            syncStatusHolder = runtime.syncStatusHolder,
+            defaultServerUrl = serverUrl,
             defaultDeviceName = "Android · ${Build.MODEL}",
         )
     }

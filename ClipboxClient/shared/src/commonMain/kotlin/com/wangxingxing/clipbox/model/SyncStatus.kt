@@ -9,6 +9,9 @@ package com.wangxingxing.clipbox.model
 sealed interface SyncStatus {
     data object Idle : SyncStatus
     data object Syncing : SyncStatus
+
+    // 全量重同步耗时更长，UI 与「同步中」同样展示，但保留独立状态便于诊断
+    data object Resyncing : SyncStatus
     data object Offline : SyncStatus
     data object Unauthorized : SyncStatus
 

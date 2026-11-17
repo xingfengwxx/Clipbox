@@ -9,6 +9,7 @@ package com.wangxingxing.clipbox.db
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface OutboxDao {
@@ -40,4 +41,11 @@ interface OutboxDao {
 
     @Query("SELECT COUNT(*) FROM outbox WHERE lastErrorCode IS NOT NULL")
     suspend fun countFailed(): Int
+
+    // 状态条按记录数而非操作数统计，避免同一条记录的多笔操作被重复计数
+    @Query("SELECT COUNT(DISTINCT clipId) FROM outbox WHERE lastErrorCode IS NULL")
+    fun observePendingCount(): Flow<Int>
+
+    @Query("SELECT COUNT(DISTINCT clipId) FROM outbox WHERE lastErrorCode IS NOT NULL")
+    fun observeFailedCount(): Flow<Int>
 }

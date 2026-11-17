@@ -19,6 +19,7 @@ import com.wangxingxing.clipbox.model.ApiFailure
 import com.wangxingxing.clipbox.model.ClipDto
 import com.wangxingxing.clipbox.model.SyncResponse
 import com.wangxingxing.clipbox.model.SyncState
+import com.wangxingxing.clipbox.model.WsClipEvent
 import com.wangxingxing.clipbox.network.ApiResult
 import com.wangxingxing.clipbox.network.ApiService
 import com.wangxingxing.clipbox.settings.SettingsRepository
@@ -30,13 +31,44 @@ class SyncEngine(
     private val apiService: ApiService,
     private val settingsRepository: SettingsRepository,
     private val syncMutex: Mutex = Mutex(),
-) {
+    private val statusReporter: SyncStatusReporter = SyncStatusReporter.None,
+) : SyncGateway {
 
     /**
      * 从 meta.lastSeq 拉取增量变更，遇到缺口或 `resyncRequired` 时自动全量重同步。
      * 返回的 [PullResult.Success.lastSeq] 是本次成功提交的游标；失败时游标停在最后一页成功值。
      */
-    suspend fun pull(): PullResult = syncMutex.withLock { pullLocked() }
+    override suspend fun pull(): PullResult = syncMutex.withLock { pullLocked() }
+
+    /**
+     * 应用一条 WS 事件。事件不重放：只有 `seq == lastSeq + 1` 才写入记录并在同一事务推进游标；
+     * `seq > lastSeq + 1` 视为缺口，在锁内执行一次 REST 补拉，事件是否已被覆盖由补拉后的游标判定。
+     */
+    override suspend fun applyEvent(event: WsClipEvent): SyncEventResult = syncMutex.withLock {
+        val lastSeq = database.metaDao().get(MetaKeys.LAST_SEQ)
+        when {
+            event.seq <= lastSeq -> SyncEventResult.Ignored
+            event.seq == lastSeq + 1 -> {
+                applyEventItem(event.data, event.seq)
+                SyncEventResult.Applied(event.seq)
+            }
+
+            else -> when (val result = pullLocked()) {
+                is PullResult.Failure -> SyncEventResult.GapPullFailed(result.failure)
+                PullResult.WaitingForPairing -> SyncEventResult.NotPaired
+                is PullResult.Success -> {
+                    val advanced = database.metaDao().get(MetaKeys.LAST_SEQ)
+                    // 补拉通常已包含该事件；只有它恰好紧跟新游标时才单独应用，避免乱序推进
+                    if (event.seq == advanced + 1) {
+                        applyEventItem(event.data, event.seq)
+                        SyncEventResult.Applied(event.seq)
+                    } else {
+                        SyncEventResult.GapPulled(advanced)
+                    }
+                }
+            }
+        }
+    }
 
     private suspend fun pullLocked(): PullResult {
         if (settingsRepository.current().deviceToken.isNullOrEmpty()) return PullResult.WaitingForPairing
@@ -65,6 +97,7 @@ class SyncEngine(
 
     // 重同步期间保留 Outbox 与待发 / 失败记录，只清空已同步记录后从 0 重拉
     private suspend fun resyncLocked(): PullResult {
+        statusReporter.onResyncing()
         writeTransaction { clipDao, _, metaDao ->
             clipDao.deleteSynced()
             metaDao.put(MetaKeys.LAST_SEQ, 0)
@@ -96,23 +129,35 @@ class SyncEngine(
         writeTransaction { clipDao, outboxDao, metaDao ->
             var applied = 0
             for (item in page.items) {
-                if (item.deleted) {
-                    if (clipDao.getById(item.id) == null) continue
-                    // 本地仍有待发操作时保留，避免墓碑吞掉用户尚未同步的修改
-                    if (outboxDao.opsForClip(item.id).isNotEmpty()) continue
-                    clipDao.deleteById(item.id)
-                    applied++
-                } else {
-                    val local = clipDao.getById(item.id)
-                    // 待发 / 失败记录的合并规则由 T-CORE-10 统一收口，本层不覆盖本地意图
-                    if (local != null && local.syncState != SyncState.SYNCED) continue
-                    clipDao.upsert(item.toEntity())
-                    applied++
-                }
+                if (applyItem(clipDao, outboxDao, item)) applied++
             }
             if (page.nextSince >= since) metaDao.put(MetaKeys.LAST_SEQ, page.nextSince)
             applied
         }
+
+    // WS 事件与拉取共用同一条写入规则；游标与记录同事务推进，保证事件不重放
+    private suspend fun applyEventItem(item: ClipDto, seq: Long) {
+        writeTransaction { clipDao, outboxDao, metaDao ->
+            applyItem(clipDao, outboxDao, item)
+            metaDao.put(MetaKeys.LAST_SEQ, seq)
+        }
+    }
+
+    // 返回是否真正写入或删除了本地记录；被本地待发状态保护而跳过时游标仍会前进
+    private suspend fun applyItem(clipDao: ClipDao, outboxDao: OutboxDao, item: ClipDto): Boolean {
+        if (item.deleted) {
+            if (clipDao.getById(item.id) == null) return false
+            // 本地仍有待发操作时保留，避免墓碑吞掉用户尚未同步的修改
+            if (outboxDao.opsForClip(item.id).isNotEmpty()) return false
+            clipDao.deleteById(item.id)
+            return true
+        }
+        val local = clipDao.getById(item.id)
+        // 待发 / 失败记录的合并规则由 T-CORE-10 统一收口，本层不覆盖本地意图
+        if (local != null && local.syncState != SyncState.SYNCED) return false
+        clipDao.upsert(item.toEntity())
+        return true
+    }
 
     private fun ClipDto.toEntity(): ClipEntity = ClipEntity(
         id = id,
@@ -149,4 +194,23 @@ sealed interface PullResult {
     data class Failure(val failure: ApiFailure) : PullResult
 
     data object WaitingForPairing : PullResult
+}
+
+/**
+ * WS 传输层与同步内核之间的窄接口：传输层只负责协议与重连，
+ * 拉取与事件应用必须经过同一实现，才能保证共享同步锁与游标规则不被绕过。
+ */
+interface SyncGateway {
+    suspend fun pull(): PullResult
+    suspend fun applyEvent(event: WsClipEvent): SyncEventResult
+}
+
+sealed interface SyncEventResult {
+    data class Applied(val seq: Long) : SyncEventResult
+    data object Ignored : SyncEventResult
+
+    /** 缺口补拉完成；游标按 nextSince 前进，事件本身不单独应用 */
+    data class GapPulled(val lastSeq: Long) : SyncEventResult
+    data class GapPullFailed(val failure: ApiFailure) : SyncEventResult
+    data object NotPaired : SyncEventResult
 }

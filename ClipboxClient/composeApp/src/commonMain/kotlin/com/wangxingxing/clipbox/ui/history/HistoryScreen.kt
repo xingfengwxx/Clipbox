@@ -101,6 +101,7 @@ fun HistoryRoute(
         HistoryViewModel(
             clipRepository = graph.clipRepository,
             settingsRepository = graph.settingsRepository,
+            outboxWorker = graph.outboxWorker,
             scope = scope,
         )
     }
