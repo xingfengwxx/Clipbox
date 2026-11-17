@@ -12,6 +12,7 @@ package com.wangxingxing.clipbox.server
 import com.wangxingxing.clipbox.server.config.AppConfig
 import com.wangxingxing.clipbox.server.config.ConfigException
 import com.wangxingxing.clipbox.server.db.DatabaseFactory
+import com.wangxingxing.clipbox.server.job.RetentionJob
 import com.wangxingxing.clipbox.server.plugins.RateLimitSettings
 import com.wangxingxing.clipbox.server.plugins.RateLimitedConnectionAttemptGate
 import com.wangxingxing.clipbox.server.plugins.RateLimiters
@@ -57,7 +58,7 @@ fun main() {
 
     try {
         embeddedServer(Netty, host = "0.0.0.0", port = config.port) {
-            module(config)
+            module(config, startRetentionJob = true)
         }.start(wait = true)
     } catch (e: Exception) {
         val rootCause = generateSequence<Throwable>(e) { it.cause }.last()
@@ -71,6 +72,8 @@ fun main() {
  * 迁移失败必须关闭连接池后继续抛出，避免残留连接与半初始化状态。
  * 管线顺序有依赖：日志最外层保证每请求都有记录；错误映射必须早于认证与路由才能兜住其异常；
  * 请求体流限制必须早于 ContentNegotiation 才能先看到原始字节。
+ * 保留清理默认不启动：测试夹具依赖固定时间与旧墓碑，后台任务会按真实时钟破坏这些数据；
+ * 生产入口 [main] 显式传 true，启动时立即清理一次并每 24 小时重复。
  */
 fun Application.module(
     config: AppConfig,
@@ -78,6 +81,7 @@ fun Application.module(
     webSocketSettings: WebSocketSettings = WebSocketSettings(),
     connectionRegistry: ConnectionRegistry = ConnectionRegistry(),
     rateLimitSettings: RateLimitSettings = RateLimitSettings(),
+    startRetentionJob: Boolean = false,
 ) {
     val factory = databaseFactory ?: DatabaseFactory.open(config.dataDir)
     val schemaVersion = try {
@@ -104,6 +108,8 @@ fun Application.module(
     }
 
     val limiters = RateLimiters(rateLimitSettings)
+    // 路由与保留清理共用同一个广播器，确保双方看到同一份连接注册表。
+    val broadcaster = Broadcaster(connectionRegistry)
 
     configureRequestLogging()
     configureSecurityHeaders()
@@ -116,7 +122,7 @@ fun Application.module(
     routing {
         healthRoutes(factory::isHealthy)
         pairingRoutes(adminService, pairingService)
-        clipRoutes(ClipService(factory, Broadcaster(connectionRegistry)))
+        clipRoutes(ClipService(factory, broadcaster))
         syncRoutes(
             factory,
             connectionRegistry,
@@ -124,5 +130,9 @@ fun Application.module(
             RateLimitedConnectionAttemptGate(limiters.webSocketAttempts),
         )
         notFoundRoute()
+    }
+
+    if (startRetentionJob) {
+        RetentionJob(factory, broadcaster).start(this)
     }
 }
