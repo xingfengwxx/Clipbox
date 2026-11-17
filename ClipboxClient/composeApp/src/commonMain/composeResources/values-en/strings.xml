@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Theca</string>
+    <string name="window_title">Theca</string>
     <string name="nav_history">History</string>
     <string name="nav_toolbox">Toolbox</string>
     <string name="nav_settings">Settings</string>
