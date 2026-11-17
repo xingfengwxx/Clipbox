@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-16 18:05
  * email : 1099420259@qq.com
- * description : 历史页 S01 / S02：顶栏、已配对才显示的发送器、置顶与全部两组记录、未配对与已配对两种空态；只消费 HistoryUiState，不访问 Room 或 ApiService
+ * description : 历史页 S01 / S02：顶栏、已配对才显示的发送器、置顶与全部两组记录、未配对与已配对两种空态；只消费 HistoryUiState，不访问 Room 或 ApiService；分享草稿只负责预填与发送后清除
  */
 package com.wangxingxing.clipbox.ui.history
 
@@ -45,6 +45,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -90,6 +91,8 @@ private const val TIME_REFRESH_MILLIS = 30_000L
 fun HistoryRoute(
     onOpenSettings: () -> Unit,
     onPair: () -> Unit,
+    incomingShareDraft: String? = null,
+    onShareDraftConsumed: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val graph = LocalAppGraph.current
@@ -103,18 +106,36 @@ fun HistoryRoute(
     }
     val state by viewModel.state.collectAsState()
     var draft by rememberSaveable { mutableStateOf("") }
+    // 只有新的分享正文到达才覆盖草稿；null 表示没有待处理分享，不能清掉用户正在编辑的内容
+    LaunchedEffect(incomingShareDraft) {
+        if (!incomingShareDraft.isNullOrEmpty()) {
+            draft = incomingShareDraft
+        }
+    }
+    // 未配对分享按 REQ-PAIR-008 直达配对页；同一份草稿只自动跳一次，用户取消后不再强推
+    var pairingPrompted by rememberSaveable(incomingShareDraft) { mutableStateOf(false) }
+    LaunchedEffect(state.isLoaded, state.paired, incomingShareDraft) {
+        if (!pairingPrompted && state.isLoaded && !state.paired && !incomingShareDraft.isNullOrEmpty()) {
+            pairingPrompted = true
+            onPair()
+        }
+    }
     val listState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
     // CMP 1.9 的跨端剪贴板仍是 LocalClipboardManager；T-CORE-12 落地后收敛到剪贴板服务
     val clipboard = LocalClipboardManager.current
     val copiedMessage = stringResource(Res.string.history_copied)
     val overLimitMessage = stringResource(Res.string.history_over_limit)
+    // 事件收集器只启动一次，用最新回调避免 Activity 重建后仍引用旧闭包
+    val latestOnShareDraftConsumed by rememberUpdatedState(onShareDraftConsumed)
 
     LaunchedEffect(viewModel, copiedMessage, overLimitMessage) {
         viewModel.events.collect { event ->
             when (event) {
                 HistoryEvent.Sent -> {
                     draft = ""
+                    // 分享草稿在用户确认发送后清除；普通输入发送时清除空草稿同样安全
+                    latestOnShareDraftConsumed()
                     // 列表为空时新记录本来就在顶部，无需滚动
                     if (state.clips.isNotEmpty()) listState.animateScrollToItem(0)
                 }

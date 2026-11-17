@@ -15,11 +15,18 @@ import com.wangxingxing.clipbox.ui.navigation.ClipboxNavigationHost
 import com.wangxingxing.clipbox.ui.theme.ClipboxTheme
 
 @Composable
-fun App() {
+fun App(
+    incomingShareDraft: String? = null,
+    onShareDraftConsumed: () -> Unit = {},
+) {
     val appGraph = rememberAppGraph()
     ClipboxTheme {
         CompositionLocalProvider(LocalAppGraph provides appGraph) {
-            ClipboxNavigationHost(navController = rememberNavController())
+            ClipboxNavigationHost(
+                navController = rememberNavController(),
+                incomingShareDraft = incomingShareDraft,
+                onShareDraftConsumed = onShareDraftConsumed,
+            )
         }
     }
 }

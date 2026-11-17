@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-16 16:29
  * email : 1099420259@qq.com
- * description : 应用级 NavHost：历史页接真实实现，工具箱与设置暂为占位；配对页全屏入栈，配对成功回退到历史页
+ * description : 应用级 NavHost：历史页接真实实现，工具箱与设置暂为占位；配对页全屏入栈，配对成功回退到历史页；分享草稿参数只透传给历史页
  */
 package com.wangxingxing.clipbox.ui.navigation
 
@@ -21,6 +21,8 @@ fun ClipboxNavHost(
     navController: NavHostController,
     startDestination: String = TopLevelDestination.History.route,
     modifier: Modifier = Modifier,
+    incomingShareDraft: String? = null,
+    onShareDraftConsumed: () -> Unit = {},
 ) {
     NavHost(
         navController = navController,
@@ -38,6 +40,8 @@ fun ClipboxNavHost(
                         launchSingleTop = true
                     }
                 },
+                incomingShareDraft = incomingShareDraft,
+                onShareDraftConsumed = onShareDraftConsumed,
             )
         }
         TopLevelDestination.entries

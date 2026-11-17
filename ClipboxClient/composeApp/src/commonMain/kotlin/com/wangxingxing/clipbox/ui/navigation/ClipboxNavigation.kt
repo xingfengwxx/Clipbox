@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-16 16:29
  * email : 1099420259@qq.com
- * description : 自适应导航壳：<600dp 用底部三栏，≥600dp 用 200dp 侧栏；切换一级页时保存 / 恢复各自返回栈状态；配对页全屏不显示导航
+ * description : 自适应导航壳：<600dp 用底部三栏，≥600dp 用 200dp 侧栏；切换一级页时保存 / 恢复各自返回栈状态；配对页全屏不显示导航；分享草稿参数原样透传
  */
 package com.wangxingxing.clipbox.ui.navigation
 
@@ -53,6 +53,8 @@ fun ClipboxNavigationHost(
     navController: NavHostController,
     startDestination: String = TopLevelDestination.History.route,
     modifier: Modifier = Modifier,
+    incomingShareDraft: String? = null,
+    onShareDraftConsumed: () -> Unit = {},
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -74,6 +76,8 @@ fun ClipboxNavigationHost(
                 navController = navController,
                 startDestination = startDestination,
                 modifier = Modifier.fillMaxSize(),
+                incomingShareDraft = incomingShareDraft,
+                onShareDraftConsumed = onShareDraftConsumed,
             )
         } else if (maxWidth >= WideLayoutMinWidth) {
             Row(Modifier.fillMaxSize()) {
@@ -87,6 +91,8 @@ fun ClipboxNavigationHost(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight(),
+                    incomingShareDraft = incomingShareDraft,
+                    onShareDraftConsumed = onShareDraftConsumed,
                 )
             }
         } else {
@@ -97,6 +103,8 @@ fun ClipboxNavigationHost(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth(),
+                    incomingShareDraft = incomingShareDraft,
+                    onShareDraftConsumed = onShareDraftConsumed,
                 )
                 ClipboxBottomBar(
                     selected = selected,
