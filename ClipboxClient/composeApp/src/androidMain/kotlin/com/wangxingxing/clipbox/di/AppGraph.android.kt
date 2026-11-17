@@ -13,6 +13,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.wangxingxing.clipbox.config.BundledConfig
+import com.wangxingxing.clipbox.logging.AndroidLogSink
+import com.wangxingxing.clipbox.logging.AppLogger
 import com.wangxingxing.clipbox.repository.PairingRepository
 import com.wangxingxing.clipbox.settings.createSettingsRepository
 import com.wangxingxing.clipbox.sync.createSyncRuntime
@@ -39,6 +41,7 @@ private object AndroidAppGraph {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         val isDebug = context.isDebuggable()
         val serverUrl = BundledConfig.serverUrl(isDebug)
+        val appLogger = AppLogger(AndroidLogSink(), isDebugBuild = isDebug)
         val settingsRepository = createSettingsRepository(
             context = context,
             scope = scope,
@@ -49,6 +52,7 @@ private object AndroidAppGraph {
             scope = scope,
             settingsRepository = settingsRepository,
             defaultServerUrl = serverUrl,
+            appLogger = appLogger,
         )
         runtime.syncCoordinator.start()
         return AppGraph(
@@ -61,6 +65,7 @@ private object AndroidAppGraph {
             syncStatusHolder = runtime.syncStatusHolder,
             clipboardService = runtime.clipboardService,
             clipboardController = runtime.clipboardController,
+            appLogger = appLogger,
             defaultServerUrl = serverUrl,
             defaultDeviceName = "Android · ${Build.MODEL}",
             isDesktop = false,

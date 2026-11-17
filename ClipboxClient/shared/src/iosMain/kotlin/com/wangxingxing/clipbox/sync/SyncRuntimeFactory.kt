@@ -8,6 +8,7 @@ package com.wangxingxing.clipbox.sync
 
 import com.wangxingxing.clipbox.db.buildClipboxDatabase
 import com.wangxingxing.clipbox.db.createClipboxDatabaseBuilder
+import com.wangxingxing.clipbox.logging.AppLogger
 import com.wangxingxing.clipbox.platform.IosClipboardService
 import com.wangxingxing.clipbox.settings.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
@@ -16,6 +17,7 @@ fun createSyncRuntime(
     scope: CoroutineScope,
     settingsRepository: SettingsRepository,
     defaultServerUrl: String,
+    appLogger: AppLogger,
 ): SyncRuntime = buildSyncRuntime(
     database = buildClipboxDatabase(createClipboxDatabaseBuilder()),
     scope = scope,
@@ -23,4 +25,5 @@ fun createSyncRuntime(
     defaultServerUrl = defaultServerUrl,
     clipboardService = IosClipboardService(),
     isDesktop = false,
+    appLogger = appLogger,
 )

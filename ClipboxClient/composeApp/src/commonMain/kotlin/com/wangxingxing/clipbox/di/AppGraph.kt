@@ -9,6 +9,7 @@ package com.wangxingxing.clipbox.di
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.wangxingxing.clipbox.clipboard.ClipboardController
+import com.wangxingxing.clipbox.logging.AppLogger
 import com.wangxingxing.clipbox.platform.ClipboardService
 import com.wangxingxing.clipbox.repository.ClipRepository
 import com.wangxingxing.clipbox.repository.PairingRepository
@@ -29,6 +30,7 @@ internal class AppGraph(
     val syncStatusHolder: SyncStatusHolder,
     val clipboardService: ClipboardService,
     val clipboardController: ClipboardController,
+    val appLogger: AppLogger,
     val defaultServerUrl: String,
     val defaultDeviceName: String,
     val isDesktop: Boolean,

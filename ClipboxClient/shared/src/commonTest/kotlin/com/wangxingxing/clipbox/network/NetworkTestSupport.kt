@@ -6,6 +6,7 @@
  */
 package com.wangxingxing.clipbox.network
 
+import com.wangxingxing.clipbox.logging.AppLogger
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
@@ -24,6 +25,7 @@ internal const val TEST_TOKEN = "test-device-token"
 internal fun stubService(
     token: String? = TEST_TOKEN,
     requests: MutableList<HttpRequestData> = mutableListOf(),
+    logger: AppLogger? = null,
     handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
 ): ApiService {
     val engine = MockEngine { request ->
@@ -35,7 +37,7 @@ internal fun stubService(
         tokenProvider = { token },
         engine = engine,
     )
-    return ApiService(client)
+    return ApiService(client, logger = logger)
 }
 
 // 可选 Retry-After 需要在同一份响应头里给出

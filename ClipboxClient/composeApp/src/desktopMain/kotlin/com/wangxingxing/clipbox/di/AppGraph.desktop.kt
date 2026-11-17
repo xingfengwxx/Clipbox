@@ -9,6 +9,8 @@ package com.wangxingxing.clipbox.di
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.wangxingxing.clipbox.config.BundledConfig
+import com.wangxingxing.clipbox.logging.AppLogger
+import com.wangxingxing.clipbox.logging.DesktopLogSink
 import com.wangxingxing.clipbox.repository.PairingRepository
 import com.wangxingxing.clipbox.settings.createSettingsRepository
 import com.wangxingxing.clipbox.sync.createSyncRuntime
@@ -25,12 +27,15 @@ private object DesktopAppGraph {
 
     private fun create(): AppGraph {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-        val serverUrl = BundledConfig.serverUrl(isDevRun())
+        val isDebug = isDevRun()
+        val serverUrl = BundledConfig.serverUrl(isDebug)
+        val appLogger = AppLogger(DesktopLogSink(), isDebugBuild = isDebug)
         val settingsRepository = createSettingsRepository(scope, diagnosticLoggingDefault = true)
         val runtime = createSyncRuntime(
             scope = scope,
             settingsRepository = settingsRepository,
             defaultServerUrl = serverUrl,
+            appLogger = appLogger,
         )
         runtime.syncCoordinator.start()
         return AppGraph(
@@ -43,6 +48,7 @@ private object DesktopAppGraph {
             syncStatusHolder = runtime.syncStatusHolder,
             clipboardService = runtime.clipboardService,
             clipboardController = runtime.clipboardController,
+            appLogger = appLogger,
             defaultServerUrl = serverUrl,
             defaultDeviceName = "Desktop · ${System.getProperty("os.name")}",
             isDesktop = true,

@@ -8,6 +8,7 @@ package com.wangxingxing.clipbox.sync
 
 import com.wangxingxing.clipbox.clipboard.ClipboardController
 import com.wangxingxing.clipbox.db.ClipboxDatabase
+import com.wangxingxing.clipbox.logging.AppLogger
 import com.wangxingxing.clipbox.network.ApiService
 import com.wangxingxing.clipbox.network.KtorSyncSocketTransport
 import com.wangxingxing.clipbox.network.SyncSocket
@@ -45,15 +46,19 @@ internal fun buildSyncRuntime(
     defaultServerUrl: String,
     clipboardService: ClipboardService,
     isDesktop: Boolean,
+    appLogger: AppLogger,
 ): SyncRuntime {
     val syncMutex = Mutex()
     val statusHolder = SyncStatusHolder(database, scope)
+    // 开关跟随 DataStore，重启后无需重新绑定
+    appLogger.observe(settingsRepository, scope)
     // 令牌每次请求时读取，重新配对后无需重建客户端
     val apiService = ApiService(
         createApiHttpClient(
             serverUrl = defaultServerUrl,
             tokenProvider = { settingsRepository.current().deviceToken },
-        )
+        ),
+        logger = appLogger,
     )
     val syncEngine = SyncEngine(
         database = database,
@@ -76,6 +81,7 @@ internal fun buildSyncRuntime(
         settingsRepository = settingsRepository,
         defaultServerUrl = defaultServerUrl,
         statusReporter = statusHolder,
+        logger = appLogger,
     )
     val shareRepository = ShareRepository(
         apiService = apiService,

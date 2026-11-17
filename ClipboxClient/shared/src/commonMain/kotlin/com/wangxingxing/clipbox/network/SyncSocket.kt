@@ -6,6 +6,8 @@
  */
 package com.wangxingxing.clipbox.network
 
+import com.wangxingxing.clipbox.logging.AppLogger
+import com.wangxingxing.clipbox.logging.LogEvent
 import com.wangxingxing.clipbox.model.ClipDto
 import com.wangxingxing.clipbox.model.WsAuthOk
 import com.wangxingxing.clipbox.model.WsAuthRequest
@@ -111,6 +113,7 @@ class SyncSocket(
     private val settingsRepository: SettingsRepository,
     private val defaultServerUrl: String,
     private val statusReporter: SyncStatusReporter = SyncStatusReporter.None,
+    private val logger: AppLogger? = null,
     private val jitterSample: () -> Double = { Random.nextDouble() },
     private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
@@ -167,6 +170,7 @@ class SyncSocket(
         while (currentCoroutineContext().isActive && foreground) {
             val token = settingsRepository.current().deviceToken?.takeIf { it.isNotEmpty() }
             if (token == null) {
+                logger?.log(LogEvent.Socket(event = "wait-pairing", detail = "no device token"))
                 statusReporter.onUnauthorized()
                 // 配对成功由 SyncCoordinator 调用 onForeground 唤醒，不轮询
                 wakeUps.receive()
@@ -187,6 +191,7 @@ class SyncSocket(
 
             val session = transport.connect(syncSocketUrl(defaultServerUrl))
             if (session == null) {
+                logger?.log(LogEvent.Socket(event = "connect-failed", detail = "transport returned null"))
                 statusReporter.onOffline()
                 retryCount++
                 delayBackoff()
@@ -201,17 +206,20 @@ class SyncSocket(
 
             when (outcome) {
                 SessionOutcome.Unauthorized -> {
+                    logger?.log(LogEvent.Socket(event = "auth-failed", detail = "stop reconnect"))
                     statusReporter.onUnauthorized()
                     return
                 }
 
                 // 服务端正常关闭或 4001 设备被顶替：不自动重连，等待下一次前台或配对
                 SessionOutcome.Stop -> {
+                    logger?.log(LogEvent.Socket(event = "closed", detail = "reconnect disabled"))
                     statusReporter.onOffline()
                     return
                 }
 
                 SessionOutcome.Retry -> {
+                    logger?.log(LogEvent.Socket(event = "closed", detail = "will retry"))
                     statusReporter.onOffline()
                     retryCount++
                     delayBackoff()
@@ -223,15 +231,28 @@ class SyncSocket(
     private suspend fun runSession(session: SyncSocketSession, token: String): SessionOutcome =
         coroutineScope {
             session.send(ApiJson.encodeToString(WsAuthRequest.auth(token)))
+            // 令牌仅进入首帧；日志中由 LogRedactor 统一替换为 <redacted>
+            logger?.log(
+                LogEvent.Socket(event = "auth-sent", detail = "waiting auth.ok", authToken = token),
+            )
             // 5 秒内必须收到 auth.ok；超时或错误帧按 4401 处理，等待重新配对
             val auth = withTimeoutOrNull(AUTH_TIMEOUT_MILLIS) { awaitAuth(session) }
             when (auth) {
-                null -> return@coroutineScope SessionOutcome.Unauthorized
+                null -> {
+                    logger?.log(LogEvent.Socket(event = "auth-timeout", detail = "no auth.ok in 5s"))
+                    return@coroutineScope SessionOutcome.Unauthorized
+                }
+
                 AuthOutcome.Ok -> Unit
-                AuthOutcome.Error -> return@coroutineScope SessionOutcome.Unauthorized
+                AuthOutcome.Error -> {
+                    logger?.log(LogEvent.Socket(event = "auth-rejected", detail = "error frame or 4401"))
+                    return@coroutineScope SessionOutcome.Unauthorized
+                }
+
                 is AuthOutcome.Closed -> return@coroutineScope auth.outcome
             }
             retryCount = 0
+            logger?.log(LogEvent.Socket(event = "auth-ok", detail = "session established"))
             statusReporter.onSynced()
 
             // auth.ok 后事件可能立刻到达；补拉期间先入内存缓冲，避免把并发新事件误判为缺口
@@ -315,7 +336,9 @@ class SyncSocket(
     }
 
     private suspend fun delayBackoff() {
-        delay(Backoff.delayMillis(retryCount.coerceAtLeast(1), jitterSample()))
+        val delayMillis = Backoff.delayMillis(retryCount.coerceAtLeast(1), jitterSample())
+        logger?.log(LogEvent.Socket(event = "backoff", detail = "retry=$retryCount delayMs=$delayMillis"))
+        delay(delayMillis)
     }
 
     private sealed interface AuthOutcome {

@@ -11,6 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.wangxingxing.clipbox.IosDeviceInfo
 import com.wangxingxing.clipbox.config.BundledConfig
+import com.wangxingxing.clipbox.logging.AppLogger
+import com.wangxingxing.clipbox.logging.IosLogSink
 import com.wangxingxing.clipbox.repository.PairingRepository
 import com.wangxingxing.clipbox.settings.createSettingsRepository
 import com.wangxingxing.clipbox.sync.createSyncRuntime
@@ -33,12 +35,15 @@ private object IosAppGraph {
     @OptIn(ExperimentalNativeApi::class)
     private fun create(): AppGraph {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-        val serverUrl = BundledConfig.serverUrl(Platform.isDebugBinary)
+        val isDebug = Platform.isDebugBinary
+        val serverUrl = BundledConfig.serverUrl(isDebug)
+        val appLogger = AppLogger(IosLogSink(), isDebugBuild = isDebug)
         val settingsRepository = createSettingsRepository(scope, diagnosticLoggingDefault = true)
         val runtime = createSyncRuntime(
             scope = scope,
             settingsRepository = settingsRepository,
             defaultServerUrl = serverUrl,
+            appLogger = appLogger,
         )
         runtime.syncCoordinator.start()
         return AppGraph(
@@ -51,6 +56,7 @@ private object IosAppGraph {
             syncStatusHolder = runtime.syncStatusHolder,
             clipboardService = runtime.clipboardService,
             clipboardController = runtime.clipboardController,
+            appLogger = appLogger,
             defaultServerUrl = serverUrl,
             defaultDeviceName = IosDeviceInfo.defaultDeviceName,
             isDesktop = false,
