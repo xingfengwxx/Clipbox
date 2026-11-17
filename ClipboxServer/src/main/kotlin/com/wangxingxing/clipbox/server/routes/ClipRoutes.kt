@@ -11,6 +11,7 @@ package com.wangxingxing.clipbox.server.routes
 import com.wangxingxing.clipbox.server.db.ClipRow
 import com.wangxingxing.clipbox.server.plugins.DEVICE_AUTH_PROVIDER
 import com.wangxingxing.clipbox.server.plugins.DevicePrincipal
+import com.wangxingxing.clipbox.server.plugins.respondError
 import com.wangxingxing.clipbox.server.service.ClipService
 import com.wangxingxing.clipbox.server.service.ClipSyncPage
 import com.wangxingxing.clipbox.server.service.ClipWriteFailure
@@ -19,6 +20,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.principal
+import io.ktor.server.plugins.PayloadTooLargeException
+import io.ktor.server.plugins.UnsupportedMediaTypeException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -81,14 +84,10 @@ fun Route.clipRoutes(clipService: ClipService) {
             }
 
             if (since == null || limit == null) {
-                call.respond(
+                call.respondError(
                     HttpStatusCode.BadRequest,
-                    ApiErrorResponse(
-                        ApiErrorBody(
-                            code = "VALIDATION_ERROR",
-                            message = "since 必须是非负整数，limit 必须是 $MIN_LIMIT-$MAX_LIMIT 的整数",
-                        ),
-                    ),
+                    "VALIDATION_ERROR",
+                    "since 必须是非负整数，limit 必须是 $MIN_LIMIT-$MAX_LIMIT 的整数",
                 )
                 return@get
             }
@@ -156,8 +155,13 @@ private suspend inline fun <reified T : Any> ApplicationCall.receiveJsonOrNull()
         receive<T>()
     } catch (e: CancellationException) {
         throw e
+    } catch (e: PayloadTooLargeException) {
+        // 分块请求超限在这里才暴露，必须原样抛出交给统一错误映射，不能降级成参数错误。
+        throw e
+    } catch (e: UnsupportedMediaTypeException) {
+        throw e
     } catch (e: Exception) {
-        // 缺字段、类型不符与非 JSON 体统一按参数错误处理；413/415 由 T-S-07 的请求体管线负责。
+        // 缺字段与类型不符统一按参数错误处理。
         null
     }
 
@@ -166,7 +170,7 @@ private suspend fun ApplicationCall.respondClipError(
     code: String,
     message: String,
 ) {
-    respond(status, ApiErrorResponse(ApiErrorBody(code = code, message = message)))
+    respondError(status, code, message)
 }
 
 // 契约要求严格类型：带引号的 "true" / "1" 不当作布尔或数字，避免字符串被静默转成合法值。

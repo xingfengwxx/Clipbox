@@ -13,7 +13,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import kotlinx.serialization.Serializable
 
-private const val SERVER_VERSION = "1.0.0"
+internal const val SERVER_VERSION = "1.0.0"
 
 @Serializable
 data class HealthResponse(
