@@ -55,6 +55,10 @@ interface ClipDao {
     @Query("DELETE FROM clips WHERE id = :id")
     suspend fun deleteById(id: String)
 
+    // 全量重同步专用：只清已同步记录，待发 / 失败记录与 Outbox 必须保留到重拉完成
+    @Query("DELETE FROM clips WHERE syncState = 'SYNCED'")
+    suspend fun deleteSynced(): Int
+
     // 只裁剪已同步的非置顶记录；待同步、失败、置顶与已删除记录一律保留
     @Query(
         """
