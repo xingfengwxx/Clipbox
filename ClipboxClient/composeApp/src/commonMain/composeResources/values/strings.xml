@@ -230,4 +230,8 @@
     <string name="tool_decode">解码</string>
     <string name="tool_url_safe">URL-safe</string>
     <string name="tool_base64_error">不是合法的 Base64 内容</string>
+    <string name="tool_url_component">组件</string>
+    <string name="tool_url_whole">整串</string>
+    <string name="tool_url_plus">+ = 空格</string>
+    <string name="tool_url_error">位置 %1$d 的百分号编码不合法</string>
 </resources>

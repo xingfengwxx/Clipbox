@@ -238,4 +238,8 @@
     <string name="tool_decode">Decode</string>
     <string name="tool_url_safe">URL-safe</string>
     <string name="tool_base64_error">Not a valid Base64 string</string>
+    <string name="tool_url_component">Component</string>
+    <string name="tool_url_whole">Full URL</string>
+    <string name="tool_url_plus">+ as space</string>
+    <string name="tool_url_error">Invalid percent-encoding at position %1$d</string>
 </resources>
