@@ -15,7 +15,9 @@
     <string name="pair_device_label">设备名称</string>
     <string name="pair_submit">配对</string>
     <string name="pair_submitting">配对中…</string>
-    <string name="pair_cooldown">%1$s 秒后可重试</string>
+    <plurals name="pair_cooldown">
+        <item quantity="other">%1$d 秒后可重试</item>
+    </plurals>
     <string name="pair_rate_hint">配对请求按来源 IP 限速，5 次／分钟。</string>
     <string name="pair_note">配对码由服务器生成，10 分钟内有效，只能使用一次。</string>
     <string name="pair_insecure_warning">未加密连接，仅用于学习</string>
@@ -40,8 +42,12 @@
     <string name="history_paste">粘贴</string>
     <string name="history_bytes_counter">%1$s / %2$s B</string>
     <string name="history_bytes">%1$s B</string>
-    <string name="history_group_pinned">置顶 %1$d</string>
-    <string name="history_group_all">全部 %1$d</string>
+    <plurals name="history_group_pinned">
+        <item quantity="other">置顶 %1$d</item>
+    </plurals>
+    <plurals name="history_group_all">
+        <item quantity="other">全部 %1$d</item>
+    </plurals>
     <string name="history_empty_title">还没有记录</string>
     <string name="history_empty_paired_body">从手机分享，或在上方输入开始。工具箱离线可用。</string>
     <string name="history_empty_unpaired_body">尚未配对，记录只保存在本机</string>
@@ -49,15 +55,21 @@
     <string name="history_device_local">本机</string>
     <string name="history_device_unknown">未知设备</string>
     <string name="history_time_just_now">刚刚</string>
-    <string name="history_time_minutes">%1$d 分钟前</string>
-    <string name="history_time_hours">%1$d 小时前</string>
+    <plurals name="history_time_minutes">
+        <item quantity="other">%1$d 分钟前</item>
+    </plurals>
+    <plurals name="history_time_hours">
+        <item quantity="other">%1$d 小时前</item>
+    </plurals>
     <string name="history_act_pin">置顶</string>
     <string name="history_act_unpin">取消置顶</string>
     <string name="history_act_more">更多</string>
     <string name="history_copied">已复制到剪贴板</string>
     <string name="history_search_placeholder">搜索本地记录</string>
     <string name="history_search_clear">清空</string>
-    <string name="history_search_count">找到 %1$d 条</string>
+    <plurals name="history_search_count">
+        <item quantity="other">找到 %1$d 条</item>
+    </plurals>
     <string name="history_search_empty_title">没有匹配的记录</string>
     <string name="history_search_empty_body">换个关键词试试</string>
     <string name="history_act_copy">复制</string>
@@ -75,8 +87,12 @@
     <string name="history_sync_syncing">同步中</string>
     <string name="history_sync_synced">已同步</string>
     <string name="history_sync_offline">离线</string>
-    <string name="history_sync_pending_count">待同步 %1$d 条</string>
-    <string name="history_sync_failed_count">失败 %1$d 条</string>
+    <plurals name="history_sync_pending_count">
+        <item quantity="other">待同步 %1$d 条</item>
+    </plurals>
+    <plurals name="history_sync_failed_count">
+        <item quantity="other">失败 %1$d 条</item>
+    </plurals>
     <string name="history_received_new">收到新记录</string>
     <string name="history_share_draft_replaced">已替换为新的分享内容</string>
     <string name="history_view_new">查看</string>

@@ -47,10 +47,12 @@ import com.wangxingxing.clipbox.resources.history_state_pending
 import com.wangxingxing.clipbox.resources.history_time_hours
 import com.wangxingxing.clipbox.resources.history_time_just_now
 import com.wangxingxing.clipbox.resources.history_time_minutes
+import com.wangxingxing.clipbox.ui.i18n.LocalAppLanguage
 import com.wangxingxing.clipbox.ui.theme.ClipboxTokens
 import com.wangxingxing.clipbox.util.ClipTimeLabel
 import com.wangxingxing.clipbox.util.TextSize
 import com.wangxingxing.clipbox.util.clipTimeLabel
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -175,10 +177,20 @@ private fun SyncBadge(state: SyncState) {
 
 @Composable
 private fun timeText(createdAtMillis: Long, nowMillis: Long): String =
-    when (val label = clipTimeLabel(createdAtMillis, nowMillis)) {
+    when (val label = clipTimeLabel(createdAtMillis, nowMillis, LocalAppLanguage.current)) {
         ClipTimeLabel.JustNow -> stringResource(Res.string.history_time_just_now)
-        is ClipTimeLabel.MinutesAgo -> stringResource(Res.string.history_time_minutes, label.minutes)
-        is ClipTimeLabel.HoursAgo -> stringResource(Res.string.history_time_hours, label.hours)
+        is ClipTimeLabel.MinutesAgo -> pluralStringResource(
+            Res.plurals.history_time_minutes,
+            label.minutes,
+            label.minutes,
+        )
+
+        is ClipTimeLabel.HoursAgo -> pluralStringResource(
+            Res.plurals.history_time_hours,
+            label.hours,
+            label.hours,
+        )
+
         is ClipTimeLabel.Absolute -> label.text
     }
 

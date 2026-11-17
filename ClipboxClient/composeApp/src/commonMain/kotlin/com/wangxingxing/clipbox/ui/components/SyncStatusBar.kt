@@ -33,6 +33,7 @@ import com.wangxingxing.clipbox.resources.history_sync_synced
 import com.wangxingxing.clipbox.resources.history_sync_syncing
 import com.wangxingxing.clipbox.resources.history_sync_unpaired
 import com.wangxingxing.clipbox.ui.theme.ClipboxTokens
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -50,8 +51,17 @@ fun SyncStatusBar(
         SyncStatus.Syncing, SyncStatus.Resyncing -> stringResource(Res.string.history_sync_syncing)
         SyncStatus.Offline -> stringResource(Res.string.history_sync_offline)
         SyncStatus.Unauthorized -> stringResource(Res.string.history_sync_unpaired)
-        is SyncStatus.Pending -> stringResource(Res.string.history_sync_pending_count, effective.count)
-        is SyncStatus.Failed -> stringResource(Res.string.history_sync_failed_count, effective.count)
+        is SyncStatus.Pending -> pluralStringResource(
+            Res.plurals.history_sync_pending_count,
+            effective.count,
+            effective.count,
+        )
+
+        is SyncStatus.Failed -> pluralStringResource(
+            Res.plurals.history_sync_failed_count,
+            effective.count,
+            effective.count,
+        )
     }
     val color = when (effective) {
         SyncStatus.Idle -> colors.ok

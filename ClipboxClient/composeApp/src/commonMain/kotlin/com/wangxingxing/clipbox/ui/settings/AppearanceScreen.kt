@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-17 15:42
  * email : 1099420259@qq.com
- * description : 外观与语言 S13：主题三选一分段与预览卡片立即生效并写入设置，语言入口先保留当前值，控件由 T-UI-10 补齐
+ * description : 外观与语言 S13：主题与语言三选一分段立即写入设置；语言切换只重载资源，不重建导航或丢失输入
  */
 package com.wangxingxing.clipbox.ui.settings
 
@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -75,11 +74,11 @@ fun AppearanceRoute(
         ThemeMode.LIGHT to stringResource(Res.string.settings_theme_light),
         ThemeMode.DARK to stringResource(Res.string.settings_theme_dark),
     )
-    val languageLabel = when (state.language) {
-        AppLanguage.ZH_HANS -> stringResource(Res.string.settings_language_hans)
-        AppLanguage.ZH_TW -> stringResource(Res.string.settings_language_tw)
-        AppLanguage.EN -> stringResource(Res.string.settings_language_en)
-    }
+    val languageOptions = listOf(
+        AppLanguage.ZH_HANS to stringResource(Res.string.settings_language_hans),
+        AppLanguage.ZH_TW to stringResource(Res.string.settings_language_tw),
+        AppLanguage.EN to stringResource(Res.string.settings_language_en),
+    )
 
     Column(
         modifier = modifier
@@ -131,9 +130,10 @@ fun AppearanceRoute(
             deviceName = state.deviceName.ifBlank { stringResource(Res.string.appearance_preview_device) },
         )
         AppearanceSectionLabel(stringResource(Res.string.appearance_section_language))
-        AppearanceValueRow(
-            label = stringResource(Res.string.appearance_current),
-            value = languageLabel,
+        AppearanceSegment(
+            options = languageOptions,
+            selected = state.language,
+            onSelect = viewModel::setLanguage,
         )
         Text(
             text = stringResource(Res.string.appearance_note),
@@ -261,28 +261,4 @@ private fun AppearanceSectionLabel(text: String) {
         style = ClipboxTokens.typography.mono,
         color = ClipboxTokens.colors.ink3,
     )
-}
-
-@Composable
-private fun AppearanceValueRow(label: String, value: String) {
-    val colors = ClipboxTokens.colors
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 48.dp)
-            .padding(horizontal = ClipboxTokens.spacing.l, vertical = ClipboxTokens.spacing.s),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.ink,
-        )
-        Spacer(Modifier.weight(1f))
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodySmall,
-            color = colors.ink2,
-        )
-    }
 }

@@ -33,6 +33,7 @@ import com.wangxingxing.clipbox.resources.startup_failed_body
 import com.wangxingxing.clipbox.resources.startup_failed_title
 import com.wangxingxing.clipbox.resources.startup_loading
 import com.wangxingxing.clipbox.resources.startup_retry
+import com.wangxingxing.clipbox.ui.i18n.ProvideAppLanguage
 import com.wangxingxing.clipbox.ui.navigation.ClipboxNavigationHost
 import com.wangxingxing.clipbox.ui.navigation.PAIRING_ROUTE
 import com.wangxingxing.clipbox.ui.navigation.TopLevelDestination
@@ -50,25 +51,28 @@ fun App(
     val startupState by container.startupState.collectAsState()
     val generation by container.generation.collectAsState()
     val themeMode by container.themeMode.collectAsState()
+    val language by container.language.collectAsState()
 
     ClipboxTheme(themeMode = themeMode) {
-        when (startupState) {
-            AppStartupState.Loading -> StartupLoading()
-            is AppStartupState.Failed -> StartupFailure(onRetry = container::startAsync)
-            AppStartupState.Ready -> {
-                // 会话版本变化意味着数据库与 ViewModel 已整体替换，导航必须重建，旧页面不能继续持有旧会话
-                val startAtPairing = remember(generation) { container.consumeStartAtPairing() }
-                key(generation) {
-                    ClipboxNavigationHost(
-                        navController = rememberNavController(),
-                        startDestination = if (startAtPairing) {
-                            PAIRING_ROUTE
-                        } else {
-                            TopLevelDestination.History.route
-                        },
-                        incomingShareDraft = incomingShareDraft,
-                        onShareDraftConsumed = onShareDraftConsumed,
-                    )
+        ProvideAppLanguage(language) {
+            when (startupState) {
+                AppStartupState.Loading -> StartupLoading()
+                is AppStartupState.Failed -> StartupFailure(onRetry = container::startAsync)
+                AppStartupState.Ready -> {
+                    // 会话版本变化意味着数据库与 ViewModel 已整体替换，导航必须重建，旧页面不能继续持有旧会话
+                    val startAtPairing = remember(generation) { container.consumeStartAtPairing() }
+                    key(generation) {
+                        ClipboxNavigationHost(
+                            navController = rememberNavController(),
+                            startDestination = if (startAtPairing) {
+                                PAIRING_ROUTE
+                            } else {
+                                TopLevelDestination.History.route
+                            },
+                            incomingShareDraft = incomingShareDraft,
+                            onShareDraftConsumed = onShareDraftConsumed,
+                        )
+                    }
                 }
             }
         }

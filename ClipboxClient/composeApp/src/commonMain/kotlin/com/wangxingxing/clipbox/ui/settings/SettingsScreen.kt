@@ -120,6 +120,7 @@ import com.wangxingxing.clipbox.settings.ThemeMode
 import com.wangxingxing.clipbox.settings.isInsecureServerUrl
 import com.wangxingxing.clipbox.ui.components.ConfirmDialog
 import com.wangxingxing.clipbox.ui.components.SyncStatusBar
+import com.wangxingxing.clipbox.ui.i18n.LocalAppLanguage
 import com.wangxingxing.clipbox.ui.theme.ClipboxTokens
 import com.wangxingxing.clipbox.util.formatAbsoluteTime
 import org.jetbrains.compose.resources.stringResource
@@ -292,7 +293,7 @@ private fun SettingsScreen(
         AppLanguage.ZH_TW -> stringResource(Res.string.settings_language_tw)
         AppLanguage.EN -> stringResource(Res.string.settings_language_en)
     }
-    val lastSyncText = state.lastSyncAt?.let { formatAbsoluteTime(it) }
+    val lastSyncText = state.lastSyncAt?.let { formatAbsoluteTime(it, LocalAppLanguage.current) }
         ?: stringResource(Res.string.settings_last_sync_never)
 
     Column(

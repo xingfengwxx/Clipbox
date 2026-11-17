@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import com.wangxingxing.clipbox.app.AppContainer
 import com.wangxingxing.clipbox.model.ApiFailure
 import com.wangxingxing.clipbox.repository.SyncRepository
+import com.wangxingxing.clipbox.settings.AppLanguage
 import com.wangxingxing.clipbox.settings.ServerUrlValidation
 import com.wangxingxing.clipbox.settings.ServerUrlValidator
 import com.wangxingxing.clipbox.settings.SettingsRepository
@@ -142,5 +143,9 @@ class SettingsViewModel(
 
     fun setThemeMode(mode: ThemeMode) {
         viewModelScope.launch { settingsRepository.setThemeMode(mode) }
+    }
+
+    fun setLanguage(language: AppLanguage) {
+        viewModelScope.launch { settingsRepository.setAppLanguage(language) }
     }
 }

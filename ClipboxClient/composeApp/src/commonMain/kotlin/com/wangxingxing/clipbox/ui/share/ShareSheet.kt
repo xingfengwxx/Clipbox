@@ -66,6 +66,7 @@ import com.wangxingxing.clipbox.resources.share_tier_24h
 import com.wangxingxing.clipbox.resources.share_tier_7d
 import com.wangxingxing.clipbox.resources.share_tier_one_time
 import com.wangxingxing.clipbox.resources.share_tier_one_time_hint
+import com.wangxingxing.clipbox.ui.i18n.LocalAppLanguage
 import com.wangxingxing.clipbox.ui.theme.ClipboxTokens
 import com.wangxingxing.clipbox.util.formatAbsoluteTime
 import kotlinx.coroutines.CoroutineScope
@@ -280,7 +281,7 @@ fun ShareSheet(
                 Text(
                     text = stringResource(
                         Res.string.share_result_expires,
-                        formatAbsoluteTime(result.expiresAt),
+                        formatAbsoluteTime(result.expiresAt, LocalAppLanguage.current),
                     ),
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.ink3,

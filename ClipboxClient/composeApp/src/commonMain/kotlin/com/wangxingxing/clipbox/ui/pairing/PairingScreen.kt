@@ -69,6 +69,7 @@ import com.wangxingxing.clipbox.resources.pair_submitting
 import com.wangxingxing.clipbox.resources.pair_title
 import com.wangxingxing.clipbox.ui.theme.ClipboxTokens
 import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -332,9 +333,10 @@ private fun PairingSubmitButton(
     val colors = ClipboxTokens.colors
     val label = when {
         state.isSubmitting -> stringResource(Res.string.pair_submitting)
-        state.cooldownSeconds > 0 -> stringResource(
-            Res.string.pair_cooldown,
-            state.cooldownSeconds.toString(),
+        state.cooldownSeconds > 0 -> pluralStringResource(
+            Res.plurals.pair_cooldown,
+            state.cooldownSeconds,
+            state.cooldownSeconds,
         )
 
         else -> stringResource(Res.string.pair_submit)

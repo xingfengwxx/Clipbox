@@ -114,6 +114,7 @@ import com.wangxingxing.clipbox.ui.theme.ClipboxTokens
 import com.wangxingxing.clipbox.util.clipNowMillis
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -502,7 +503,7 @@ private fun SearchBar(
         )
         if (resultCount != null) {
             Text(
-                text = stringResource(Res.string.history_search_count, resultCount),
+                text = pluralStringResource(Res.plurals.history_search_count, resultCount, resultCount),
                 style = typography.mono,
                 color = colors.ink3,
             )
@@ -615,7 +616,13 @@ private fun ClipList(
     ) {
         if (state.pinnedClips.isNotEmpty()) {
             item(key = "group_pinned") {
-                GroupHeader(stringResource(Res.string.history_group_pinned, state.pinnedClips.size))
+                GroupHeader(
+                    pluralStringResource(
+                        Res.plurals.history_group_pinned,
+                        state.pinnedClips.size,
+                        state.pinnedClips.size,
+                    ),
+                )
             }
             items(state.pinnedClips, key = { it.id }) { clip ->
                 ClipRow(
@@ -631,7 +638,13 @@ private fun ClipList(
         }
         if (state.unpinnedClips.isNotEmpty()) {
             item(key = "group_all") {
-                GroupHeader(stringResource(Res.string.history_group_all, state.unpinnedClips.size))
+                GroupHeader(
+                    pluralStringResource(
+                        Res.plurals.history_group_all,
+                        state.unpinnedClips.size,
+                        state.unpinnedClips.size,
+                    ),
+                )
             }
             items(state.unpinnedClips, key = { it.id }) { clip ->
                 ClipRow(

@@ -19,6 +19,7 @@ import com.wangxingxing.clipbox.repository.ClipRepository
 import com.wangxingxing.clipbox.repository.PairingRepository
 import com.wangxingxing.clipbox.repository.ShareRepository
 import com.wangxingxing.clipbox.repository.SyncRepository
+import com.wangxingxing.clipbox.settings.AppLanguage
 import com.wangxingxing.clipbox.settings.AppSettings
 import com.wangxingxing.clipbox.settings.SettingsRepository
 import com.wangxingxing.clipbox.settings.ThemeMode
@@ -107,9 +108,12 @@ class AppContainer(private val services: PlatformServices) {
     private val _generation = MutableStateFlow(0)
     val generation: StateFlow<Int> = _generation.asStateFlow()
 
-    // 主题独立于会话：切换只改根主题重组，不触发导航或数据库重建
+    // 主题与语言独立于会话：切换只改根组合，不触发导航或数据库重建
     private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
     val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
+
+    private val _language = MutableStateFlow(AppLanguage.ZH_HANS)
+    val language: StateFlow<AppLanguage> = _language.asStateFlow()
 
     private val startLock = Mutex()
     private val sessionLock = Mutex()
@@ -155,6 +159,7 @@ class AppContainer(private val services: PlatformServices) {
             val settings = settingsRepository.current()
             settingsSnapshot = settings
             _themeMode.value = settings.themeMode
+            _language.value = settings.appLanguage
             settingsPreloaded = true
         }
     }
@@ -177,12 +182,14 @@ class AppContainer(private val services: PlatformServices) {
                         settingsRepository.settings.collect {
                             settingsSnapshot = it
                             _themeMode.value = it.themeMode
+                            _language.value = it.appLanguage
                         }
                     }
                 }
                 val settings = settingsRepository.current()
                 settingsSnapshot = settings
                 _themeMode.value = settings.themeMode
+                _language.value = settings.appLanguage
                 session = buildSession(settings)
                 _startupState.value = AppStartupState.Ready
             } catch (e: CancellationException) {
@@ -232,6 +239,7 @@ class AppContainer(private val services: PlatformServices) {
             val settings = settingsRepository.current()
             settingsSnapshot = settings
             _themeMode.value = settings.themeMode
+            _language.value = settings.appLanguage
             startAtPairing = returnToPairing && settings.deviceToken.isNullOrEmpty()
             session = buildSession(settings)
             _generation.value += 1
