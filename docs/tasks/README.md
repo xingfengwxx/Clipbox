@@ -27,6 +27,7 @@
 | M3 | 全功能 | 搜索 / 置顶 / 删除、5 个工具箱、设置、主题、多语言、诊断日志、Desktop 剪贴板完整；Android 与 Desktop 可日常自用 |
 | M4 | iOS 完成 | iOS 宿主、共享 UI、前后台同步、分享扩展、iPad 布局全部可用；模拟器构建通过 |
 | M5 | 发布与验收 | 远程服务器部署；APK / macOS 包产出；AC-01…AC-20 全部有证据；v1.0.0 打 tag |
+| M6 | 官网 | 三语单页官网上线；五端下载矩阵与 Range 可用；同容器托管；远程验收通过 |
 
 ## 3. 工作流与文件索引
 
@@ -37,6 +38,7 @@
 | [03-client-ui.md](03-client-ui.md) | Compose UI 与平台入口：主题、历史、配对、设置、分享、工具箱、Android / Desktop | T-UI-01…T-UI-20 |
 | [04-ios.md](04-ios.md) | iOS 宿主、生命周期、分享扩展、iPad、模拟器验收 | T-IOS-01…T-IOS-09 |
 | [05-release.md](05-release.md) | 远程部署、打包、验收矩阵、安全复查、发版 | T-REL-01…T-REL-08 |
+| [06-web.md](06-web.md) | 官网：三语单页、下载矩阵、自建说明、Ktor 托管与远程部署 | T-WEB-01…T-WEB-09 |
 | [PROMPTS.md](PROMPTS.md) | 派单与返修提示词模板、停止条件、提交规范 | — |
 
 ## 4. 依赖关系
@@ -132,6 +134,18 @@ flowchart LR
         R06 --> R07[T-REL-07 安全复查]
         R07 --> R08[T-REL-08 文档与 tag]
     end
+
+    subgraph M6[M6 官网]
+        R05 --> W01[T-WEB-01 文档落位]
+        W01 --> W02[T-WEB-02 骨架令牌]
+        W02 --> W03[T-WEB-03 三语文案]
+        W03 --> W04[T-WEB-04 首页区块]
+        W04 --> W05[T-WEB-05 下载产物]
+        W05 --> W06[T-WEB-06 自建说明]
+        W06 --> W07[T-WEB-07 打磨]
+        W07 --> W08[T-WEB-08 Ktor 托管]
+        W08 --> W09[T-WEB-09 远程部署]
+    end
 ```
 
 图只画主要依赖；卡内「前置」字段是派单的唯一依据。同层无依赖的卡可以按第 5 节顺序依次执行。
@@ -203,6 +217,15 @@ flowchart LR
 61. T-REL-06（M5）
 62. T-REL-07（M5）
 63. T-REL-08（M5）→ **v1.0.0 发布**
+64. T-WEB-01（M6）
+65. T-WEB-02（M6）
+66. T-WEB-03（M6）
+67. T-WEB-04（M6）
+68. T-WEB-05（M6）
+69. T-WEB-06（M6）
+70. T-WEB-07（M6）
+71. T-WEB-08（M6）
+72. T-WEB-09（M6）→ **M6 Gate：官网与下载远程可用**
 
 > 若某卡验收失败，不要跳到下一卡；按 `PROMPTS.md` 的「验收失败修复」模板重新派同一张卡，最多两轮，仍失败则停下汇报。
 
@@ -217,6 +240,7 @@ flowchart LR
 | Client UI | T-UI-01…T-UI-20 | 已完成 | 最后一张 T-UI-20（M3 Gate 提交）；M3 见 [m3-gate.md](m3-gate.md) |
 | iOS | T-IOS-01…T-IOS-09 | 已完成 | 最后一张 T-IOS-09（M4 Gate 提交）；M4 见 [m4-gate.md](m4-gate.md) |
 | Release | T-REL-01…T-REL-08 | 待开始 | — |
+| Web | T-WEB-01…T-WEB-09 | 待开始 | — |
 
 > M2 已于 2026-11-17 通过（证据见 [m2-gate.md](m2-gate.md)）；M3 于同日有条件通过，AC-11 全量分页冲突（D8）已于 2026-11-18 由 [BUG-001](bug-001-ac11-full-sync-floor.md) 修复关闭（证据见 [m3-gate.md](m3-gate.md)）；M4 于同日通过（证据见 [m4-gate.md](m4-gate.md)）；下一张为 T-REL-01。
 
@@ -244,6 +268,7 @@ flowchart LR
 | 工具箱 | TOOL-001…009 | T-UI-11…16 |
 | 设置 | SET-001…011 | T-UI-08/09/10、T-CORE-03/12/13 |
 | 平台 | PLAT-001…009 | 全部 UI / iOS / Release 卡 |
+| 官网 | WEB-001…0NN | T-WEB-02…09 |
 | 非功能 | NFR-001…017 | T-S-07/11、T-REL-07、各卡验收 |
 
 最终 AC-01…AC-20 的逐条证据在 T-REL-06 汇总。
@@ -254,6 +279,9 @@ flowchart LR
 - 接口唯一契约：`docs/api.md`
 - 客户端实现细节：`docs/客户端技术架构.md`
 - 服务端实现细节：`docs/服务端技术架构.md`
+- 官网需求与验收：`docs/web-功能需求.md`
+- 官网实现细节：`docs/web-架构.md`
+- 官网托管决策：`docs/adr/0004-web-static-hosting.md`
 - 领域术语：`docs/GLOSSARY.md`
 - 视觉与交互基准：`design/Clipbox 三端设计.html`、`design/README.md`、`design/brand-spec.md`
 - 执行协议与不变量：仓库根目录 `AGENTS.md`

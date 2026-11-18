@@ -71,6 +71,7 @@
 | --- | --- |
 | 客户端 | `ClipboxClient/` |
 | 服务端 | `ClipboxServer/` |
+| 官网 | `ClipboxWeb/` |
 | 文档 | `docs/` |
 | 设计 | `design/` |
 
@@ -88,6 +89,13 @@ cd ClipboxClient
 ./gradlew :composeApp:assembleDebug
 ./gradlew :composeApp:run
 ./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
+
+# 官网
+cd ClipboxWeb
+npm ci
+npm run dev
+npm run build
+npm run preview
 
 # Android 本地联调
 adb reverse tcp:8080 tcp:8080
