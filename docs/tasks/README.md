@@ -240,7 +240,8 @@ flowchart LR
 | Client UI | T-UI-01…T-UI-20 | 已完成 | 最后一张 T-UI-20（M3 Gate 提交）；M3 见 [m3-gate.md](m3-gate.md) |
 | iOS | T-IOS-01…T-IOS-09 | 已完成 | 最后一张 T-IOS-09（M4 Gate 提交）；M4 见 [m4-gate.md](m4-gate.md) |
 | Release | T-REL-01…T-REL-08 | 待开始 | — |
-| Web | T-WEB-01…T-WEB-09 | 待开始 | — |
+| Web | T-WEB-01…T-WEB-08 | 已完成 | 最后一张 `57ab06c`（T-WEB-08） |
+| Web | T-WEB-09 | 已完成 | 最后一张 T-WEB-09（M6 Gate 提交）；M6 证据见 [web-artifacts.md](web-artifacts.md) §7 |
 
 > M2 已于 2026-11-17 通过（证据见 [m2-gate.md](m2-gate.md)）；M3 于同日有条件通过，AC-11 全量分页冲突（D8）已于 2026-11-18 由 [BUG-001](bug-001-ac11-full-sync-floor.md) 修复关闭（证据见 [m3-gate.md](m3-gate.md)）；M4 于同日通过（证据见 [m4-gate.md](m4-gate.md)）；下一张为 T-REL-01。
 
