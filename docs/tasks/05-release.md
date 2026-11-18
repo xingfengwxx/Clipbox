@@ -572,6 +572,7 @@ git push origin v1.0.0
 - Android 记录 `apksigner` 与 `debuggable=false` 证据；macOS / Windows / Linux 记录未签名事实。
 - Windows / Linux 明确写「未做安装与运行验收」，列为 v1.0.0 已知限制；不得写成已通过。
 - iOS 记录仅模拟器构建，无真机签名与 IPA。
+- 记录 `releaseServerUrl` 仍在 `build.gradle.kts` 中硬编码公网学习版地址，作为与 AGENTS §7 的已知偏差；本版保留默认连接行为，后续版本改为构建注入。
 - 官网 `downloads.ts` 的数值以本台账为唯一来源。
 
 **验收**
@@ -579,7 +580,7 @@ git push origin v1.0.0
 ```bash
 cd /Users/wangxingxing/AndroidStudioProjects/MyProjects/Clipbox
 ls -l docs/tasks/release-artifacts.md docs/tasks/acceptance-matrix.md
-grep -nE "windows-x64|linux-x86_64|未做安装|SHA-256" docs/tasks/release-artifacts.md docs/tasks/acceptance-matrix.md
+grep -nE "windows-amd64|linux-amd64|未做安装|SHA-256" docs/tasks/release-artifacts.md docs/tasks/acceptance-matrix.md
 ```
 
 预期：四平台产物与限制均有记录；无「未验证」但被标为通过的条目。
