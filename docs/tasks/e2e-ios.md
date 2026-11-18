@@ -91,3 +91,10 @@ iPad 用例由 `xcodebuild test` 自动构建并安装同一 target；日志 `/t
 ## 2026-11-18 追加：第二设备取码方式变更（ADR-0006）
 
 上文“通过管理接口配对第二设备”已废弃。T-IOS-11 起，UITest 先调用 `/api/v1/bootstrap` 初始化，再用设备 Bearer 调 `/api/v1/devices/me/pairing-code` 取码，不使用 `ADMIN_TOKEN` 或 `X-Admin-Token`。
+
+T-IOS-11 实现说明：
+
+- 测试进程首次 `POST /api/v1/bootstrap`（设备名 `XCUITest 宿主设备`）成为首台设备，返回的令牌缓存在测试 Runner 的 UserDefaults；之后各用例用该 Bearer 取码，令牌与配对码均不打印。
+- 若服务端已初始化且 Runner 无缓存令牌，取码用例会失败；需用全新数据目录重启服务端后重跑（或保留同一模拟器的 Runner 数据）。
+- 取码返回 429 时按 `Retry-After` 等待后重试；服务端数据被重置返回 401 时清除缓存令牌并重新 bootstrap。
+- 主流程断言未变，仍覆盖配对、发送/接收、复制粘贴、前后台补拉、分享草稿、宽屏与三语。

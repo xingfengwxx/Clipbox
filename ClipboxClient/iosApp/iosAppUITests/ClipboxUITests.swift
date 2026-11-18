@@ -5,6 +5,7 @@
 //  在 iOS 27 模拟器上驱动共享 Compose UI，覆盖配对、发送、键盘避让、实时接收、复制/粘贴、
 //  后台补拉、分享草稿、宽屏导航、主题与三语切换。
 //  不进入 CI；分享扩展的系统面板与粘贴权限弹窗属模拟器不稳定场景，由验收脚本另行留证。
+//  取码链路：测试进程首次 bootstrap 成为首台设备并缓存令牌，后续用 Bearer 调设备取码接口。
 //
 
 import XCTest
@@ -12,10 +13,10 @@ import XCTest
 final class ClipboxUITests: XCTestCase {
 
     private let serverBase = "http://127.0.0.1:8080"
-    // 本地联调服务端的管理令牌，与服务端启动命令中的 ADMIN_TOKEN 保持一致
-    private let adminToken = String(repeating: "a", count: 32)
     // 与验收脚本写入 App Group 的 share-draft.json 正文保持一致
     private let seededShareDraft = "ios-share-draft-e2e-1120"
+    private let ownerTokenKey = "clipbox.uitest.owner.token"
+    private let ownerDeviceIdKey = "clipbox.uitest.owner.deviceId"
 
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -293,45 +294,99 @@ final class ClipboxUITests: XCTestCase {
         add(attachment)
     }
 
-    private func requestPairingCode() throws -> String {
-        guard let url = URL(string: serverBase + "/api/v1/admin/pairing-codes") else {
-            throw NSError(domain: "ClipboxUITests", code: 1)
-        }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue(adminToken, forHTTPHeaderField: "X-Admin-Token")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = Data("{}".utf8)
+    private struct TestDevice {
+        let token: String
+        let deviceId: String
+    }
 
+    // 只走设备认证取码接口；429 按 Retry-After 等待重试，服务端数据被重置导致 401 时重新 bootstrap
+    private func requestPairingCode() throws -> String {
+        for _ in 0..<3 {
+            let owner = try ensureOwnerDevice()
+            guard let url = URL(string: serverBase + "/api/v1/devices/me/pairing-code") else {
+                throw NSError(domain: "ClipboxUITests", code: 1)
+            }
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.timeoutInterval = 15
+            request.setValue("Bearer \(owner.token)", forHTTPHeaderField: "Authorization")
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = Data("{}".utf8)
+
+            switch perform(request) {
+            case .failure(let error):
+                throw error
+            case .success(let http, let data):
+                if http.statusCode == 201,
+                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let code = json["code"] as? String {
+                    return code
+                }
+                if http.statusCode == 401 {
+                    clearOwnerDevice()
+                    continue
+                }
+                if http.statusCode == 429 {
+                    let retryAfter = http.value(forHTTPHeaderField: "Retry-After").flatMap(Double.init) ?? 6
+                    Thread.sleep(forTimeInterval: min(retryAfter + 1, 30))
+                    continue
+                }
+                throw NSError(domain: "ClipboxUITests", code: http.statusCode)
+            }
+        }
+        throw NSError(domain: "ClipboxUITests", code: 6)
+    }
+
+    // 首次运行成为首台设备；令牌只保存在测试 Runner 的 UserDefaults，不打印
+    private func ensureOwnerDevice() throws -> TestDevice {
+        if let token = UserDefaults.standard.string(forKey: ownerTokenKey),
+           let deviceId = UserDefaults.standard.string(forKey: ownerDeviceIdKey) {
+            return TestDevice(token: token, deviceId: deviceId)
+        }
+        return try bootstrapOwnerDevice()
+    }
+
+    private func bootstrapOwnerDevice() throws -> TestDevice {
+        let json = try sendJSON(
+            method: "POST",
+            path: "/api/v1/bootstrap",
+            body: ["deviceName": "XCUITest 宿主设备"],
+            expected: [201, 409],
+        )
+        guard let token = json["token"] as? String, let deviceId = json["deviceId"] as? String else {
+            // 409 且无缓存令牌：服务器已初始化但测试进程拿不到设备身份，需换全新数据目录重启服务端
+            throw NSError(domain: "ClipboxUITests", code: 5)
+        }
+        UserDefaults.standard.set(token, forKey: ownerTokenKey)
+        UserDefaults.standard.set(deviceId, forKey: ownerDeviceIdKey)
+        return TestDevice(token: token, deviceId: deviceId)
+    }
+
+    private func clearOwnerDevice() {
+        UserDefaults.standard.removeObject(forKey: ownerTokenKey)
+        UserDefaults.standard.removeObject(forKey: ownerDeviceIdKey)
+    }
+
+    private func perform(_ request: URLRequest) -> Result<(HTTPURLResponse, Data), Error> {
         let semaphore = DispatchSemaphore(value: 0)
-        var result: Result<String, Error> = .failure(NSError(domain: "ClipboxUITests", code: 2))
+        var result: Result<(HTTPURLResponse, Data), Error> = .failure(NSError(domain: "ClipboxUITests", code: 2))
         URLSession.shared.dataTask(with: request) { data, response, error in
             defer { semaphore.signal() }
             if let error {
                 result = .failure(error)
                 return
             }
-            guard let http = response as? HTTPURLResponse,
-                  http.statusCode == 201,
-                  let data,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let code = json["code"] as? String
-            else {
+            guard let http = response as? HTTPURLResponse else {
                 result = .failure(NSError(domain: "ClipboxUITests", code: 3))
                 return
             }
-            result = .success(code)
+            result = .success((http, data ?? Data()))
         }.resume()
-        _ = semaphore.wait(timeout: .now() + 15)
-        return try result.get()
+        _ = semaphore.wait(timeout: .now() + 20)
+        return result
     }
 
-    private struct TestDevice {
-        let token: String
-        let deviceId: String
-    }
-
-    // 通过管理接口配对一台对照设备，用于替代 Desktop / Android 观察 iOS 的写入
+    // 用宿主设备生成的码配对一台对照设备，用于替代 Desktop / Android 观察 iOS 的写入
     private func pairSecondDevice(name: String) throws -> TestDevice {
         let code = try requestPairingCode()
         let body: [String: Any] = ["code": code, "deviceName": name]
