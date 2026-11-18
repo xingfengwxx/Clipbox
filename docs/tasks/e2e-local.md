@@ -31,7 +31,7 @@
 | AC-08 | 工具箱离线 | 飞行模式下依次使用 JSON、Base64、URL、时间戳、正则 5 个工具，全部可计算、可复制，不写历史、不发起网络请求。截图 `e2e-ac08-json-offline.png`、`e2e-ac08-base64-offline.png`、`e2e-ac08-url-offline.png`、`e2e-ac08-timestamp-offline.png`、`e2e-ac08-regex-offline.png` | 通过 |
 | AC-09 | 重启持久化 | 停止并重启服务端（保留 `data/`）：`healthz` 恢复，`clips=43`、`server_seq=48`；Android 冷启动显示「已配对/已同步」，历史与置顶保留，新增记录继续使用 seq 49/50。截图 `e2e-ac09-server-restart.png` | 通过 |
 | AC-10 | 剪贴板回环 | 同时开启自动粘贴与自动发送：Android 发送后 Desktop 只写入一次剪贴板，6s 内服务端无 Desktop 回传记录、`outbox=0`；2s 窗口内重复监听被跳过，窗口外同内容可再次上传（seq 45/46）。截图与数据库见 `e2e-loopback-*`、`/tmp/e2e-desktop*.log` | 通过 |
-| AC-11 | 序号与墓碑 | 隔离实例：501 条活跃非置顶 → 清理软删 1 条（新 seq 505）、活跃 500；清理 2 个旧墓碑后 `sync_floor=504`、`minAvailableSeq=505`；`since=1`/`since=999999` 均返回 `resyncRequired=true`；`since=0` 首页 200 条（seq 2–201）、`hasMore=true`。**下一页 `since=201` 因 `<504` 被判定重新同步，全量分页无法完成**。证据 `/tmp/e2e-ac11-p2.json`、`/tmp/e2e-ac11-p3.json`、`/tmp/e2e-ac11-server*.log`；冲突见 §4-1 | 部分通过（保留/墓碑语义通过，全量分页冲突未通过） |
+| AC-11 | 序号与墓碑 | 隔离实例：501 条活跃非置顶 → 清理软删 1 条（新 seq 505）、活跃 500；清理 2 个旧墓碑后 `sync_floor=504`、`minAvailableSeq=505`；`since=1`/`since=999999` 均返回 `resyncRequired=true`；`since=0` 首页 200 条（seq 2–201）、`hasMore=true`。**下一页 `since=201` 因 `<504` 被判定重新同步，全量分页无法完成**。证据 `/tmp/e2e-ac11-p2.json`、`/tmp/e2e-ac11-p3.json`、`/tmp/e2e-ac11-server*.log`；冲突见 §4-1 | 已修复（保留/墓碑语义实测通过；全量分页冲突由 BUG-001 修复，自动化集成测试验证，见 §4-1） |
 | AC-12 | 资源占用 | 未执行 24 小时稳定运行；本机 M3 验收窗口不足，留待发布前稳定性验证。见 §4-3 | 未执行 |
 | AC-13 | 安全基线 | 设备令牌：`SHA-256(token)` 前 12 位 `d3faeda08d84` 与 `devices.token_hash` 一致；分享 token：`SHA-256` 等于 `shares.token_hash`（`094010ea25f6…`）；服务端日志敏感模式命中数 0，分享访问只记录 `pathTemplate=/s/{token}`；配对接口同一 IP 第 6 次请求返回 `429 RATE_LIMITED`。证据 `/tmp/pair-6.json`、`/tmp/clipbox-m3-server.log` | 通过 |
 | AC-14 | 解除配对 | Android 确认解除配对：回到配对页，本地 `clips=0`、`outbox=0`、`meta` 清空；服务端 `clips=41`、`devices=12` 保持不变；Desktop 仍在线并在解绑后收到新记录（seq 47）；重新配对后拉回服务端历史（含该记录）。截图 `e2e-ac14-unpaired.png`、`e2e-ac14-repaired.png` | 通过 |
@@ -53,7 +53,7 @@
 
 ## 4. 失败、冲突与限制
 
-### 4-1 AC-11：全量分页与 `syncFloor` 冲突（待决策）
+### 4-1 AC-11：全量分页与 `syncFloor` 冲突（已修复，BUG-001 方案 A）
 
 **现象**：`sync_floor=504` 时，`GET /api/v1/clips?since=0&limit=200` 返回 200 条（seq 2–201）、`hasMore=true`、`nextSince=201`；继续请求 `since=201` 时，因为 `201 < sync_floor` 返回 `resyncRequired=true` 与空 `items`，无法按 `api.md`「`since=0` … 客户端按页拉取直到 `hasMore=false`」完成首次全量同步。
 
@@ -63,7 +63,9 @@
 
 **根因性质**：冻结文档同时要求「`since=0` 全量分页」与「`since < sync_floor` 必须重同步」，但未定义「如何区分全量分页续页与增量游标」。服务端无状态，无法从 `since>0` 判断请求是否属于全量分页。
 
-**未采取的动作**：未修改 `api.md` 或实现来“通过”验收；未引入未文档化的全量会话状态。需文档所有者选择：为全量同步增加显式参数/续页令牌，或调整 `sync_floor` 语义。已在 `m3-gate.md` 登记为 D8，并建立 [BUG-001](bug-001-ac11-full-sync-floor.md)。
+**未采取的动作**：未修改 `api.md` 或实现来“通过”验收；未引入未文档化的全量会话状态。已在 `m3-gate.md` 登记为 D8，并建立 [BUG-001](bug-001-ac11-full-sync-floor.md)。
+
+**修复（2026-11-18）**：经用户批准采用方案 A，`GET /api/v1/clips` 新增可选参数 `full`：`full=true` 跳过 `since < sync_floor` 判定，仍保留 `since > serverMaxSeq` 保护；客户端首次配对与强制重同步的整轮分页都携带 `full=true`，增量请求省略。契约、服务端/客户端架构、功能需求与术语表已同步修订。自动化证据：`SyncFlowIntegrationTest.full sync completes after retention purge with non zero sync floor` 用隔离 SQLite 复现「501 条 + 软删 + 墓碑清理 + 多页全量拉取」，服务端与客户端全量测试均绿（见 `bug-001-ac11-full-sync-floor.md` 修复记录）。本轮未重新执行隔离实例手工复跑，D8 依据自动化集成测试关闭。
 
 ### 4-2 AC-05：客户端 120 KiB 手工注入跳过
 
@@ -88,5 +90,5 @@ Desktop 应用窗口在验收期间无法稳定获得前台焦点，未做窗口
 ## 5. 结论
 
 - Android + Desktop + 真实服务端的核心闭环（配对、双向收发、离线补发、WS 补拉、置顶/删除、分享安全、回环、解绑/重配、主题/语言重启保持）均已实测通过。
-- AC-11 的保留/墓碑语义通过，但「全量分页 + 墓碑清理」存在冻结文档层面的协议空洞，未通过完整场景；需要文档所有者决策后修复。
+- AC-11 的保留/墓碑语义通过；「全量分页 + 墓碑清理」冲突已由 BUG-001 方案 A 修复，并以自动化集成测试验证，D8 关闭。
 - AC-05 客户端 UI 手工项与 AC-12 24 小时稳定性未执行，已在 Gate 中登记。

@@ -74,9 +74,11 @@ class SyncEngine(
         if (settingsRepository.current().deviceToken.isNullOrEmpty()) return PullResult.WaitingForPairing
 
         var since = database.metaDao().get(MetaKeys.LAST_SEQ)
+        // lastSeq=0 表示首次配对或本地已清空，整轮分页都是全量语义，续页同样要跳过 syncFloor 判定
+        val fullSync = since == 0L
         var appliedItems = 0
         while (true) {
-            val page = when (val result = apiService.getClips(since = since, limit = PAGE_LIMIT)) {
+            val page = when (val result = apiService.getClips(since = since, limit = PAGE_LIMIT, full = fullSync)) {
                 is ApiResult.Failure -> return PullResult.Failure(result.failure)
                 is ApiResult.Success -> result.value
             }
@@ -107,11 +109,12 @@ class SyncEngine(
         var since = 0L
         var appliedItems = 0
         while (true) {
-            val page = when (val result = apiService.getClips(since = since, limit = PAGE_LIMIT)) {
+            // 全量分页的续页游标可能落在 sync_floor 之前，必须显式携带 full=true 才能继续拉取
+            val page = when (val result = apiService.getClips(since = since, limit = PAGE_LIMIT, full = true)) {
                 is ApiResult.Failure -> return PullResult.Failure(result.failure)
                 is ApiResult.Success -> result.value
             }
-            // since=0 不应再要求重同步；出现即视为服务端违约，终止以免反复全量拉取
+            // full=true 下仍出现重同步说明游标超出 serverMaxSeq（服务端被重置），终止以免反复全量拉取
             if (page.resyncRequired) {
                 return PullResult.Failure(ApiFailure.Retryable(ApiErrorCode.INVALID_RESPONSE))
             }

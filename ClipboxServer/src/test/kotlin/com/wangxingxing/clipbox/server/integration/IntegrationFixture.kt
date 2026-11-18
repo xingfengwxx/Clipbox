@@ -152,14 +152,20 @@ internal class IntegrationContext(
         token: String,
         since: Long? = null,
         limit: Int? = null,
+        full: Boolean? = null,
     ): HttpResponse = client.get("/api/v1/clips") {
         bearer(token)
         since?.let { parameter("since", it) }
         limit?.let { parameter("limit", it) }
+        full?.let { parameter("full", it) }
     }
 
-    suspend fun clips(token: String, since: Long? = null, limit: Int? = null): JsonObject =
-        json(clipsResponse(token, since, limit))
+    suspend fun clips(
+        token: String,
+        since: Long? = null,
+        limit: Int? = null,
+        full: Boolean? = null,
+    ): JsonObject = json(clipsResponse(token, since, limit, full))
 
     suspend fun createShare(
         token: String,

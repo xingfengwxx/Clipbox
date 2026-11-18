@@ -104,7 +104,20 @@ class ApiServiceTest {
         assertEquals("/api/v1/clips", request.url.encodedPath)
         assertEquals("42", request.url.parameters["since"])
         assertEquals("200", request.url.parameters["limit"])
+        assertNull(request.url.parameters["full"], "增量拉取不得携带 full")
         assertEquals("Bearer $TEST_TOKEN", request.headers[HttpHeaders.Authorization])
+    }
+
+    @Test
+    fun getClipsFullSyncSendsFullFlag() = runTest {
+        val requests = mutableListOf<HttpRequestData>()
+        val service = stubService(requests = requests) {
+            respondJson(syncBody())
+        }
+
+        service.getClips(since = 0, limit = 200, full = true)
+
+        assertEquals("true", requests.single().url.parameters["full"])
     }
 
     @Test

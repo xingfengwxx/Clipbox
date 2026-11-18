@@ -218,7 +218,7 @@ flowchart LR
 | iOS | T-IOS-01…T-IOS-09 | 已完成 | 最后一张 T-IOS-09（M4 Gate 提交）；M4 见 [m4-gate.md](m4-gate.md) |
 | Release | T-REL-01…T-REL-08 | 待开始 | — |
 
-> M2 已于 2026-11-17 通过（证据见 [m2-gate.md](m2-gate.md)）；M3 于同日有条件通过（证据见 [m3-gate.md](m3-gate.md)，AC-11 冲突见 D8）；M4 于同日通过（证据见 [m4-gate.md](m4-gate.md)，D8 仍需在 T-REL-06 前关闭）；下一张为 T-REL-01。
+> M2 已于 2026-11-17 通过（证据见 [m2-gate.md](m2-gate.md)）；M3 于同日有条件通过，AC-11 全量分页冲突（D8）已于 2026-11-18 由 [BUG-001](bug-001-ac11-full-sync-floor.md) 修复关闭（证据见 [m3-gate.md](m3-gate.md)）；M4 于同日通过（证据见 [m4-gate.md](m4-gate.md)）；下一张为 T-REL-01。
 
 ## 7. 统一 DoD
 

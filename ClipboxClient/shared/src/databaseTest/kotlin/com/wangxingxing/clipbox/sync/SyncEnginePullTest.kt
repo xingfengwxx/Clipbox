@@ -80,6 +80,10 @@ class SyncEnginePullTest {
             assertEquals(50, lastSeq())
             assertEquals(listOf("0", "42"), requests.map { it.url.parameters["since"] })
             assertTrue(requests.all { it.url.parameters["limit"] == "200" })
+            assertTrue(
+                requests.all { it.url.parameters["full"] == "true" },
+                "首次配对从 lastSeq=0 开始，整轮分页都应携带 full=true",
+            )
         }
     }
 
@@ -94,6 +98,7 @@ class SyncEnginePullTest {
             assertEquals(PullResult.Success(appliedItems = 0, lastSeq = 41, resynced = false), result)
             assertEquals(41, lastSeq())
             assertEquals(1, requests.size)
+            assertNull(requests.single().url.parameters["full"], "增量拉取不得携带 full")
         }
     }
 

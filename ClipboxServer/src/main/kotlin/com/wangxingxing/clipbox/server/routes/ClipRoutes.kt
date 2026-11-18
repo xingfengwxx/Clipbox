@@ -72,6 +72,7 @@ fun Route.clipRoutes(clipService: ClipService) {
             val parameters = call.request.queryParameters
             val sinceParam = parameters["since"]
             val limitParam = parameters["limit"]
+            val fullParam = parameters["full"]
             val since = if (sinceParam == null) {
                 0L
             } else {
@@ -82,17 +83,24 @@ fun Route.clipRoutes(clipService: ClipService) {
             } else {
                 limitParam.toIntOrNull()?.takeIf { value -> value in MIN_LIMIT..MAX_LIMIT }
             }
+            // 只接受字面量 true/false，避免 1/TRUE 等写法被静默转换为布尔值
+            val full = when (fullParam) {
+                null -> false
+                "true" -> true
+                "false" -> false
+                else -> null
+            }
 
-            if (since == null || limit == null) {
+            if (since == null || limit == null || full == null) {
                 call.respondError(
                     HttpStatusCode.BadRequest,
                     "VALIDATION_ERROR",
-                    "since 必须是非负整数，limit 必须是 $MIN_LIMIT-$MAX_LIMIT 的整数",
+                    "since 必须是非负整数，limit 必须是 $MIN_LIMIT-$MAX_LIMIT 的整数，full 只能是 true 或 false",
                 )
                 return@get
             }
 
-            call.respond(clipService.sync(since = since, limit = limit).toJsonObject())
+            call.respond(clipService.sync(since = since, limit = limit, full = full).toJsonObject())
         }
 
         post("/api/v1/clips") {

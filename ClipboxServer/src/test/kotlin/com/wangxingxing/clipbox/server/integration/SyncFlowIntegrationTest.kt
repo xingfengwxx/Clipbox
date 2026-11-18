@@ -7,17 +7,26 @@
  */
 package com.wangxingxing.clipbox.server.integration
 
+import com.wangxingxing.clipbox.server.db.ClipRepository
+import com.wangxingxing.clipbox.server.db.ClipRow
+import com.wangxingxing.clipbox.server.db.SeqAllocator
 import com.wangxingxing.clipbox.server.db.SharesTable
+import com.wangxingxing.clipbox.server.job.RetentionJob
+import com.wangxingxing.clipbox.server.service.Broadcaster
 import com.wangxingxing.clipbox.server.service.SHARE_PAGE_CSP
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.websocket.close
 import java.nio.file.Path
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneOffset
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.api.io.TempDir
@@ -151,6 +160,84 @@ class SyncFlowIntegrationTest {
         assertFalse(secondHtml.contains("另一台设备发送"), "已消费页面不得泄露正文")
 
         macSession.close()
+    }
+
+    @Test
+    fun `full sync completes after retention purge with non zero sync floor`() = integrationApp(tempDir) {
+        val now = 1_800_000_000_000L
+        val tombstoneAge = 31L * 86_400_000L
+        factory.writeTransaction {
+            repeat(501) { index ->
+                val n = index + 1
+                ClipRepository.insert(
+                    ClipRow(
+                        id = "CLIP-$n",
+                        content = "content-$n",
+                        sourceDeviceId = null,
+                        pinned = false,
+                        createdAt = 1_000L + n,
+                        deletedAt = null,
+                        serverSeq = SeqAllocator.nextSeq(),
+                    ),
+                )
+            }
+            // 两个高序号旧墓碑把 sync_floor 推入分页区间，复现全量续页被误判的 BUG-001 场景
+            repeat(2) { index ->
+                ClipRepository.insert(
+                    ClipRow(
+                        id = "OLD-TOMBSTONE-$index",
+                        content = "gone",
+                        sourceDeviceId = null,
+                        pinned = false,
+                        createdAt = 1_000,
+                        deletedAt = now - tombstoneAge,
+                        serverSeq = SeqAllocator.nextSeq(),
+                    ),
+                )
+            }
+        }
+
+        val summary = RetentionJob(
+            factory,
+            Broadcaster(registry),
+            Clock.fixed(Instant.ofEpochMilli(now), ZoneOffset.UTC),
+        ).runOnce()
+        assertEquals(1, summary.softDeleted)
+        assertEquals(2, summary.purgedTombstones)
+        assertEquals(503L, summary.syncFloor)
+
+        val device = pairDevice()
+
+        val first = clips(device.token, since = 0, limit = 200)
+        assertEquals(200, first.items().size)
+        assertTrue(first.bool("hasMore"))
+        assertEquals(201L, first.long("nextSince"))
+
+        val blocked = clips(device.token, since = 201, limit = 200)
+        assertTrue(blocked.bool("resyncRequired"), "增量游标早于 sync_floor 必须重同步")
+        assertTrue(blocked.items().isEmpty())
+        assertEquals(504L, blocked.long("minAvailableSeq"))
+
+        val items = first.items().toMutableList()
+        var since = 201L
+        var pages = 0
+        while (true) {
+            val page = clips(device.token, since = since, limit = 200, full = true)
+            assertFalse(page.bool("resyncRequired"), "全量续页不得要求重同步")
+            items += page.items()
+            since = page.long("nextSince")
+            pages++
+            if (!page.bool("hasMore")) break
+        }
+        assertEquals(2, pages, "首页之后的 301 条记录应分两页拉完")
+        assertEquals(501, items.size)
+        assertEquals(500, items.count { !it.bool("deleted") })
+        assertEquals(1, items.count { it.bool("deleted") })
+        assertTrue(items.any { it.bool("deleted") && it.str("id") == "CLIP-1" }, "软删除墓碑必须随全量分页下发")
+        assertEquals(504L, since)
+
+        val resetPage = clips(device.token, since = 999_999, limit = 200, full = true)
+        assertTrue(resetPage.bool("resyncRequired"), "full 不得绕过 serverMaxSeq 重置保护")
     }
 
     companion object {

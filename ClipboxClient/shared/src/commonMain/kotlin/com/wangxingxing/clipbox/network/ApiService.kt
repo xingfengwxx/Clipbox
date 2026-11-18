@@ -62,7 +62,7 @@ class ApiService(
         }
     }
 
-    suspend fun getClips(since: Long, limit: Int = 200): ApiResult<SyncResponse> =
+    suspend fun getClips(since: Long, limit: Int = 200, full: Boolean = false): ApiResult<SyncResponse> =
         request(
             method = "GET",
             pathTemplate = "/clips",
@@ -71,6 +71,8 @@ class ApiService(
             client.get("clips") {
                 parameter("since", since)
                 parameter("limit", limit)
+                // full 只用于全量分页；增量请求省略该参数，保持契约规定的 query 形状
+                if (full) parameter("full", true)
             }
         }
 

@@ -35,7 +35,7 @@
 | G11 | 工具箱离线 | AC-08：飞行模式下 JSON、Base64、URL、时间戳、正则 5 个工具均可计算/复制，不写历史、不联网（`e2e-ac08-*.png`） | 通过 |
 | G12 | 重启持久化 | AC-09：服务端重启后 `clips=43`、`server_seq=48`；Android 冷启动恢复已配对/已同步与新记录（`e2e-ac09-server-restart.png`） | 通过 |
 | G13 | 剪贴板回环 | AC-10：自动粘贴 + 自动发送同时开启，Android 发送后 Desktop 只写一次、6s 内无回传、`outbox=0`；2s 窗口外同内容可再次上传（seq45/46）。修复自动发送未唤醒 Outbox 的缺陷后，自动发送记录即时重放（seq42/43） | 通过（缺陷已修，见 D11） |
-| G14 | 保留与墓碑 | AC-11：501 → 软删 1（seq505）、清理旧墓碑后 `sync_floor=504`；`since=1`/`999999` 重同步；**`since=0` 首页后 `since=201` 被误判重同步，全量分页无法完成**（D8） | 部分通过 |
+| G14 | 保留与墓碑 | AC-11：501 → 软删 1（seq505）、清理旧墓碑后 `sync_floor=504`；`since=1`/`999999` 重同步；**`since=0` 首页后 `since=201` 被误判重同步，全量分页无法完成**（D8） | 部分通过（D8 已于 2026-11-18 修复关闭，见 §4-8） |
 | G15 | 安全基线 | AC-13：设备令牌 SHA-256 前缀 `d3faeda08d84` 与数据库一致；分享 token 哈希一致；日志敏感模式 0 命中；配对第 6 次 429；分享路径记录为模板（`/tmp/pair-6.json`） | 通过 |
 | G16 | 解除配对 | AC-14：解绑后本机 clips/outbox/meta 清空、回配对页；服务端 41 条/12 设备保留；Desktop 在线继续收新记录；重配对拉回历史（`e2e-ac14-*.png`） | 通过 |
 | G17 | 多设备广播 | AC-15：三端在线广播；置顶 → 服务端 seq49、Desktop 同步；删除 → 墓碑 seq50、双端移除（`e2e-ac15-*.png`） | 通过 |
@@ -57,7 +57,7 @@
 5. **回环口径**（D5）：任务卡描述 `lastApplied`/`lastSent` 均可不处理；按 REQ-RECV-005 只以 `lastAppliedHash` + 2s 窗口跳过，`lastSentHash` 仅记录。
 6. **服务器地址动态化**（D6）：`SyncRuntime` 原固定构建期地址；T-CORE-15 改为读设置并在配对成功/解绑时重建 session，补齐配对页地址输入。
 7. **新增 Koin 依赖**（D7）：仅新增 `koin-compose-viewmodel` 4.1.1（与现有 Koin 同版本），已获批准；未升级其他依赖。
-8. **AC-11 全量分页与 `sync_floor` 冲突**（D8，待决策）：`sync_floor=504` 时 `since=0` 首页返回 seq2–201、`hasMore=true`，续页 `since=201` 因 `<504` 返回 `resyncRequired=true`，与 `api.md`「`since=0` 按页拉取直到 `hasMore=false`」不一致；客户端 `SyncEngine.resyncLocked()` 将全量分页中出现重同步判为服务端违约。根因是冻结文档未定义「全量分页续页」与「增量游标」的区分，服务端无状态无法自行判断。未修改冻结文档或实现来“通过”验收；需文档所有者选择显式全量会话参数/续页令牌，或调整 floor 语义。已登记为 [BUG-001](bug-001-ac11-full-sync-floor.md)。影响：墓碑清理后新设备/重同步可能无法完成全量拉取。
+8. **AC-11 全量分页与 `sync_floor` 冲突**（D8，已关闭）：`sync_floor=504` 时 `since=0` 首页返回 seq2–201、`hasMore=true`，续页 `since=201` 因 `<504` 返回 `resyncRequired=true`，与 `api.md`「`since=0` 按页拉取直到 `hasMore=false`」不一致；客户端 `SyncEngine.resyncLocked()` 将全量分页中出现重同步判为服务端违约。根因是冻结文档未定义「全量分页续页」与「增量游标」的区分，服务端无状态无法自行判断。**2026-11-18 经用户批准采用方案 A 修复**：`GET /api/v1/clips` 新增可选参数 `full`，`full=true` 跳过 `since < sync_floor` 判定、保留 `since > serverMaxSeq` 保护；客户端首次配对与强制重同步整轮分页携带 `full=true`。契约、架构、需求与术语表同步修订；`SyncFlowIntegrationTest.full sync completes after retention purge with non zero sync floor` 复现「501 条 + 软删 + 墓碑清理 + 多页全量拉取」并通过，服务端与客户端全量测试绿。未重新执行手工复跑，D8 依据自动化集成测试关闭。详见 [BUG-001](bug-001-ac11-full-sync-floor.md)。
 9. **iOS 日志 sink**（D9）：若 Kotlin/Native os_log 绑定不可用则用 NSLog，M4 记录 API 偏差。
 10. **模拟器限制**（D10）：iOS 粘贴权限弹窗、系统分享面板、后台真机行为可能无法完整复现，M4 用 XCUITest/手工截图取证并登记。
 11. **自动发送未唤醒 Outbox**（D11，已修）：`ClipboardController` 自动发送成功后没有 UI 调用方唤醒 `OutboxWorker`，记录滞留到下一次用户操作；T-UI-20 注入 `wakeOutbox` 并在成功后调用，实测 seq42/43 即时重放。
@@ -68,7 +68,7 @@
 
 ## 5. 出口结论
 
-- G1–G8、G10–G13、G15–G17 全部通过；G9、G14、G18 为部分通过并有明确理由；G20 未执行；iOS 场景按计划留待 M4。
+- G1–G8、G10–G13、G15–G17 全部通过；G9、G14、G18 为部分通过并有明确理由（G14 的 D8 已于 2026-11-18 修复关闭）；G20 未执行；iOS 场景按计划留待 M4。
 - Android 与 Desktop 已具备日常自用能力：配对/解绑、双向实时、离线重放、补拉、搜索/置顶/删除、5 个工具、设置、主题、三语、诊断日志、Desktop 自动收发均实测可用。
-- **M3 Gate 有条件通过**：AC-11 的「全量分页 + 墓碑清理」冲突（D8）是冻结文档层面的协议空洞，需文档所有者决策后修复；不阻塞 T-IOS-08/09 的 iOS 适配与验收，但必须在 T-REL-06 前关闭。
+- **M3 Gate 通过**：AC-11 的「全量分页 + 墓碑清理」冲突（D8）已于 2026-11-18 以 BUG-001 方案 A 修复，并由自动化集成测试验证关闭；T-REL-06 前无需再决策。
 - 下一步：T-IOS-08（iPad 宽屏、主题/三语、扩展三语）。

@@ -3,7 +3,7 @@
 | 字段 | 内容 |
 | --- | --- |
 | 文档版本 | v1.0.0 |
-| 更新日期 | 2026-11-16 |
+| 更新日期 | 2026-11-18 |
 | 状态 | 设计冻结；客户端与服务端实现的唯一接口依据 |
 | 部署基线 | 学习版 HTTP + IP 直连（`http://<SERVER_IP>:8080`），见 [ADR-0003](./adr/0003-http-ip-learning-deployment.md) |
 | 基线 | [Clipbox 项目交接文档](./Clipbox%20项目交接文档.md) v0.1 |
@@ -213,6 +213,7 @@ X-Admin-Token: <admin-token>
 | --- | --- | --- | --- |
 | `since` | int64 | 0 | 只返回 `serverSeq > since` 的变更；`0` 表示首次全量同步 |
 | `limit` | int | 200 | 单页条数，1–500 |
+| `full` | boolean | false | 全量分页标记；全量同步的每一页必须为 `true`，增量请求不得携带 |
 
 响应 `200 OK`：
 
@@ -259,22 +260,28 @@ X-Admin-Token: <admin-token>
 - `since` 是排他边界：只返回 `serverSeq > since`。
 - 活跃记录返回完整字段；墓碑只返回 `id`、`serverSeq`、`deleted: true`，不返回正文。
 - `sourceDeviceName` 由服务端联查设备表得到；设备不存在时返回 `"未知设备"`。
-- `resyncRequired` 为 true 的条件：
+- `resyncRequired` 为 true 的条件（仅在 `full` 缺省或为 `false` 时适用）：
   - `since > 0` 且 `since < syncFloor`：墓碑已被清理，游标之后可能有已丢失的删除变更；
   - `since > serverMaxSeq`：服务端数据被恢复或重置，客户端游标来自“未来”。
-- `resyncRequired` 为 true 时，响应固定为 `items: []`、`nextSince: since`、`hasMore: false`；客户端必须保留待发队列、清空已同步的本地记录，然后从 `since=0` 重新全量拉取。
-- `since=0` 表示首次全量同步，不触发 `resyncRequired`；客户端按页拉取直到 `hasMore=false`。
+- `full=true` 表示客户端正在执行全量分页：服务端跳过 `since < syncFloor` 判定，但仍保留 `since > serverMaxSeq` 判定；服务端不保存会话状态，响应字段不变。
+- `resyncRequired` 为 true 时，响应固定为 `items: []`、`nextSince: since`、`hasMore: false`；客户端必须保留待发队列、清空已同步的本地记录，然后从 `since=0` 起以 `full=true` 逐页重新拉取。
+- `since=0` 表示首次全量同步，不触发 `resyncRequired`；客户端按页拉取直到 `hasMore=false`。从 `since=0` 开始的整轮分页（含首次配对与重同步）都应携带 `full=true`。
+- 增量同步不得携带 `full=true`；该参数只用于 `since=0` 起的全量分页，续页使用上一页的 `nextSince`。
 - 不提供 `before` / `after` 历史翻页：历史浏览完全由客户端本地库承担，服务端只负责变更同步。
 - 本接口不修改数据，允许重复调用；重复调用同一 `since` 返回相同结果（除非期间有新变更）。
 
 示例：
 
 ```bash
-# 首次全量同步
-curl -sS 'http://203.0.113.10:8080/api/v1/clips?since=0&limit=200' \
+# 首次全量同步第一页（整轮分页都携带 full=true）
+curl -sS 'http://203.0.113.10:8080/api/v1/clips?since=0&limit=200&full=true' \
   -H "Authorization: Bearer $TOKEN"
 
-# 增量同步
+# 全量同步续页（syncFloor 可能高于 since）
+curl -sS 'http://203.0.113.10:8080/api/v1/clips?since=201&limit=200&full=true' \
+  -H "Authorization: Bearer $TOKEN"
+
+# 增量同步（不得携带 full）
 curl -sS 'http://203.0.113.10:8080/api/v1/clips?since=42&limit=200' \
   -H "Authorization: Bearer $TOKEN"
 ```
@@ -283,7 +290,7 @@ curl -sS 'http://203.0.113.10:8080/api/v1/clips?since=42&limit=200' \
 
 | HTTP | code | 场景 |
 | --- | --- | --- |
-| 400 | `VALIDATION_ERROR` | `since` 为负、`limit` 越界或非整数 |
+| 400 | `VALIDATION_ERROR` | `since` 为负、`limit` 越界或非整数、`full` 不是 `true`/`false` |
 | 401 | `UNAUTHORIZED` | 令牌缺失、格式错误或不存在 |
 | 429 | `RATE_LIMITED` | 超过设备限流 |
 
@@ -522,7 +529,7 @@ curl -sS 'http://203.0.113.10:8080/api/v1/clips?since=42&limit=200' \
    - `seq == lastSeq + 1`：应用并推进 `lastSeq`。
    - `seq > lastSeq + 1`：发现缺口，忽略该事件并立即执行 REST 补拉。
 3. 重连成功后，以 `auth.ok.serverSeq` 为目标执行 REST 补拉，直到 `lastSeq >= auth.ok.serverSeq`；补拉期间收到的 WS 事件先缓冲，补拉结束后按上述规则处理。
-4. 若补拉返回 `resyncRequired`，执行全量重同步：保留待发队列，清空已同步的本地记录，从 `since=0` 重新拉取。
+4. 若补拉返回 `resyncRequired`，执行全量重同步：保留待发队列，清空已同步的本地记录，从 `since=0` 起以 `full=true` 逐页拉取直到 `hasMore=false`。
 
 重连退避：1s → 2s → 4s → 8s → 16s → 32s → 60s，带 ±20% 抖动。收到 4401 时停止自动重连并提示重新配对；收到 4001 时停止自动重连，避免两个实例互踢。
 
@@ -705,7 +712,7 @@ ULID 适合做主键与展示排序，但不适合做变更游标：离线设备
 1. 暂停 Outbox 发送与 WebSocket 事件应用。
 2. 保留 `outbox`、待创建/待删除的本地记录与设置。
 3. 清空已同步的本地记录，`lastSeq = 0`。
-4. 从 `since=0` 分页拉取直到 `hasMore=false`。
+4. 从 `since=0` 起，每一页携带 `full=true` 分页拉取，直到 `hasMore=false`。
 5. 恢复 Outbox 发送，再执行一次增量补拉。
 
 ### 9.5 幂等与重试
@@ -744,8 +751,8 @@ curl -sS http://203.0.113.10:8080/api/v1/clips \
   -H 'Content-Type: application/json' \
   -d '{"id":"01J8Z6Z3K4M5N6P7Q8R9S0T1V2","content":"hello","createdAt":1730000000000}'
 
-# 桌面增量拉取
-curl -sS 'http://203.0.113.10:8080/api/v1/clips?since=0&limit=200' \
+# 桌面首次全量拉取（后续增量从 nextSince 继续，不携带 full）
+curl -sS 'http://203.0.113.10:8080/api/v1/clips?since=0&limit=200&full=true' \
   -H "Authorization: Bearer $DESKTOP_TOKEN"
 ```
 
@@ -792,3 +799,4 @@ curl -sS http://203.0.113.10:8080/api/v1/shares \
 | 版本 | 日期 | 变更 |
 | --- | --- | --- |
 | v1.0.0 | 2026-11-13 | 初版：基于交接文档 v0.1、ADR-0001、ADR-0002 冻结 API 契约 |
+| v1.0.0 修订 | 2026-11-18 | GET /api/v1/clips 新增可选参数 `full`：全量分页跳过 syncFloor 判定，仍保留 serverMaxSeq 重置保护；修复 BUG-001 墓碑清理后全量分页中断 |

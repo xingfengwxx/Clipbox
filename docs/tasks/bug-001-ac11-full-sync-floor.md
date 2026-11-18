@@ -1,7 +1,8 @@
 # BUG-001：墓碑清理后全量分页无法完成
 
-- 状态：待决策 / 待修复
+- 状态：已修复（方案 A）
 - 发现于：T-UI-20 本地端到端验收（M3 Gate）
+- 修复于：2026-11-18
 - 关联需求：AC-11、SYNC-011…015
 - 关联卡：T-S-04（增量查询）、T-S-08（清理与墓碑）、T-CORE-08（游标与重同步）
 
@@ -56,3 +57,24 @@
 
 - 本卡不修改已冻结的 `docs/api.md` / 架构文档；方案 A 需用户与文档所有者确认后实施。
 - 修复前不得通过放宽客户端校验或忽略 `resyncRequired` 来掩盖问题。
+
+## 修复记录（方案 A）
+
+用户确认采用方案 A，并授权同步修订契约、架构、需求与验收记录；首次配对（`lastSeq=0`）的分页与强制重同步统一携带 `full=true`。
+
+协议：`GET /api/v1/clips` 新增可选参数 `full`（默认 `false`，只接受字面量 `true` / `false`）。`full=true` 时跳过 `since < sync_floor` 判定，仍保留 `since > serverMaxSeq` 重置保护；增量请求不得携带。
+
+实现：
+
+- 服务端 `ClipService.sync(since, limit, full)`：`resyncRequired = (!full && since > 0 && since < syncFloor) || since > serverMaxSeq`；`ClipRoutes` 严格解析 `full`，非法取值与非法 `since`/`limit` 一并返回 400 `VALIDATION_ERROR`。
+- 客户端 `ApiService.getClips(..., full)` 仅在全量时附带 `full=true`；`SyncEngine.pullLocked()` 在起始 `lastSeq=0` 时整轮分页携带 `full=true`，`resyncLocked()` 所有页携带 `full=true`，增量请求省略。
+- 文档同步修订：`api.md` §3.1/§4.3/§9.4、服务端架构 §6.4/§9.3/§13、客户端架构 §6.3.2/§6.5.4/§6.5.5/§13、功能需求 REQ-SYNC-005/008 与 AC-11、GLOSSARY。
+
+测试证据（2026-11-18）：
+
+- `ClipboxServer ./gradlew test --rerun`：BUILD SUCCESSFUL。
+- 新增集成用例 `SyncFlowIntegrationTest.full sync completes after retention purge with non zero sync floor`：501 条活跃 + 2 个过期墓碑 → 清理后 `sync_floor=503`；`since=201` 不带 `full` 返回 `resyncRequired=true`；`full=true` 续页拉完 501 条（500 活跃 + 1 墓碑）并以 `hasMore=false` 结束；`since=999999&full=true` 仍重同步。
+- `ClipQueryTest` 新增 floor 跨页与 `full` 越界用例，并覆盖 `full=1`、`full=`、`full=TRUE` → 400。
+- `ClipboxClient ./gradlew :shared:desktopTest` 与 `:shared:allTests`：BUILD SUCCESSFUL；`SyncEnginePullTest` 覆盖首次配对全量分页逐页 `full=true`、增量不带 `full`；`SyncEngineResyncTest.fullResyncPagesCarryFullTrueAndCompleteAcrossFloor` 覆盖重同步跨 floor 续页。
+
+提交：`BUG-001: 为全量同步新增 full 参数，修复墓碑清理后分页中断`（未 push）。

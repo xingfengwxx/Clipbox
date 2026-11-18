@@ -200,6 +200,50 @@ class ClipQueryTest {
     }
 
     @Test
+    fun `full sync pages continue across sync floor`() = withApp(
+        seed = { factory ->
+            seedDevice(factory)
+            (1..5).forEach { seedClip(factory, id = "CLIP$it", seq = it.toLong(), sourceDeviceId = deviceId) }
+            seedMeta(factory, serverSeq = 20, syncFloor = 10)
+        },
+    ) { _, client ->
+        val incremental = client.sync(since = 1, limit = 2)
+        assertEquals(true, incremental.boolean("resyncRequired"), "增量游标早于 sync_floor 仍必须重同步")
+
+        val first = client.sync(since = 0, limit = 2, full = true)
+        assertEquals(false, first.boolean("resyncRequired"))
+        assertEquals(listOf("CLIP1", "CLIP2"), first.itemIds())
+        assertEquals(2L, first.long("nextSince"))
+        assertEquals(true, first.boolean("hasMore"))
+
+        val second = client.sync(since = 2, limit = 2, full = true)
+        assertEquals(false, second.boolean("resyncRequired"))
+        assertEquals(listOf("CLIP3", "CLIP4"), second.itemIds())
+        assertEquals(true, second.boolean("hasMore"))
+
+        val third = client.sync(since = 4, limit = 2, full = true)
+        assertEquals(false, third.boolean("resyncRequired"))
+        assertEquals(listOf("CLIP5"), third.itemIds())
+        assertEquals(5L, third.long("nextSince"))
+        assertEquals(false, third.boolean("hasMore"))
+    }
+
+    @Test
+    fun `full flag still requires resync beyond server max seq`() = withApp(
+        seed = { factory ->
+            seedDevice(factory)
+            seedClip(factory, id = "CLIP1", seq = 1, sourceDeviceId = deviceId)
+            seedMeta(factory, serverSeq = 10, syncFloor = 0)
+        },
+    ) { _, client ->
+        val page = client.sync(since = 11, limit = 200, full = true)
+        assertEquals(true, page.boolean("resyncRequired"))
+        assertTrue(page.itemIds().isEmpty())
+        assertEquals(11L, page.long("nextSince"))
+        assertEquals(false, page.boolean("hasMore"))
+    }
+
+    @Test
     fun `missing source device falls back to unknown device`() = withApp(
         seed = { factory ->
             seedDevice(factory)
@@ -226,6 +270,9 @@ class ClipQueryTest {
             "limit=0",
             "limit=501",
             "limit=abc",
+            "full=1",
+            "full=",
+            "full=TRUE",
         )
         invalidQueries.forEach { query ->
             val response = client.get("$CLIPS?$query") { header("Authorization", "Bearer $deviceToken") }
@@ -305,8 +352,9 @@ class ClipQueryTest {
         publicBaseUrl = "http://127.0.0.1:8080",
     )
 
-    private suspend fun HttpClient.sync(since: Long, limit: Int): JsonObject {
-        val response = get("$CLIPS?since=$since&limit=$limit") {
+    private suspend fun HttpClient.sync(since: Long, limit: Int, full: Boolean? = null): JsonObject {
+        val fullQuery = full?.let { "&full=$it" } ?: ""
+        val response = get("$CLIPS?since=$since&limit=$limit$fullQuery") {
             header("Authorization", "Bearer $deviceToken")
         }
         assertEquals(HttpStatusCode.OK, response.status)

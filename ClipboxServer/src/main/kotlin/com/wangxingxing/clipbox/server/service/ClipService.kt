@@ -63,11 +63,12 @@ class ClipService(
     private val now: () -> Long = System::currentTimeMillis,
 ) {
 
-    suspend fun sync(since: Long, limit: Int): ClipSyncPage {
+    suspend fun sync(since: Long, limit: Int, full: Boolean = false): ClipSyncPage {
         val page = databaseFactory.readTransaction {
             val serverMaxSeq = MetaRepository.getLong(MetaRepository.SERVER_SEQ_KEY) ?: 0L
             val syncFloor = MetaRepository.getLong(MetaRepository.SYNC_FLOOR_KEY) ?: 0L
-            val resyncRequired = (since > 0 && since < syncFloor) || since > serverMaxSeq
+            // full=true 是客户端全量重同步的显式标记：续页游标可能早于 sync_floor，服务端无状态，不能按增量游标拒绝
+            val resyncRequired = (!full && since > 0 && since < syncFloor) || since > serverMaxSeq
             // 需要重同步时不再查询变更行，避免把无意义的半页数据发给客户端。
             val rows = if (resyncRequired) emptyList() else ClipRepository.listSince(since, limit + 1)
             PageSnapshot(serverMaxSeq, syncFloor, resyncRequired, rows)

@@ -195,13 +195,66 @@ class SyncEngineResyncTest {
     }
 
     @Test
+    fun fullResyncPagesCarryFullTrueAndCompleteAcrossFloor() = runTest {
+        withFixture {
+            database.clipDao().upsert(testClip(id = syncedId, createdAt = 1, content = "old"))
+            database.metaDao().put(MetaKeys.LAST_SEQ, 100)
+            responder = { request ->
+                when (request.url.parameters["since"]) {
+                    "100" -> {
+                        assertNull(request.url.parameters["full"], "增量请求不得携带 full")
+                        respondJson(pageBody(resyncRequired = true, nextSince = 100, serverMaxSeq = 400))
+                    }
+
+                    "0" -> {
+                        assertEquals("true", request.url.parameters["full"])
+                        respondJson(
+                            pageBody(
+                                items = listOf(
+                                    activeBody(syncedId, content = "new", serverSeq = 2),
+                                    activeBody(createId, serverSeq = 201),
+                                ),
+                                nextSince = 201,
+                                hasMore = true,
+                                serverMaxSeq = 400,
+                            )
+                        )
+                    }
+
+                    "201" -> {
+                        assertEquals("true", request.url.parameters["full"])
+                        respondJson(
+                            pageBody(
+                                items = listOf(activeBody(deleteId, serverSeq = 402)),
+                                nextSince = 402,
+                                serverMaxSeq = 402,
+                            )
+                        )
+                    }
+
+                    else -> error("unexpected since=${request.url.parameters["since"]}")
+                }
+            }
+
+            val result = engine().pull()
+
+            assertEquals(PullResult.Success(appliedItems = 3, lastSeq = 402, resynced = true), result)
+            assertEquals(listOf(null, "true", "true"), requests.map { it.url.parameters["full"] })
+            assertEquals(402, lastSeq())
+        }
+    }
+
+    @Test
     fun resyncRequiredAtZeroStopsInsteadOfLooping() = runTest {
         withFixture {
             database.metaDao().put(MetaKeys.LAST_SEQ, 100)
             responder = { request ->
                 when (request.url.parameters["since"]) {
                     "100" -> respondJson(pageBody(resyncRequired = true, nextSince = 100, serverMaxSeq = 200))
-                    else -> respondJson(pageBody(resyncRequired = true, nextSince = 0, serverMaxSeq = 0))
+                    else -> {
+                        assertEquals("true", request.url.parameters["full"])
+                        respondJson(pageBody(resyncRequired = true, nextSince = 0, serverMaxSeq = 0))
+                    }
                 }
             }
 
