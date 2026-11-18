@@ -107,3 +107,9 @@ cd ClipboxClient && ./gradlew :shared:allTests --rerun-tasks
 - 部分通过（已知限制）1 条：AC-16（LIM-03）。
 - 替代证据 + 已知限制 2 条：AC-12（LIM-01）、AC-18（LIM-02）。
 - 三端覆盖：Android、Desktop（macOS）、iOS 模拟器（iPhone 16 + iPad (A16)）；分享页桌面与移动浏览器各验证一次；无失败项，v1.0.0 验收通过。
+
+---
+
+## 2026-11-18 追加：AC-01 / AC-13 口径更新（ADR-0006）
+
+配对码改由已配对设备生成，服务端只存哈希且不再打印。AC-01 的“生成配对码”步骤改指设置页取码；AC-13 追加断言 `device_pairing_codes` 仅含 64 位小写 hex、日志中配对码出现 0 次。历史证据保留；T-REL-15 提供新证据。

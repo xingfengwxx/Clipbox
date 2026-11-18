@@ -19,6 +19,8 @@
 
 **目标**：建立可启动、可测试、配置非法的启动即失败的 Ktor 服务端空壳，`/healthz` 可用。
 
+> 2026-11-18 起按 ADR-0006 移除 `ADMIN_TOKEN` 必填校验；配置项以 `docs/服务端技术架构.md` §11.4 与 T-S-12 为准。
+
 **必读**：`docs/服务端技术架构.md` §2、§4、§5、§11.1、§11.4；`docs/api.md` §1、§6。
 
 **涉及路径**：`ClipboxServer/build.gradle.kts`、`settings.gradle.kts`、`gradle/libs.versions.toml`、`src/main/kotlin/com/wangxingxing/clipbox/server/`、`src/main/resources/`、`src/test/kotlin/`。
@@ -107,6 +109,8 @@ sqlite3 data/clipbox.db '.schema'
 ---
 
 ## T-S-03 配对码与管理接口
+
+> 已被 T-S-12 取代（ADR-0006）：管理接口、`ADMIN_TOKEN` 与启动自动发码均已删除；配对码改由已配对设备生成。本卡保留为历史记录，当前行为以 `docs/api.md` 与 T-S-12 为准。
 
 | 字段 | 值 |
 | --- | --- |
@@ -529,3 +533,52 @@ cd ClipboxServer
 
 - 不要为了让测试通过而放宽业务校验。
 - 不要引入 Testcontainers 或 Docker 依赖。
+
+---
+
+## T-S-12 设备自有配对码与空库初始化
+
+| 字段 | 值 |
+| --- | --- |
+| 里程碑 | M5（v1.0.0 收尾） |
+| 前置 | T-S-11、T-REL-14 |
+| 需求 | REQ-PAIR-001、REQ-PAIR-009、REQ-NFR-003、REQ-NFR-005、REQ-PLAT-007 |
+| 预估 | 1 天 |
+
+**目标**：按 ADR-0006 把配对码改为已配对设备生成、服务端只校验哈希；新增空库初始化；删除管理接口与 `ADMIN_TOKEN`。
+
+**必读**：`docs/api.md` §2、§7、§8；`docs/服务端技术架构.md` §5–§9、§11；[ADR-0006](../adr/0006-device-issued-pairing-codes.md)。
+
+**涉及路径**：`src/main/resources/migrations/V002__device_pairing_codes.sql`、`src/main/kotlin/.../db/`、`service/`、`routes/`、`plugins/`、`config/`、`job/`、`Application.kt`、`src/test/kotlin/.../`、`README.md`。
+
+**实现要点**
+
+- V002：新建 `device_pairing_codes(device_id PK → devices ON DELETE CASCADE, code_hash UNIQUE, created_at, expires_at, used_at)` 与 `idx_dpc_expires`；`DROP TABLE pairing_codes`；注册到 Migrator。
+- 仓储：`upsertCode`（同 `device_id` 覆盖旧码）、`findByCodeHash`、`markUsedIfUnused`、`deleteExpired`。
+- 服务：`DevicePairingCodeService` 用 `SecureRandom` 生成 6 位补零、SHA-256 落库、冲突重试 10 次、TTL 600 秒、返回明文一次；`PairingService.pair` 改按哈希查码；`initialize` 在写事务内判空并建设备（409 `ALREADY_INITIALIZED`）。
+- 路由：删管理路由；`POST /api/v1/devices/me/pairing-code` 走设备认证；`POST /api/v1/bootstrap` 公开。
+- 限流：`bootstrapPerMinute=3`、`pairingCodePerMinute=10`，均按 IP；删除 admin 限流。
+- 日志：路径模板加两条新路由；启动不再生成/打印配对码；删除 `ADMIN_TOKEN` 配置与校验。
+- 清理：设备码按 `expires_at < now-24h` 删除。
+- 测试：新增 `DevicePairingCodeTest`、`BootstrapTest`；修改 `PairingTest`、`LimitsTest`、`RetentionTest`、`MigrationTest`、`AppConfigTest`、`DatabaseStartupTest`、`IntegrationFixture`，去除 admin 依赖。
+
+**验收**
+
+```bash
+cd ClipboxServer
+./gradlew test
+grep -RIn "ADMIN_TOKEN\|admin/pairing-codes\|pairing_codes" src/main || true
+```
+
+预期：全部测试通过；`src/main` 无残留；数据库只存配对码哈希；日志无配对码。
+
+**DoD**
+
+- [ ] 空库并发初始化只有一个成功。
+- [ ] 换码后旧码返回 `INVALID_CODE`。
+- [ ] 一卡一提交：`T-S-12: <一句话>`。
+
+**禁止**
+
+- 不要在日志、异常或测试输出中打印真实配对码。
+- 不要保留管理接口兼容层。

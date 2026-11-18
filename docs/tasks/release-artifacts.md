@@ -72,3 +72,9 @@ DMG 元数据（`plutil` 读取 `Theca.app/Contents/Info.plist`）：`CFBundleSh
 - Android debug APK 与 macOS DMG 均可用、版本号 1.0.0，哈希已记录；DMG 窗口、剪贴板、分享页三项验证通过。
 - iOS 模拟器构建命令可复现并通过。
 - 本卡 DoD 满足（真机安装按用户决定登记为已知限制）。
+
+---
+
+## 2026-11-18 追加：配对步骤变更（ADR-0006）
+
+上文“管理接口生成的 6 位码”已废弃。当前流程为：空库首台设备初始化 → 已配对设备设置页生成配对新设备码 → 新设备配对。T-REL-15 重建 Android / macOS 产物并更新台账；Windows / Linux 由 release CI 重建。

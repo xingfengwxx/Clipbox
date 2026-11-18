@@ -918,3 +918,47 @@ cd ClipboxClient && ./gradlew :composeApp:run
 
 - 不要用 mock 数据替代真实服务端做本卡验收。
 - 不要跳过断网与重连场景。
+
+---
+
+## T-UI-21 设置页配对新设备与配对页初始化
+
+| 字段 | 值 |
+| --- | --- |
+| 里程碑 | M5（v1.0.0 收尾） |
+| 前置 | T-UI-20、T-CORE-16 |
+| 需求 | REQ-PAIR-001、REQ-PAIR-009、REQ-SET-001、REQ-NFR-003 |
+| 预估 | 1 天 |
+
+**目标**：已配对设备可在设置页按需生成配对码；空库服务器可在配对页自助初始化；三语文案完整。
+
+**必读**：`docs/客户端技术架构.md` §7.3、§7.4、§8.1；`design/README.md` S10/S11；`docs/tasks/i18n-key-phrases.md`。
+
+**涉及路径**：`composeApp/src/commonMain/.../ui/settings/`、`ui/pairing/`、`composeResources/values{,-en,-zh-rTW}/strings.xml`、`docs/tasks/i18n-key-phrases.md`。
+
+**实现要点**
+
+- 设置页设备分组新增「配对新设备」（仅已配对可见）。
+- `PairingCodeDialog`：6 位等宽展示、按 `expiresAt` 倒计时、重新生成、复制走 `ClipboardService`；关闭即清空内存态。
+- `SettingsViewModel/UiState`：`pairingCode`、`pairingCodeExpiresAt`、`isGeneratingCode`、`codeError`、429 冷却；错误映射集中管理。
+- 配对页新增「初始化此服务器（首次部署）」+ 二次确认；409 提示「服务器已初始化，请输入已配对设备的配对码」。
+- 三语文案全部进入 composeResources，不硬编码。
+
+**验收**
+
+```bash
+cd ClipboxClient
+./gradlew :composeApp:assembleDebug
+./gradlew :composeApp:run
+```
+
+预期：设置页生成/复制/倒计时/重新生成可用；配对页初始化成功与 409 提示正确；三语无缺失。
+
+**DoD**
+
+- [ ] 关闭弹层后内存与界面不再保留配对码。
+- [ ] 一卡一提交：`T-UI-21: <一句话>`。
+
+**禁止**
+
+- 不要新增权限、二维码或后台轮询。

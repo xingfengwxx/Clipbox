@@ -474,3 +474,43 @@ grep -nE "Apple Developer|App Store Connect|PrivacyInfo|AppIcon|TestFlight|ATS" 
 
 - 不要申请开发者账号、证书或描述文件。
 - 不要为过审而移除 ATS 例外或修改学习版网络基线；HTTPS 方案只在清单中列为后续项。
+
+---
+
+## T-IOS-11 iOS UITest 改设备取码链路
+
+| 字段 | 值 |
+| --- | --- |
+| 里程碑 | M5（v1.0.0 收尾） |
+| 前置 | T-IOS-09、T-S-12 |
+| 需求 | REQ-PAIR-001、REQ-PAIR-009 |
+| 预估 | 0.5 天 |
+
+**目标**：删除 XCUITest 中的管理令牌取码，改为初始化首台设备 + 已配对设备生成码的真实链路。
+
+**必读**：`docs/api.md` §2；`docs/tasks/e2e-ios.md`；`iosApp/iosAppUITests/ClipboxUITests.swift`。
+
+**涉及路径**：`iosApp/iosAppUITests/ClipboxUITests.swift`、`docs/tasks/e2e-ios.md`（追加说明）。
+
+**实现要点**
+
+- 删除 `adminToken` 常量与 `X-Admin-Token` 请求。
+- 首次运行：调 `POST /api/v1/bootstrap` 建首台设备；后续用例用其 Bearer 调 `POST /api/v1/devices/me/pairing-code` 取码。
+- 429 时按 `Retry-After` 等待重试，测试不读取日志获取码。
+- 保持既有 UI 流程断言不变。
+
+**验收**
+
+```bash
+cd ClipboxClient
+./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
+xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -sdk iphonesimulator \
+  -destination 'platform=iOS Simulator,name=iPhone 16' build
+```
+
+预期：构建通过；测试源码无 `ADMIN_TOKEN`/`X-Admin-Token`。
+
+**DoD**
+
+- [ ] 不在测试输出中打印配对码或令牌。
+- [ ] 一卡一提交：`T-IOS-11: <一句话>`。

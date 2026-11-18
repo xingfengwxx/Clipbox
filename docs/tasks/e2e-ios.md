@@ -85,3 +85,9 @@ iPad 用例由 `xcodebuild test` 自动构建并安装同一 target；日志 `/t
 | `testUnpairForDraftScenario` | passed | 12.684s |
 | `testPairAfterUnpairedShareDraft` | passed | 11.590s |
 | `testAdaptiveLayoutAppearanceAndRotation`（iPad A16） | passed | 34.553s |
+
+---
+
+## 2026-11-18 追加：第二设备取码方式变更（ADR-0006）
+
+上文“通过管理接口配对第二设备”已废弃。T-IOS-11 起，UITest 先调用 `/api/v1/bootstrap` 初始化，再用设备 Bearer 调 `/api/v1/devices/me/pairing-code` 取码，不使用 `ADMIN_TOKEN` 或 `X-Admin-Token`。

@@ -708,3 +708,46 @@ cd ClipboxClient
 
 - 不要在 DI 模块中写业务判断。
 - 不要引入第二个 DI 框架。
+
+---
+
+## T-CORE-16 设备取码与空库初始化共享层
+
+| 字段 | 值 |
+| --- | --- |
+| 里程碑 | M5（v1.0.0 收尾） |
+| 前置 | T-CORE-15、T-S-12 |
+| 需求 | REQ-PAIR-001、REQ-PAIR-009 |
+| 预估 | 0.5 天 |
+
+**目标**：共享层提供空库初始化与设备取码能力，供设置页与配对页调用。
+
+**必读**：`docs/api.md` §2.2–§2.3；`docs/客户端技术架构.md` §6.3、§8.1。
+
+**涉及路径**：`shared/src/commonMain/.../network/ApiService.kt`、`repository/PairingRepository.kt`、`repository/PairingCodeRepository.kt`、`sync/SyncRuntime.kt`、`app/AppContainer.kt` 与对应测试。
+
+**实现要点**
+
+- `ApiService` 新增 `bootstrap(deviceName)`、`createPairingCode()` 与 DTO；错误码增加 `ALREADY_INITIALIZED`。
+- `PairingRepository.initialize(serverUrl, deviceName)` 复用 `setServerUrl + setPairingInfo`；`PairingError` 增加 `AlreadyInitialized`。
+- `PairingCodeRepository` 基于认证 `ApiService` 生成码，返回 `code/expiresAt`，不持久化。
+- `SyncRuntime` 暴露 `apiService`；`AppSession` 暴露 `pairingCodeRepository`。
+- 测试覆盖成功、401、409、429 映射，断言配对码不写入设置存储。
+
+**验收**
+
+```bash
+cd ClipboxClient
+./gradlew :shared:allTests
+```
+
+预期：全部通过；新增用例可定位。
+
+**DoD**
+
+- [ ] 配对码不进入 DataStore/Room。
+- [ ] 一卡一提交：`T-CORE-16: <一句话>`。
+
+**禁止**
+
+- 不要在共享层记录配对码明文。

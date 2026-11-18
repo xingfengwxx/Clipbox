@@ -21,7 +21,6 @@ const composeSnippet = `services:
       - "8080:8080"
     environment:
       DATA_DIR: /data
-      ADMIN_TOKEN: "\${ADMIN_TOKEN}"
       PUBLIC_BASE_URL: "\${PUBLIC_BASE_URL}"
     volumes:
       - ./data:/data
@@ -35,8 +34,7 @@ const composeSnippet = `services:
         max-size: "10m"
         max-file: "3"`
 
-const envSnippet = `ADMIN_TOKEN=<REPLACE_WITH_OPENSSL_RAND_BASE64_48_OUTPUT>
-PUBLIC_BASE_URL=http://<SERVER_IP>:8080`
+const envSnippet = `PUBLIC_BASE_URL=http://<SERVER_IP>:8080`
 </script>
 
 <template>

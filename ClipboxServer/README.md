@@ -1,6 +1,6 @@
 # Clipbox Server
 
-服务端（Ktor Netty）。当前已实现启动配置校验、SQLite 迁移与仓储、`/healthz`、配对码生成与设备配对。
+服务端（Ktor Netty）。当前已实现启动配置校验、SQLite 迁移与仓储、`/healthz`、设备取码与设备配对、空库初始化。
 
 ## 版本基线
 
@@ -12,7 +12,6 @@
 
 ```bash
 cd ClipboxServer
-ADMIN_TOKEN=$(printf 'a%.0s' {1..32}) \
 PUBLIC_BASE_URL=http://localhost:8080 \
 ./gradlew run
 ```
@@ -30,7 +29,6 @@ curl -sS http://127.0.0.1:8080/healthz
 | --- | --- | --- | --- |
 | `PORT` | `8080` | 否 | 监听端口，1–65535 |
 | `DATA_DIR` | `./data` | 否 | 数据目录，启动时自动创建并校验可写。容器部署由 compose 显式注入 `/data`（架构文档 §11.4 的 `/data` 为容器视角，本机默认取 `./data`） |
-| `ADMIN_TOKEN` | 无 | 是 | 管理令牌，至少 32 个字符 |
 | `PUBLIC_BASE_URL` | 无 | 是 | 分享链接基地址，合法的 `http://` / `https://` 绝对地址，含主机、无尾斜杠 |
 
 任一配置缺失或非法时进程立即退出并打印原因，不打印令牌明文。
@@ -101,27 +99,30 @@ cd ClipboxServer
 
 ## 配对
 
-启动时若不存在「未使用且未过期」的配对码，会生成一个并打印一次启动日志：
-
-```text
-[PAIRING-CODE] 启动自动生成配对码：123456（10 分钟内有效，一次性使用）
-```
-
-管理端随时补发（管理令牌错误返回 401）：
+空数据库首次部署时，首台设备调用初始化接口取得设备令牌（仅 `devices` 为空时可用）：
 
 ```bash
-curl -sS -X POST http://127.0.0.1:8080/api/v1/admin/pairing-codes \
-  -H "X-Admin-Token: $ADMIN_TOKEN"
+curl -sS -X POST http://127.0.0.1:8080/api/v1/bootstrap \
+  -H 'Content-Type: application/json' \
+  -d '{"deviceName":"Pixel 8"}'
+# {"deviceId":"01J8...","token":"<43 字符>","deviceName":"Pixel 8"}
+```
+
+之后由已配对设备生成 6 位配对码：
+
+```bash
+curl -sS -X POST http://127.0.0.1:8080/api/v1/devices/me/pairing-code \
+  -H "Authorization: Bearer $TOKEN"
 # {"code":"654321","expiresAt":1730000600000}
 ```
 
-客户端用码换取设备令牌，令牌只在该响应出现一次：
+新设备用码换取设备令牌，令牌只在该响应出现一次：
 
 ```bash
 curl -sS -X POST http://127.0.0.1:8080/api/v1/pair \
   -H 'Content-Type: application/json' \
-  -d '{"code":"654321","deviceName":"Pixel 8"}'
-# {"deviceId":"01J8...","token":"<43 字符>","deviceName":"Pixel 8"}
+  -d '{"code":"654321","deviceName":"MacBook"}'
+# {"deviceId":"01J8...","token":"<43 字符>","deviceName":"MacBook"}
 ```
 
-配对码 600 秒有效、一次性；服务端只保存设备令牌的 SHA-256 摘要。
+配对码 600 秒有效、一次性、单设备单活码；服务端只保存配对码与设备令牌的 SHA-256 摘要，不打印配对码。

@@ -7,7 +7,7 @@
 | 状态 | 设计冻结；客户端与服务端实现的唯一接口依据 |
 | 部署基线 | 学习版 HTTP + IP 直连（`http://<SERVER_IP>:8080`），见 [ADR-0003](./adr/0003-http-ip-learning-deployment.md) |
 | 基线 | [Clipbox 项目交接文档](./Clipbox%20项目交接文档.md) v0.1 |
-| 相关 | [GLOSSARY.md](GLOSSARY.md)、[ADR-0001](./adr/0001-server-seq-change-feed.md)、[ADR-0002](./adr/0002-share-content-snapshot.md) |
+| 相关 | [GLOSSARY.md](GLOSSARY.md)、[ADR-0001](./adr/0001-server-seq-change-feed.md)、[ADR-0002](./adr/0002-share-content-snapshot.md)、[ADR-0006](./adr/0006-device-issued-pairing-codes.md) |
 | 适用产品 | Clipbox v1.0.0 |
 | 工程路径 | 服务端 `/Users/wangxingxing/AndroidStudioProjects/MyProjects/ClipBox/ClipboxServer`<br>客户端 `/Users/wangxingxing/AndroidStudioProjects/MyProjects/ClipBox/ClipboxClient` |
 
@@ -32,12 +32,11 @@
 | 范围 | 方式 |
 | --- | --- |
 | 设备接口 | `Authorization: Bearer <device-token>` |
-| 管理接口 | `X-Admin-Token: <admin-token>` |
-| 公开接口 | `POST /api/v1/pair`、`GET /s/{token}`、`GET /healthz` |
+| 公开接口 | `POST /api/v1/pair`、`POST /api/v1/bootstrap`、`GET /s/{token}`、`GET /healthz` |
 
 - 设备令牌只返回一次，服务端只保存 `SHA-256(token)`；令牌泄露等价于设备身份泄露。
 - 设备令牌不得出现在 URL、查询参数、日志或错误信息中。
-- 管理令牌只存在于服务端环境变量，比较时使用常量时间算法。
+- 配对码由已配对设备生成，服务端只保存 `SHA-256(code)`；配对码只允许出现在生成响应与配对请求体中，不得进入 URL、查询参数或日志。
 
 ### 1.3 标识、时间与变更序号
 
@@ -60,7 +59,6 @@
 | 头 | 说明 |
 | --- | --- |
 | `Authorization` | 设备接口必填，`Bearer <token>` |
-| `X-Admin-Token` | 管理接口必填 |
 | `Content-Type` | 有请求体时必填 `application/json` |
 
 响应头：
@@ -119,7 +117,7 @@
 
 ### 2.1 POST /api/v1/pair
 
-用配对码把新设备登记到唯一用户空间，并换取设备令牌。无需认证。
+用已配对设备生成的配对码把新设备登记到唯一用户空间，并换取设备令牌。无需认证。
 
 请求：
 
@@ -142,11 +140,11 @@
 
 行为：
 
-1. 校验配对码存在、未使用、未过期；任何一项不满足都返回对应错误码。
+1. 对配对码做 SHA-256 后查找设备码记录，校验存在、未使用、未过期；任何一项不满足都返回对应错误码。
 2. 在同一个事务内把配对码标记为已使用、创建设备记录、写入令牌哈希。
 3. 令牌只在本响应返回一次；服务端之后无法还原明文令牌。
 4. 每个设备独立令牌；同一用户可配对多台设备，互不影响。
-5. 配对码为一次性，成功或过期后不可再次使用。
+5. 配对码为一次性，成功或过期后不可再次使用；来源设备重新生成码时旧码立即失效。
 
 错误：
 
@@ -166,15 +164,9 @@ curl -sS http://203.0.113.10:8080/api/v1/pair \
   -d '{"code":"123456","deviceName":"Pixel 8"}'
 ```
 
-### 2.2 POST /api/v1/admin/pairing-codes
+### 2.2 POST /api/v1/devices/me/pairing-code
 
-生成新的配对码。仅管理令牌可访问。
-
-请求头：
-
-```text
-X-Admin-Token: <admin-token>
-```
+已配对设备为“配对新设备”生成一次性配对码。需要设备认证。
 
 请求体为空或 `{}`。
 
@@ -189,17 +181,55 @@ X-Admin-Token: <admin-token>
 
 行为：
 
-- 新码有效期固定 600 秒，一次性使用。
-- 生成新码不会使已有未使用码失效；多个有效码可并存。
-- 服务端启动时若不存在“未使用且未过期”的配对码，会自动生成一个并写入容器日志，供自助配对；管理接口用于随时补发。
-- 配对码不得写入常规访问日志，只有启动自动生成时允许打印一次。
+- 每台设备同一时间最多一个有效码；再次生成会覆盖旧码，旧码立即失效。
+- 有效期固定 600 秒，一次性使用。
+- 服务端只保存 `SHA-256(code)`；明文只在本次响应返回，不写入日志，不进入 URL。
+- 客户端只在内存中保留明文，展示弹层关闭即销毁，不落盘。
 
 错误：
 
 | HTTP | code | 场景 |
 | --- | --- | --- |
-| 401 | `UNAUTHORIZED` | 管理令牌缺失或不匹配 |
+| 401 | `UNAUTHORIZED` | 设备令牌缺失或无效 |
 | 429 | `RATE_LIMITED` | 超过每 IP 每分钟 10 次 |
+
+### 2.3 POST /api/v1/bootstrap
+
+空数据库首次初始化：创建首台设备并返回设备令牌。无需认证。
+
+仅当 `devices` 表为空时可用；已有任何设备时返回 409 `ALREADY_INITIALIZED`。
+
+请求：
+
+```json
+{
+  "deviceName": "Pixel 8"
+}
+```
+
+响应 `201 Created` 与 `POST /api/v1/pair` 同形：
+
+```json
+{
+  "deviceId": "01J8Y6Z3K4M5N6P7Q8R9S0T1V2",
+  "token": "3q2-7wJ8kLmN4pQrS6tUvWxYzA1bC2dE3fG4hJ5kL6M",
+  "deviceName": "Pixel 8"
+}
+```
+
+行为：
+
+- 首台设备与其他设备权限相同，可继续生成配对码添加设备。
+- 空库判断与设备写入在同一个写事务内完成，并发请求只有一个成功。
+- 部署完成后应立即初始化；否则任何能访问该地址的人都可以抢先成为首台设备。
+
+错误：
+
+| HTTP | code | 场景 |
+| --- | --- | --- |
+| 400 | `VALIDATION_ERROR` | 设备名为空或超长 |
+| 409 | `ALREADY_INITIALIZED` | 已存在设备，不能再次初始化 |
+| 429 | `RATE_LIMITED` | 超过每 IP 每分钟 3 次 |
 
 ## 3. 剪贴记录
 
@@ -657,10 +687,11 @@ Cache-Control: no-store
 | 400 | `INVALID_CODE` | 配对码不存在 | 输入错误 |
 | 400 | `CODE_EXPIRED` | 配对码过期 | 超过 10 分钟 |
 | 400 | `CODE_USED` | 配对码已使用 | 重复配对 |
-| 401 | `UNAUTHORIZED` | 认证失败 | 令牌缺失、无效、管理令牌错误 |
+| 401 | `UNAUTHORIZED` | 认证失败 | 设备令牌缺失或无效 |
 | 404 | `NOT_FOUND` | 资源不存在 | 记录不存在、分享令牌不存在 |
 | 405 | `METHOD_NOT_ALLOWED` | 方法不允许 | 对只读路径发写请求 |
 | 409 | `CONFLICT` | 幂等冲突 | 同 ID 不同内容、记录已删除 |
+| 409 | `ALREADY_INITIALIZED` | 服务器已初始化 | 空库初始化时已存在设备 |
 | 410 | `SHARE_EXPIRED` | 分享已过期 | 超过 `expiresAt` |
 | 410 | `SHARE_CONSUMED` | 分享已焚毁 | 一次性分享已打开 |
 | 413 | `PAYLOAD_TOO_LARGE` | 请求体超限 | 超过 512 KiB |
@@ -674,7 +705,8 @@ Cache-Control: no-store
 | 范围 | 限制 | 维度 | 超限 |
 | --- | --- | --- | --- |
 | `POST /api/v1/pair` | 5 次/分钟 | IP | 429，`Retry-After: 60` |
-| `POST /api/v1/admin/pairing-codes` | 10 次/分钟 | IP | 429 |
+| `POST /api/v1/bootstrap` | 3 次/分钟 | IP | 429 |
+| `POST /api/v1/devices/me/pairing-code` | 10 次/分钟 | IP | 429 |
 | 设备接口 | 120 次/分钟 | 设备 ID | 429 |
 | `GET /s/{token}` | 60 次/分钟 | IP | 429 |
 | `GET /healthz` | 120 次/分钟 | IP | 429 |
@@ -729,17 +761,22 @@ ULID 适合做主键与展示排序，但不适合做变更游标：离线设备
 
 ## 10. 端到端示例
 
-### 10.1 生成配对码并配对
+### 10.1 初始化、生成配对码并配对
 
 ```bash
-# 1. 管理端生成配对码
-curl -sS -X POST http://203.0.113.10:8080/api/v1/admin/pairing-codes \
-  -H "X-Admin-Token: $ADMIN_TOKEN"
+# 1. 空服务器初始化首台设备（仅 devices 为空时可用）
+curl -sS -X POST http://203.0.113.10:8080/api/v1/bootstrap \
+  -H 'Content-Type: application/json' \
+  -d '{"deviceName":"Pixel 8"}'
 
-# 2. 客户端配对
+# 2. 已配对设备为新设备生成配对码
+curl -sS -X POST http://203.0.113.10:8080/api/v1/devices/me/pairing-code \
+  -H "Authorization: Bearer $TOKEN"
+
+# 3. 新设备用该码配对
 curl -sS http://203.0.113.10:8080/api/v1/pair \
   -H 'Content-Type: application/json' \
-  -d '{"code":"123456","deviceName":"Pixel 8"}'
+  -d '{"code":"123456","deviceName":"MacBook"}'
 ```
 
 ### 10.2 创建并同步
@@ -790,7 +827,7 @@ curl -sS http://203.0.113.10:8080/api/v1/shares \
 | 分享令牌 | 明文主键 | 只存 SHA-256 哈希 | 降低数据库泄露时的链接风险 |
 | 来源设备 | 只有 `source_device_id` | 响应增加 `sourceDeviceName` | 历史列表直接展示来源设备 |
 | 错误码 | 仅示例 | 完整错误码表 | 客户端稳定分支与文案映射 |
-| 限流 | 仅配对 5 次/分钟/IP | 配对、管理、设备、分享页、WS 分项限流 | 公网暴露面收敛 |
+| 限流 | 仅配对 5 次/分钟/IP | 配对、空库初始化、设备取码、设备、分享页、WS 分项限流 | 公网暴露面收敛 |
 | 健康检查 | 仅状态 | 增加 `version` 与 `time` | 容器排障与版本确认 |
 | 透明复制页 | MVP 界面清单 | P2（v1.0.0 不实现） | v1.0.0 没有后台通知，透明页无触发入口 |
 
@@ -800,3 +837,4 @@ curl -sS http://203.0.113.10:8080/api/v1/shares \
 | --- | --- | --- |
 | v1.0.0 | 2026-11-13 | 初版：基于交接文档 v0.1、ADR-0001、ADR-0002 冻结 API 契约 |
 | v1.0.0 修订 | 2026-11-18 | GET /api/v1/clips 新增可选参数 `full`：全量分页跳过 syncFloor 判定，仍保留 serverMaxSeq 重置保护；修复 BUG-001 墓碑清理后全量分页中断 |
+| v1.0.0 修订 | 2026-11-18 | 配对码改由已配对设备生成（`POST /api/v1/devices/me/pairing-code`），服务端只存哈希；新增空库初始化 `POST /api/v1/bootstrap` 与 409 `ALREADY_INITIALIZED`；删除管理接口与 `X-Admin-Token`（ADR-0006） |

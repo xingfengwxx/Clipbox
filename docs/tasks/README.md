@@ -2,7 +2,7 @@
 
 本文档把 `docs/` 中已冻结的需求与架构转换为**可逐张派发的任务卡**。每张卡是一个 0.5–1 天的独立工作单元，有单一可验证产出；按 `docs/tasks/` 中的工作流文件顺序执行即可交付 v1.0.0。
 
-> v1.0.0 功能已实现并通过 M4；当前处于 M5/M6 发布扩展阶段，补齐 Windows / Linux 桌面产物与官网下载矩阵。
+> v1.0.0 功能已实现并通过 M4；当前处于 M5/M6 发布扩展阶段，补齐 Windows / Linux 桌面产物与官网下载矩阵。2026-11-18 追加配对模型改造（[ADR-0006](../adr/0006-device-issued-pairing-codes.md)），T-REL-14 / T-S-12 / T-CORE-16 / T-UI-21 / T-IOS-11 / T-REL-15 须在打 `v1.0.0` tag 前完成。
 
 ## 1. 执行基线
 
@@ -34,11 +34,11 @@
 
 | 文件 | 范围 | 卡片 |
 | --- | --- | --- |
-| [01-server.md](01-server.md) | Ktor 服务端：配对、同步、WS、分享、清理、测试 | T-S-01…T-S-11 |
-| [02-client-core.md](02-client-core.md) | KMP 共享层：模型、Room、Outbox、SyncEngine、WS、剪贴板、日志 | T-CORE-01…T-CORE-15 |
-| [03-client-ui.md](03-client-ui.md) | Compose UI 与平台入口：主题、历史、配对、设置、分享、工具箱、Android / Desktop | T-UI-01…T-UI-20 |
-| [04-ios.md](04-ios.md) | iOS 宿主、生命周期、分享扩展、iPad、模拟器验收、真机发布前置 | T-IOS-01…T-IOS-10 |
-| [05-release.md](05-release.md) | 远程部署、打包、验收矩阵、安全复查、发版、多平台产物与 release CI | T-REL-01…T-REL-12 |
+| [01-server.md](01-server.md) | Ktor 服务端：配对、同步、WS、分享、清理、测试 | T-S-01…T-S-12 |
+| [02-client-core.md](02-client-core.md) | KMP 共享层：模型、Room、Outbox、SyncEngine、WS、剪贴板、日志 | T-CORE-01…T-CORE-16 |
+| [03-client-ui.md](03-client-ui.md) | Compose UI 与平台入口：主题、历史、配对、设置、分享、工具箱、Android / Desktop | T-UI-01…T-UI-21 |
+| [04-ios.md](04-ios.md) | iOS 宿主、生命周期、分享扩展、iPad、模拟器验收、真机发布前置 | T-IOS-01…T-IOS-11 |
+| [05-release.md](05-release.md) | 远程部署、打包、验收矩阵、安全复查、发版、多平台产物与 release CI | T-REL-01…T-REL-15 |
 | [06-web.md](06-web.md) | 官网：三语单页、下载矩阵、自建说明、Ktor 托管与远程部署 | T-WEB-01…T-WEB-10 |
 | [PROMPTS.md](PROMPTS.md) | 派单与返修提示词模板、停止条件、提交规范 | — |
 
@@ -245,6 +245,17 @@ T-WEB-09 首轮远程部署已于 2026-11-18 完成，范围仅 APK / DMG；T-WE
 78. T-WEB-10（M6，下载矩阵）
 79. T-WEB-09 补验收（M6，同步 MSI / DEB 并验证四平台 Range / SHA）→ **M6 Gate：官网与下载远程可用**
 
+### 5.1 v1.0.0 收尾追加顺序（2026-11-18）
+
+以下 6 张卡来自 ADR-0006，必须在打 `v1.0.0` tag 前按顺序完成：
+
+80. T-REL-14（契约修订 + ADR-0006，纯文档）
+81. T-S-12（服务端设备自有配对码与空库初始化）
+82. T-CORE-16（共享层取码与初始化）
+83. T-UI-21（设置页配对新设备、配对页初始化）
+84. T-IOS-11（iOS UITest 取码链路）
+85. T-REL-15（本地产物重建与验收；远程升级需另行确认）→ 完成后才可 T-REL-08 打 tag
+
 > 若某卡验收失败，不要跳到下一卡；按 `PROMPTS.md` 的「验收失败修复」模板重新派同一张卡，最多两轮，仍失败则停下汇报。
 
 ## 6. 卡的状态跟踪
@@ -254,19 +265,25 @@ T-WEB-09 首轮远程部署已于 2026-11-18 完成，范围仅 APK / DMG；T-WE
 | 工作流 | 卡片 | 状态 | 提交 |
 | --- | --- | --- | --- |
 | Server | T-S-01…T-S-11 | 已完成 | `e57aed5`（T-S-11）；M2 Gate 见 [m2-gate.md](m2-gate.md) |
+| Server | T-S-12 | 待开始 | — |
 | Client Core | T-CORE-01…T-CORE-15 | 已完成 | 最后一张 `fe04070`（T-CORE-15）；M3 见 [m3-gate.md](m3-gate.md) |
+| Client Core | T-CORE-16 | 待开始 | — |
 | Client UI | T-UI-01…T-UI-20 | 已完成 | 最后一张 T-UI-20（M3 Gate 提交）；M3 见 [m3-gate.md](m3-gate.md) |
+| Client UI | T-UI-21 | 待开始 | — |
 | iOS | T-IOS-01…T-IOS-09 | 已完成 | 最后一张 T-IOS-09（M4 Gate 提交）；M4 见 [m4-gate.md](m4-gate.md) |
 | iOS | T-IOS-10 | 待开始 | — |
+| iOS | T-IOS-11 | 待开始 | — |
 | Release | T-REL-01…T-REL-07 | 已完成 | 最后一张 `1eee62b`（T-REL-07）；T-REL-01/03 为用户动作与远程部署 |
 | Release | T-REL-08 | 待开始 | — |
 | Release | T-REL-09…T-REL-12 | 待开始 | — |
 | Release | T-REL-13 | 进行中 | — |
+| Release | T-REL-14 | 进行中 | — |
+| Release | T-REL-15 | 待开始 | — |
 | Web | T-WEB-01…T-WEB-08 | 已完成 | 最后一张 `57ab06c`（T-WEB-08） |
 | Web | T-WEB-09 | 进行中 | 首轮 `d2ad070`（仅 APK / DMG）；MSI / DEB 补验收待 T-WEB-10 后执行，证据见 [web-artifacts.md](web-artifacts.md) §7 |
 | Web | T-WEB-10 | 待开始 | — |
 
-> M2 已于 2026-11-17 通过（证据见 [m2-gate.md](m2-gate.md)）；M3 于同日有条件通过，AC-11 全量分页冲突（D8）已于 2026-11-18 由 [BUG-001](bug-001-ac11-full-sync-floor.md) 修复关闭（证据见 [m3-gate.md](m3-gate.md)）；M4 于同日通过（证据见 [m4-gate.md](m4-gate.md)）；下一张为 T-REL-09。T-WEB-09 尚余四平台补验收，M6 未关闭。
+> M2 已于 2026-11-17 通过（证据见 [m2-gate.md](m2-gate.md)）；M3 于同日有条件通过，AC-11 全量分页冲突（D8）已于 2026-11-18 由 [BUG-001](bug-001-ac11-full-sync-floor.md) 修复关闭（证据见 [m3-gate.md](m3-gate.md)）；M4 于同日通过（证据见 [m4-gate.md](m4-gate.md)）；T-WEB-09 尚余四平台补验收，M6 未关闭。ADR-0006 追加的 6 张收尾卡完成前不得打 `v1.0.0` tag。
 
 ## 7. 统一 DoD
 
@@ -283,7 +300,7 @@ T-WEB-09 首轮远程部署已于 2026-11-18 完成，范围仅 APK / DMG；T-WE
 
 | 域 | REQ 范围 | 主要落点 |
 | --- | --- | --- |
-| 配对 | PAIR-001…008 | T-S-03、T-CORE-03、T-UI-02、T-UI-08 |
+| 配对 | PAIR-001…009 | T-S-03/12、T-CORE-03/16、T-UI-02/08/21 |
 | 发送 | SEND-001…010 | T-S-05、T-CORE-06、T-UI-03/04、T-UI-17/18 |
 | 接收 | RECV-001…008 | T-S-06、T-CORE-09、T-UI-07、T-IOS-04 |
 | 历史 | HIST-001…011 | T-S-05、T-CORE-05、T-UI-03/05 |
@@ -307,6 +324,7 @@ T-WEB-09 首轮远程部署已于 2026-11-18 完成，范围仅 APK / DMG；T-WE
 - 官网实现细节：`docs/web-架构.md`
 - 官网托管决策：`docs/adr/0004-web-static-hosting.md`
 - 多平台发布与 release-only CI 决策：`docs/adr/0005-v1-multiplatform-release.md`
+- 设备自有配对码与空库初始化决策：`docs/adr/0006-device-issued-pairing-codes.md`
 - 领域术语：`docs/GLOSSARY.md`
 - 视觉与交互基准：`design/Clipbox 三端设计.html`、`design/README.md`、`design/brand-spec.md`
 - 执行协议与不变量：仓库根目录 `AGENTS.md`

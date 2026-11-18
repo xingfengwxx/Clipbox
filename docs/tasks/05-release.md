@@ -81,7 +81,7 @@ nc -vz <SERVER_IP> 8080   # 部署前应失败；部署后应成功
 
 - Dockerfile：多阶段构建（Gradle 构建 → JRE 运行）；非 root 用户；`JAVA_OPTS=-Xmx256m`；`EXPOSE 8080`；`HEALTHCHECK` 调 `/healthz`；运行镜像含 `curl` 或轻量检查工具。
 - `docker-compose.yml`：仅 `clipbox` 服务；`ports: ["8080:8080"]`；`./data:/data`；`read_only: true`；`tmpfs: /tmp`；`mem_limit: 512m`；`restart: unless-stopped`；环境变量从 `.env` 读取。
-- `.env.example`：`ADMIN_TOKEN`（≥32 字符占位）、`PUBLIC_BASE_URL=http://<SERVER_IP>:8080`；不含真实令牌。
+- `.env.example`：`PUBLIC_BASE_URL=http://<SERVER_IP>:8080`；不含真实配置。（2026-11-18 起按 ADR-0006 移除 `ADMIN_TOKEN`。）
 - `.gitignore` 忽略 `.env`、`data/`、构建产物。
 - 本地无 Docker 时，至少执行 Gradle 构建验证 JAR 可产出；Docker 构建在 T-REL-03 远程验证。
 
@@ -104,7 +104,7 @@ docker compose -f ../docker-compose.yml config   # 若本机已安装 Docker
 **禁止**
 
 - 不要加入 Caddy / TLS / 域名配置。
-- 不要把 `ADMIN_TOKEN` 写入 Dockerfile 或 compose 明文。
+- 不要把真实部署配置或令牌写入 Dockerfile 或 compose 明文。
 
 ---
 
@@ -126,9 +126,10 @@ docker compose -f ../docker-compose.yml config   # 若本机已安装 Docker
 **实现要点**
 
 - 将仓库同步到服务器（git clone 或 rsync，任选；不提交服务器信息）。
-- 创建 `.env`：`ADMIN_TOKEN` 用 `openssl rand -base64 48` 生成；`PUBLIC_BASE_URL=http://<SERVER_IP>:8080`。
+- 创建 `.env`：仅 `PUBLIC_BASE_URL=http://<SERVER_IP>:8080`（ADR-0006 起不再需要 `ADMIN_TOKEN`）。
 - `docker compose up -d --build`；查看 `docker compose ps`、`docker compose logs --tail=100`。
-- 冒烟：`curl /healthz`；管理接口生成配对码；`curl /api/v1/pair`；创建一条记录；增量拉取；分享创建并在浏览器打开。
+- 冒烟：`curl /healthz`；首台设备调用 `/api/v1/bootstrap` 初始化；已配对设备调用 `/api/v1/devices/me/pairing-code` 取码；`curl /api/v1/pair`；创建一条记录；增量拉取；分享创建并在浏览器打开。
+- 部署完成后立即初始化，缩短空库被抢先占用的窗口。
 - 检查日志不包含正文、令牌、配对码、分享 token；容器内存 <512MB。
 - 检查端口：外部仅 `8080` 可访问。
 
@@ -136,14 +137,16 @@ docker compose -f ../docker-compose.yml config   # 若本机已安装 Docker
 
 ```bash
 curl -sS http://<SERVER_IP>:8080/healthz
-curl -sS -X POST http://<SERVER_IP>:8080/api/v1/admin/pairing-codes \
-  -H "X-Admin-Token: $ADMIN_TOKEN"
+# 空库时由首台设备执行；已有设备时应返回 409
+curl -sS -X POST http://<SERVER_IP>:8080/api/v1/bootstrap \
+  -H 'Content-Type: application/json' \
+  -d '{"deviceName":"smoke"}'
 curl -sS http://<SERVER_IP>:8080/s/<token>
 docker stats --no-stream
 docker compose logs --tail=100 | grep -Ei 'token|content|code' || true
 ```
 
-预期：`/healthz` 200；配对码可生成；分享页可打开；日志 grep 无敏感信息；内存占用符合预算。
+预期：`/healthz` 200；空库初始化返回 201 或已初始化返回 409；分享页可打开；日志 grep 无敏感信息；内存占用符合预算。
 
 **DoD**
 
@@ -153,7 +156,7 @@ docker compose logs --tail=100 | grep -Ei 'token|content|code' || true
 
 **禁止**
 
-- 不要在公网暴露管理接口给未知来源；必要时用防火墙限制。
+- 空库初始化窗口内尽快完成初始化；不要把服务长期暴露在未初始化状态。
 - 不要把 `.env` 或日志原文贴进公开 PR / 文档。
 
 ---
@@ -325,7 +328,7 @@ cd ClipboxClient && ./gradlew :shared:allTests
 **验收**
 
 ```bash
-git grep -nE 'ADMIN_TOKEN=[^<]|Bearer [A-Za-z0-9_-]{20,}|BEGIN (RSA|OPENSSH) PRIVATE KEY' -- . ':!docs/tasks/security-review.md' || true
+git grep -nE 'Bearer [A-Za-z0-9_-]{20,}|BEGIN (RSA|OPENSSH) PRIVATE KEY|X-Admin-Token' -- . ':!docs/tasks/security-review.md' || true
 cd ClipboxServer && ./gradlew test
 cd ClipboxClient && ./gradlew :shared:allTests
 ```
@@ -647,3 +650,43 @@ ruby -ryaml -e 'YAML.load_file(".github/workflows/release.yml"); puts "yaml ok"'
 - 不要为命名改动 Gradle 内部产物名或新增打包时间字段。
 - 不要拆分 Android ABI，不要改动官网页面布局。
 - 不要在没有用户授权时推送、打 tag 或部署远端。
+
+---
+
+## T-REL-15 配对改造后的产物重建与验收
+
+| 字段 | 值 |
+| --- | --- |
+| 里程碑 | M5（v1.0.0 收尾） |
+| 前置 | T-S-12、T-CORE-16、T-UI-21、T-IOS-11 |
+| 需求 | AC-01、AC-13、REQ-PAIR-001、REQ-PAIR-009、REQ-NFR-003 |
+| 预估 | 1 天 |
+
+**目标**：用新配对模型重建本地可构建产物，完成本地验收并更新台账；远程部署需用户另行确认。
+
+**必读**：[ADR-0006](../adr/0006-device-issued-pairing-codes.md)、`docs/tasks/release-artifacts.md`、`docs/tasks/acceptance-matrix.md`、`docs/tasks/security-review.md`。
+
+**涉及路径**：`dist/`、`downloads/`、`docs/tasks/release-artifacts.md`、`acceptance-matrix.md`、`security-review.md`、`e2e-local.md`、`docs/tasks/README.md`。
+
+**实现要点**
+
+- 重建 Android release APK 与 macOS arm64 DMG，更新 SHA-256；Windows / Linux 由 release CI 重建（需 tag，另行授权）。
+- 本地空库：初始化 → A 取码 → B 配对 → 双向同步；换码旧码 `INVALID_CODE`；过期 `CODE_EXPIRED`；已用 `CODE_USED`；409 初始化提示。
+- 日志 grep：配对码 0 次；数据库仅哈希；429 冷却符合预期。
+- 台账与验收记录追加日期与证据路径，不篡改历史结论。
+- 远程服务器升级需重启容器应用 V002，须用户明确确认后执行。
+
+**验收**
+
+```bash
+cd ClipboxServer && ./gradlew test
+cd ClipboxClient && ./gradlew :shared:allTests && ./gradlew :composeApp:assembleRelease && ./gradlew :composeApp:packageDmg
+(cd downloads && shasum -a 256 -c SHA256SUMS.txt)
+```
+
+预期：全部通过；产物哈希与台账一致；AC-13 日志断言成立。
+
+**DoD**
+
+- [ ] 不 push、不打 tag、不部署远端。
+- [ ] 一卡一提交：`T-REL-15: <一句话>`。

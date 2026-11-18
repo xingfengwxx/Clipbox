@@ -208,3 +208,9 @@ xcodebuild ... -only-testing:iosAppUITests/ClipboxUITests/testAdaptiveLayoutAppe
 # iPhone 16：1 passed / 0 failures / 32.434s
 # iPad (A16)：1 passed / 0 failures / 35.163s
 ```
+
+---
+
+## 2026-11-18 追加（ADR-0006）
+
+上文的“客户端不能生成配对码、无重新生成按钮、提示到服务端管理端获取”已失效。当前设置页提供「配对新设备」弹层，含 6 位码、倒计时、重新生成与复制；配对页提供空库初始化入口。视觉样式沿用既有设计语言，待 T-UI-21 补齐截图后另行登记偏差。
