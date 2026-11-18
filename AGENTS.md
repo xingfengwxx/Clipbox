@@ -5,9 +5,9 @@
 ## 1. 项目与当前状态
 
 - 产品：Clipbox，离线优先的跨设备文本中转 + 本地开发者工具箱。
-- 三端：Android（minSdk 26）、iOS 16+、Desktop（Windows / macOS / Linux；本版只产出 macOS 包）。
+- 三端：Android（minSdk 26）、iOS 16+、Desktop（Windows / macOS / Linux）；v1.0.0 桌面产物为 macOS arm64 DMG、Windows x64 MSI、Linux x86_64 DEB，均未签名（`docs/adr/0005-v1-multiplatform-release.md`）。
 - 服务端：Kotlin + Ktor + Exposed + SQLite WAL，单实例。
-- 当前状态：设计冻结，代码工程为空；按 `docs/tasks/README.md` 的卡片顺序从零实现。
+- 当前状态：v1.0.0 功能与本地验收已完成；正在补齐 Windows / Linux 发布产物与官网下载矩阵。
 - 包名：客户端 `com.wangxingxing.clipbox`；服务端 `com.wangxingxing.clipbox.server`。
 
 ## 2. 权威文档
@@ -20,7 +20,7 @@
 4. `docs/功能需求文档.md`：产品行为与 Given/When/Then 验收。
 5. `docs/客户端技术架构.md` / `docs/服务端技术架构.md`：实现细节。
 6. `docs/GLOSSARY.md`：术语。
-7. `docs/adr/0001…0003`：已接受决策。
+7. `docs/adr/0001…0005`：已接受决策。
 8. `design/README.md`、`design/brand-spec.md`、`design/Clipbox 三端设计.html`：视觉与交互基准。
 
 发现文档之间不一致：**停下汇报**，不要自行选择或修改冻结文档。
@@ -62,7 +62,7 @@
 ### 工程
 
 19. 不升级已锁定依赖；确需新增依赖时先停下说明理由并等待确认。
-20. 不搭 CI、不写全量 UI 自动化；验收靠任务卡命令 + 手工截图。
+20. 不做 PR / 常驻 CI，不写全量 UI 自动化；仅允许由版本 tag 或手动触发的 release-only GitHub Actions（`docs/adr/0005-v1-multiplatform-release.md`）；验收仍靠任务卡命令 + 手工截图。
 21. 一卡一提交；不 amend 已推送提交；不 push、不打 tag，除非用户明确要求。
 
 ## 4. 工程路径与命令
@@ -88,6 +88,10 @@ cd ClipboxClient
 ./gradlew :shared:allTests
 ./gradlew :composeApp:assembleDebug
 ./gradlew :composeApp:run
+./gradlew :composeApp:assembleRelease
+./gradlew :composeApp:packageDmg
+./gradlew :composeApp:packageMsi   # 仅 Windows
+./gradlew :composeApp:packageDeb   # 仅 Linux
 ./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64
 
 # 官网
@@ -140,7 +144,7 @@ adb shell am start -n com.wangxingxing.clipbox/.MainActivity
 
 - 禁止修改已冻结的需求、接口、架构文档来让实现「通过」。
 - 禁止跳过验收、伪造输出、删除失败测试、放宽校验。
-- 禁止提交 `.env`、数据库、备份、令牌、私钥、APK / DMG 等产物。
+- 禁止提交 `.env`、数据库、备份、令牌、私钥、APK / DMG / MSI / DEB 等产物。
 - 禁止在代码中硬编码服务器 IP、令牌、示例域名。
 - 禁止在 UI 中硬编码用户可见文案。
 - 禁止在 Android / iOS 上实现后台剪贴板或轮询。
@@ -183,4 +187,4 @@ adb shell am start -n com.wangxingxing.clipbox/.MainActivity
 
 1. **Android 调试与测试**：模拟器 / 真机 / 安装 / 启动 / 截图 / 日志 / 界面操作优先使用 `android` CLI 及官方 Android Skills（`android-cli`、`android-profiler` 等），而不是手写等效 adb 命令；本机未安装时按 `android-cli` Skill 的说明安装。任务卡要求的 `adb reverse` 等命令照常执行。
 2. **代码流程梳理**：理解调用链、数据流、模块依赖时优先用 codegraph（MCP `codegraph_explore` 或 `codegraph` CLI）；工程无索引时先在对应工程根目录执行 `codegraph init`，再检索；索引不可用时才回退到文本搜索。
-3. **测试建设**：设计测试策略、搭建测试工程、补齐测试用例时先调用 `testing-setup` Skill。其建议若涉及新增测试依赖，按 §3 工程第 19 条先停下确认；不得因此引入 CI 或全量 UI 自动化（第 20 条）。
+3. **测试建设**：设计测试策略、搭建测试工程、补齐测试用例时先调用 `testing-setup` Skill。其建议若涉及新增测试依赖，按 §3 工程第 19 条先停下确认；不得因此引入 PR / 常驻 CI 或全量 UI 自动化（第 20 条），release-only CI 例外见第 20 条。

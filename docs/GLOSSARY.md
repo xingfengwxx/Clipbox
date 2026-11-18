@@ -97,3 +97,29 @@ _Avoid_: 覆盖、后写优先
 **剪贴板回环（Clipboard Loop）**:
 自动写入剪贴板与自动上传剪贴板相互触发形成的循环。
 _Avoid_: 死循环、回传、回声
+
+## 发布与分发
+
+**发布产物（Release Artifact）**:
+面向最终用户交付、按平台与 CPU 架构命名的可安装文件；构建中间物与调试包不算。
+_Avoid_: 构建产物、二进制、安装文件
+
+**模拟器构建（Simulator Build）**:
+只用于模拟器验证、不能安装到真机的 iOS 构建。
+_Avoid_: iOS 包、开发包
+
+**代码签名（Code Signing）**:
+用私钥对安装包签名，使平台能验证来源与完整性；与传输层加密无关。
+_Avoid_: 公证、加密
+
+**公证（Notarization）**:
+Apple 对 macOS 软件做恶意软件扫描并签发票据的流程；与代码签名不同。
+_Avoid_: 签名、上架
+
+**应用镜像（App Image）**:
+jpackage 产出的免安装应用目录，不是单文件 `.AppImage` 格式。
+_Avoid_: AppImage、绿色版
+
+**发布流水线（Release Pipeline）**:
+由版本 tag 或手动触发、只负责构建与发布产物的自动化流程，不等同于常驻 CI。
+_Avoid_: CI、持续集成

@@ -1,6 +1,6 @@
 # 发布与验收任务卡（T-REL）
 
-M5 目标：把已通过本地验收的代码部署到用户的远程服务器，产出 Android debug APK 与 macOS Desktop 包，完成 AC-01…AC-20 证据矩阵并打 `v1.0.0` tag。
+M5 目标：把已通过本地验收的代码部署到用户的远程服务器，产出 Android release APK、macOS arm64 DMG、Windows x64 MSI 与 Linux x86_64 DEB，完成 AC-01…AC-20 证据矩阵并打 `v1.0.0` tag。桌面安装包均未签名；Windows / Linux 不做安装验收（[ADR-0005](../adr/0005-v1-multiplatform-release.md)）。
 
 前置：T-S-11、T-UI-20、T-IOS-09 全部完成。远程服务器只有公网 IP，无域名；部署仅 server 容器，HTTP + `8080`（[ADR-0003](../adr/0003-http-ip-learning-deployment.md)）。
 
@@ -208,12 +208,12 @@ ssh <server> 'ls -l /data/backups && sqlite3 /data/clipbox.db "PRAGMA integrity_
 | --- | --- |
 | 里程碑 | M5 |
 | 前置 | T-UI-20、T-IOS-09 |
-| 需求 | REQ-PLAT-001/002、交付范围 |
+| 需求 | REQ-PLAT-001/002/005、交付范围 |
 | 预估 | 0.5–1 天 |
 
-**目标**：产出可安装的 Android debug APK、macOS Desktop 包与 iOS 模拟器构建记录。
+**目标**：本卡产出首轮 Android debug APK、macOS Desktop 包与 iOS 模拟器构建记录；对外 release APK 与 Windows / Linux 产物由 T-REL-10/11 扩展。
 
-**必读**：`docs/tasks/README.md` §1 交付物；`docs/客户端技术架构.md` §4。
+**必读**：`docs/tasks/README.md` §1 交付物；`docs/客户端技术架构.md` §4；[ADR-0005](../adr/0005-v1-multiplatform-release.md)。
 
 **涉及路径**：`dist/`（构建产物，加入 `.gitignore`）、`ClipboxClient/README.md`。
 
@@ -223,7 +223,8 @@ ssh <server> 'ls -l /data/backups && sqlite3 /data/clipbox.db "PRAGMA integrity_
 - Desktop：`./gradlew :composeApp:packageDmg`（若任务名不同，使用 `:composeApp:createDistributable` 并记录实际命令）；在 macOS 上启动，确认窗口、剪贴板、分享页。
 - iOS：执行 T-IOS-09 的模拟器构建命令，记录成功输出；不导出真机签名包。
 - 产物复制到 `dist/` 并记录 SHA-256；`dist/` 不提交。
-- 不配置 release 签名、不混淆、不缩小；学习版用 debug 构建即可，但在 README 说明。
+- 本卡首轮产物使用 debug 构建且不配置签名；对外 release 签名与 Windows / Linux 打包由 T-REL-10/11 接管，并在 README 说明。
+- 2026-11-18 范围扩展：T-REL-05 记录保留为首轮证据，不追溯重做；v1.0.0 对外分发以 T-REL-11 的 release 产物为准（ADR-0005）。
 
 **验收**
 
@@ -244,8 +245,8 @@ shasum -a 256 composeApp/build/outputs/apk/debug/composeApp-debug.apk
 
 **禁止**
 
-- 不要为打包引入签名证书或 CI。
-- 不要承诺 Windows / Linux 包。
+- 本卡不要引入签名证书或 CI；签名与 release CI 由 T-REL-10/11 接管。
+- 不要在本卡伪造 Windows / Linux 产物。
 
 ---
 
@@ -349,7 +350,7 @@ cd ClipboxClient && ./gradlew :shared:allTests
 | 字段 | 值 |
 | --- | --- |
 | 里程碑 | M5 |
-| 前置 | T-REL-07 |
+| 前置 | T-REL-11 |
 | 需求 | 全部 |
 | 预估 | 0.5 天 |
 
@@ -365,6 +366,7 @@ cd ClipboxClient && ./gradlew :shared:allTests
 - `docs/tasks/README.md` 状态表全部标为已完成；记录最终提交。
 - 交接文档追加变更记录：HTTP + IP、包名、范围、交付物。
 - 确认工作区干净；`git status` 无未跟踪的敏感文件。
+- tag 标记代码交付点；官网下载 SHA 数据提交与远程部署可在 tag 之后（ADR-0005），以 tag 触发的 CI 产物为唯一哈希口径。
 - 打 annotated tag：`git tag -a v1.0.0 -m "Clipbox v1.0.0"`。
 - 是否 push 由用户确认；未确认前只保留本地 tag。
 
@@ -376,7 +378,7 @@ git log --oneline -10
 git tag -n
 ```
 
-预期：工作区干净；提交历史一卡一提交；`v1.0.0` tag 指向最终提交。
+预期：工作区干净；提交历史一卡一提交；`v1.0.0` tag 指向最终代码提交；官网数据提交可在 tag 之后。
 
 **DoD**
 
@@ -388,3 +390,207 @@ git tag -n
 
 - 不要在未确认时 `git push --tags`。
 - 不要为打 tag 而跳过未完成的验收项。
+
+---
+
+## T-REL-09 发布范围、ADR 与冻结文档同步
+
+| 字段 | 值 |
+| --- | --- |
+| 里程碑 | M5 |
+| 前置 | T-REL-07 |
+| 需求 | REQ-PLAT-005、交付范围 |
+| 预估 | 0.5 天 |
+
+**目标**：把 Windows / Linux 并入 v1.0.0、iOS 真机延后、release-only CI 与未签名策略写成 ADR，并同步所有受影响的冻结文档与术语。
+
+**必读**：`AGENTS.md`、[ADR-0005](../adr/0005-v1-multiplatform-release.md)、`docs/tasks/README.md`、`docs/web-功能需求.md`、`docs/tasks/security-review.md`。
+
+**涉及路径**：`docs/adr/0005-v1-multiplatform-release.md`、`AGENTS.md`、`docs/tasks/README.md`、`docs/tasks/05-release.md`、`docs/tasks/04-ios.md`、`docs/tasks/06-web.md`、`docs/web-功能需求.md`、`docs/tasks/security-review.md`、`docs/GLOSSARY.md`。
+
+**实现要点**
+
+- ADR-0005 记录范围扩展、CI 例外、未签名、无安装验收、公开 keystore 接受风险。
+- `AGENTS.md` §1、§3 第 20 条、§4、§7、§9 同步；README 交付物、M5/M6 Gate、依赖图、派单顺序与状态表同步。
+- `05-release.md` 增加 T-REL-10/11/12 卡；`06-web.md` 增加 T-WEB-10；`04-ios.md` 增加 T-IOS-10。
+- `docs/web-功能需求.md` 修订 WEB-DL-004，新增 Windows / Linux 未签名提示；`security-review.md` F4 补充 public 仓库与公开分发事实。
+- `docs/GLOSSARY.md` 增加发布与分发术语。
+
+**验收**
+
+```bash
+cd /Users/wangxingxing/AndroidStudioProjects/MyProjects/Clipbox
+ls docs/adr/0005-v1-multiplatform-release.md
+grep -n "MSI" AGENTS.md docs/tasks/README.md docs/tasks/05-release.md docs/web-功能需求.md
+grep -n "release-only" AGENTS.md docs/tasks/README.md
+grep -nE "T-REL-(09|10|11|12)" docs/tasks/README.md docs/tasks/05-release.md
+grep -n "T-WEB-10" docs/tasks/README.md docs/tasks/06-web.md
+grep -n "T-IOS-10" docs/tasks/README.md docs/tasks/04-ios.md
+grep -n "发布产物" docs/GLOSSARY.md
+git diff --check
+```
+
+预期：ADR 与卡片存在；四份文档均出现新平台与 CI 口径；术语表有发布条目；无空白错误。
+
+**DoD**
+
+- [ ] ADR 格式与 0001–0004 一致，含 Considered Options 与 Consequences。
+- [ ] 未改任何代码、构建配置或资产。
+- [ ] README 依赖图与状态表不再停留在「T-REL-08 全员待开始」。
+- [ ] 一卡一提交：`T-REL-09: <一句话>`。
+
+**禁止**
+
+- 不要修改 `docs/api.md` 与两份技术架构文档。
+- 不要把未确认的签名、公证或 iOS 真机方案写成既定事实。
+
+---
+
+## T-REL-10 桌面三平台打包配置与图标
+
+| 字段 | 值 |
+| --- | --- |
+| 里程碑 | M5 |
+| 前置 | T-REL-09 |
+| 需求 | REQ-PLAT-004/005 |
+| 预估 | 1 天 |
+
+**目标**：让 Compose Desktop 同时注册 DMG / MSI / DEB 打包任务，补齐 Windows、Linux、macOS 图标；本机回归 macOS DMG。
+
+**必读**：[ADR-0005](../adr/0005-v1-multiplatform-release.md)、`docs/客户端技术架构.md` §4、`docs/tasks/release-artifacts.md`。
+
+**涉及路径**：`ClipboxClient/composeApp/build.gradle.kts`、`ClipboxClient/composeApp/packaging/`、`ClipboxClient/README.md`。
+
+**实现要点**
+
+- `targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)`；保留 `modules("jdk.unsupported")`。
+- `macOS { bundleID; iconFile }`；`windows { iconFile; menuGroup; perUserInstall=true; upgradeUuid=<固定 GUID> }`；`linux { packageName="theca"; iconFile; debMaintainer; appCategory="utils"; appRelease="1" }`。
+- 图标从 `design/brand/exports/` 生成：`Theca.ico`（16–256）、`Theca.png`（512）、`Theca.icns`；生成工具只在本机使用，不作为项目依赖。
+- 不签名、不公证；在 README 写明 SmartScreen / Gatekeeper / DEB 无签名的提示。
+- 本机只回归 `packageDmg`；MSI/DEB 由 T-REL-11 在对应 runner 上构建。
+
+**验收**
+
+```bash
+cd ClipboxClient
+./gradlew :composeApp:tasks --all | grep -E "package(Msi|Deb|Dmg)"
+./gradlew :composeApp:packageDmg
+ls -l composeApp/packaging/Theca.ico composeApp/packaging/Theca.png composeApp/packaging/Theca.icns
+```
+
+预期：三个打包任务均已注册；DMG 可生成并启动；三种图标存在且尺寸正确。
+
+**DoD**
+
+- [ ] `packageDmg` 回归通过，版本仍为 1.0.0。
+- [ ] 图标来源与品牌规范一致，无外部素材。
+- [ ] README 写明三平台打包命令与未签名提示。
+- [ ] 一卡一提交：`T-REL-10: <一句话>`。
+
+**禁止**
+
+- 不要在 macOS 上伪造或提交 MSI / DEB 产物。
+- 不要引入签名证书、公证账号或新的打包插件。
+- 不要改动同步、UI 与接口代码。
+
+---
+
+## T-REL-11 Release CI 与版本一致性检查
+
+| 字段 | 值 |
+| --- | --- |
+| 里程碑 | M5 |
+| 前置 | T-REL-10 |
+| 需求 | REQ-PLAT-005、交付范围 |
+| 预估 | 1 天 |
+
+**目标**：用 release-only GitHub Actions 构建四平台产物，校验版本一致，并上传 GitHub Release；官网与服务器仍人工搬运。
+
+**必读**：[ADR-0005](../adr/0005-v1-multiplatform-release.md)、`AGENTS.md` §3 第 20 条、`docs/tasks/web-artifacts.md`。
+
+**涉及路径**：`.github/workflows/release.yml`（新增）、`scripts/check-release-version.sh`（新增）、`ClipboxClient/README.md`、`README.md`。
+
+**实现要点**
+
+- 触发仅 `push tags: v*` 与 `workflow_dispatch`；`permissions: contents: write`；不配置 PR / 主分支触发。
+- Job：`test-server`（ubuntu）、`test-client`（macos-15）、`android`、`linux`、`windows`、`macos`、`release`；构建前跑版本检查。
+- Runner 固定 `ubuntu-24.04`、`windows-2022`、`macos-15`；只使用 GitHub 官方 actions。
+- Windows 确认 WiX 3.14，缺失时用官方安装方式补齐；Linux 用 `dpkg-deb --info` 校验。
+- 产物命名：`Theca-1.0.0-{android,macos-arm64,windows-x64,linux-x86_64}.{apk,dmg,msi,deb}`；生成 `SHA256SUMS.txt`。
+- 不读取 GitHub Secrets；Android 签名直接使用仓库内 `ClipboxClient/signing/`（用户接受风险 F4）。
+- `workflow_dispatch` 先做 dry run，不创建 Release；tag 构建才执行 `gh release create`。
+- 推送 workflow 与 tag 前必须取得用户明确授权。
+
+**验收**
+
+```bash
+cd /Users/wangxingxing/AndroidStudioProjects/MyProjects/Clipbox
+scripts/check-release-version.sh
+# 用户授权推送 workflow 后：
+gh workflow run release.yml
+gh run list --workflow release.yml --limit 1
+# dry run 通过、用户授权打 tag 后：
+git tag -a v1.0.0 -m "Clipbox v1.0.0"
+git push origin v1.0.0
+```
+
+预期：版本检查通过；dry run 六个构建 job 全绿；tag run 的 Release 含四个产物与 `SHA256SUMS.txt`。
+
+**DoD**
+
+- [ ] 无 PR / 常驻 CI；无 Secrets；无第三方 action。
+- [ ] 四个产物命名、大小、SHA 与 Release 一致。
+- [ ] 版本检查覆盖 Android、Desktop、iOS、官网四处。
+- [ ] 一卡一提交：`T-REL-11: <一句话>`。
+
+**禁止**
+
+- 不要把服务器 SSH 凭据、`.env` 或部署脚本放进 CI。
+- 不要为让 CI 通过而关闭测试或放宽版本校验。
+- 不要使用 `--no-verify` 绕过提交检查。
+
+---
+
+## T-REL-12 发布产物台账与已知限制
+
+| 字段 | 值 |
+| --- | --- |
+| 里程碑 | M5/M6 |
+| 前置 | T-REL-08（tag CI 产物已生成） |
+| 需求 | 全部 AC、交付范围 |
+| 预估 | 0.5 天 |
+
+**目标**：把 tag CI 的四个正式产物、大小、SHA、CI run 与未安装验收限制写入台账，供官网与部署使用。
+
+**必读**：`docs/tasks/release-artifacts.md`、`docs/tasks/acceptance-matrix.md`、[ADR-0005](../adr/0005-v1-multiplatform-release.md)。
+
+**涉及路径**：`docs/tasks/release-artifacts.md`、`docs/tasks/acceptance-matrix.md`。
+
+**实现要点**
+
+- 记录四个产物的文件名、字节数、SHA-256、构建 job 与 CI run 链接。
+- Android 记录 `apksigner` 与 `debuggable=false` 证据；macOS / Windows / Linux 记录未签名事实。
+- Windows / Linux 明确写「未做安装与运行验收」，列为 v1.0.0 已知限制；不得写成已通过。
+- iOS 记录仅模拟器构建，无真机签名与 IPA。
+- 官网 `downloads.ts` 的数值以本台账为唯一来源。
+
+**验收**
+
+```bash
+cd /Users/wangxingxing/AndroidStudioProjects/MyProjects/Clipbox
+ls -l docs/tasks/release-artifacts.md docs/tasks/acceptance-matrix.md
+grep -nE "windows-x64|linux-x86_64|未做安装|SHA-256" docs/tasks/release-artifacts.md docs/tasks/acceptance-matrix.md
+```
+
+预期：四平台产物与限制均有记录；无「未验证」但被标为通过的条目。
+
+**DoD**
+
+- [ ] 台账数值来自 tag CI，不是本地临时构建。
+- [ ] Windows / Linux 限制明确、可复查。
+- [ ] 一卡一提交：`T-REL-12: <一句话>`。
+
+**禁止**
+
+- 不要把本地 debug APK / 旧 DMG 的哈希写进正式台账。
+- 不要把未安装验收描述成「已验证安装」。

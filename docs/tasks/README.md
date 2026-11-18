@@ -2,7 +2,7 @@
 
 本文档把 `docs/` 中已冻结的需求与架构转换为**可逐张派发的任务卡**。每张卡是一个 0.5–1 天的独立工作单元，有单一可验证产出；按 `docs/tasks/` 中的工作流文件顺序执行即可交付 v1.0.0。
 
-> 代码工程当前为空：`ClipboxClient/` 与 `ClipboxServer/` 仅有 `.gitkeep`。第一张卡从零初始化。
+> v1.0.0 功能已实现并通过 M4；当前处于 M5/M6 发布扩展阶段，补齐 Windows / Linux 桌面产物与官网下载矩阵。
 
 ## 1. 执行基线
 
@@ -12,8 +12,9 @@
 | 部署 | 学习版 HTTP + IP 直连，仅 server 容器发布 `8080`，无 Caddy / TLS（[ADR-0003](../adr/0003-http-ip-learning-deployment.md)） |
 | 包名 | 客户端 `com.wangxingxing.clipbox`；服务端 `com.wangxingxing.clipbox.server` |
 | 本地联调 | 服务端本机 `:8080`；Android 模拟器 / 真机用 `adb reverse tcp:8080 tcp:8080` 后访问 `http://localhost:8080` |
-| 交付物 | Android debug APK、macOS Desktop 包、iOS 模拟器构建；不含 Windows / Linux 包与 iOS 真机签名 |
-| 测试 | 每卡自带验收命令；服务端 Ktor `testApplication` 集成测试；客户端同步内核单元测试；UI 用 AVD `Medium_Phone_API_37` + Desktop 截图人工核对；不做全量 UI 自动化、不搭 CI |
+| 交付物 | Android release APK、macOS arm64 DMG、Windows x64 MSI、Linux x86_64 DEB、iOS 模拟器构建；桌面安装包均未签名，不含 iOS 真机签名 |
+| 测试 | 每卡自带验收命令；服务端 Ktor `testApplication` 集成测试；客户端同步内核单元测试；UI 用 AVD `Medium_Phone_API_37` + Desktop 截图人工核对；不做全量 UI 自动化；仅 tag / 手动触发的 release-only GitHub Actions，不做 PR / 常驻 CI |
+| 发布 | 四平台产物由 release CI 构建并上传 GitHub Release；`downloads/` 仍人工搬运到服务器（[ADR-0005](../adr/0005-v1-multiplatform-release.md)） |
 | iOS | 从 M1 起交错参与（不是真正并行）；Xcode 安装是 M0 的用户动作卡 |
 | 范围排除 | 后台推送 / 通知、移动端后台剪贴板、片段收藏夹、托盘 / 全局快捷键、端到端加密、HTTPS |
 
@@ -26,8 +27,8 @@
 | M2 | 同步韧性与分享 | 断网排队重放、游标补拉、WS 缺口补拉、全量重同步可用；分享链接可生成、可访问、一次性语义正确 |
 | M3 | 全功能 | 搜索 / 置顶 / 删除、5 个工具箱、设置、主题、多语言、诊断日志、Desktop 剪贴板完整；Android 与 Desktop 可日常自用 |
 | M4 | iOS 完成 | iOS 宿主、共享 UI、前后台同步、分享扩展、iPad 布局全部可用；模拟器构建通过 |
-| M5 | 发布与验收 | 远程服务器部署；APK / macOS 包产出；AC-01…AC-20 全部有证据；v1.0.0 打 tag |
-| M6 | 官网 | 三语单页官网上线；五端下载矩阵与 Range 可用；同容器托管；远程验收通过 |
+| M5 | 发布与验收 | 远程服务器部署；APK / DMG / MSI / DEB 产出；AC-01…AC-20 全部有证据；v1.0.0 打 tag |
+| M6 | 官网 | 三语单页官网上线；五端下载矩阵（Windows / Linux 可下载、iOS 说明）与 Range 可用；同容器托管；远程验收通过 |
 
 ## 3. 工作流与文件索引
 
@@ -36,9 +37,9 @@
 | [01-server.md](01-server.md) | Ktor 服务端：配对、同步、WS、分享、清理、测试 | T-S-01…T-S-11 |
 | [02-client-core.md](02-client-core.md) | KMP 共享层：模型、Room、Outbox、SyncEngine、WS、剪贴板、日志 | T-CORE-01…T-CORE-15 |
 | [03-client-ui.md](03-client-ui.md) | Compose UI 与平台入口：主题、历史、配对、设置、分享、工具箱、Android / Desktop | T-UI-01…T-UI-20 |
-| [04-ios.md](04-ios.md) | iOS 宿主、生命周期、分享扩展、iPad、模拟器验收 | T-IOS-01…T-IOS-09 |
-| [05-release.md](05-release.md) | 远程部署、打包、验收矩阵、安全复查、发版 | T-REL-01…T-REL-08 |
-| [06-web.md](06-web.md) | 官网：三语单页、下载矩阵、自建说明、Ktor 托管与远程部署 | T-WEB-01…T-WEB-09 |
+| [04-ios.md](04-ios.md) | iOS 宿主、生命周期、分享扩展、iPad、模拟器验收、真机发布前置 | T-IOS-01…T-IOS-10 |
+| [05-release.md](05-release.md) | 远程部署、打包、验收矩阵、安全复查、发版、多平台产物与 release CI | T-REL-01…T-REL-12 |
+| [06-web.md](06-web.md) | 官网：三语单页、下载矩阵、自建说明、Ktor 托管与远程部署 | T-WEB-01…T-WEB-10 |
 | [PROMPTS.md](PROMPTS.md) | 派单与返修提示词模板、停止条件、提交规范 | — |
 
 ## 4. 依赖关系
@@ -120,6 +121,7 @@ flowchart LR
     subgraph M4[M4 iOS 完成]
         IOS07 --> IOS09[T-IOS-09 模拟器验收]
         IOS08 --> IOS09
+        IOS09 --> IOS10[T-IOS-10 真机前置]
     end
 
     subgraph M5[M5 发布]
@@ -132,7 +134,11 @@ flowchart LR
         R04 --> R06[T-REL-06 AC 矩阵]
         R05 --> R06
         R06 --> R07[T-REL-07 安全复查]
-        R07 --> R08[T-REL-08 文档与 tag]
+        R07 --> R09[T-REL-09 范围与文档]
+        R09 --> R10[T-REL-10 桌面打包]
+        R10 --> R11[T-REL-11 Release CI]
+        R11 --> R08[T-REL-08 文档与 tag]
+        R08 --> R12[T-REL-12 产物台账]
     end
 
     subgraph M6[M6 官网]
@@ -144,11 +150,16 @@ flowchart LR
         W05 --> W06[T-WEB-06 自建说明]
         W06 --> W07[T-WEB-07 打磨]
         W07 --> W08[T-WEB-08 Ktor 托管]
-        W08 --> W09[T-WEB-09 远程部署]
+        W08 --> W09[T-WEB-09 远程部署（首轮完成）]
+        W08 --> W10[T-WEB-10 下载矩阵]
+        R12 --> W10
+        W10 -.->|四平台补验收| W09
     end
 ```
 
 图只画主要依赖；卡内「前置」字段是派单的唯一依据。同层无依赖的卡可以按第 5 节顺序依次执行。
+
+T-WEB-09 首轮远程部署已于 2026-11-18 完成，范围仅 APK / DMG；T-WEB-10 完成后需同步 MSI / DEB 并补做四平台下载验收（Range 与 SHA），M6 Gate 以补验收结果为准。
 
 ## 5. 推荐派单顺序
 
@@ -216,16 +227,23 @@ flowchart LR
 60. T-REL-05（M5）
 61. T-REL-06（M5）
 62. T-REL-07（M5）
-63. T-REL-08（M5）→ **v1.0.0 发布**
-64. T-WEB-01（M6）
-65. T-WEB-02（M6）
-66. T-WEB-03（M6）
-67. T-WEB-04（M6）
-68. T-WEB-05（M6）
-69. T-WEB-06（M6）
-70. T-WEB-07（M6）
-71. T-WEB-08（M6）
-72. T-WEB-09（M6）→ **M6 Gate：官网与下载远程可用**
+63. T-REL-09（M5，范围与文档）
+64. T-IOS-10（M5，真机发布前置清单）
+65. T-REL-10（M5，桌面三平台打包）
+66. T-REL-11（M5，Release CI）
+67. T-REL-08（M5）→ **v1.0.0 发布**
+68. T-REL-12（M5/M6，CI 产物台账）
+69. T-WEB-01（M6）
+70. T-WEB-02（M6）
+71. T-WEB-03（M6）
+72. T-WEB-04（M6）
+73. T-WEB-05（M6）
+74. T-WEB-06（M6）
+75. T-WEB-07（M6）
+76. T-WEB-08（M6）
+77. T-WEB-09（M6，首轮部署已完成 `d2ad070`，仅 APK / DMG）
+78. T-WEB-10（M6，下载矩阵）
+79. T-WEB-09 补验收（M6，同步 MSI / DEB 并验证四平台 Range / SHA）→ **M6 Gate：官网与下载远程可用**
 
 > 若某卡验收失败，不要跳到下一卡；按 `PROMPTS.md` 的「验收失败修复」模板重新派同一张卡，最多两轮，仍失败则停下汇报。
 
@@ -239,11 +257,16 @@ flowchart LR
 | Client Core | T-CORE-01…T-CORE-15 | 已完成 | 最后一张 `fe04070`（T-CORE-15）；M3 见 [m3-gate.md](m3-gate.md) |
 | Client UI | T-UI-01…T-UI-20 | 已完成 | 最后一张 T-UI-20（M3 Gate 提交）；M3 见 [m3-gate.md](m3-gate.md) |
 | iOS | T-IOS-01…T-IOS-09 | 已完成 | 最后一张 T-IOS-09（M4 Gate 提交）；M4 见 [m4-gate.md](m4-gate.md) |
-| Release | T-REL-01…T-REL-08 | 待开始 | — |
+| iOS | T-IOS-10 | 待开始 | — |
+| Release | T-REL-01…T-REL-07 | 已完成 | 最后一张 `1eee62b`（T-REL-07）；T-REL-01/03 为用户动作与远程部署 |
+| Release | T-REL-08 | 待开始 | — |
+| Release | T-REL-09 | 进行中 | — |
+| Release | T-REL-10…T-REL-12 | 待开始 | — |
 | Web | T-WEB-01…T-WEB-08 | 已完成 | 最后一张 `57ab06c`（T-WEB-08） |
-| Web | T-WEB-09 | 已完成 | 最后一张 T-WEB-09（M6 Gate 提交）；M6 证据见 [web-artifacts.md](web-artifacts.md) §7 |
+| Web | T-WEB-09 | 进行中 | 首轮 `d2ad070`（仅 APK / DMG）；MSI / DEB 补验收待 T-WEB-10 后执行，证据见 [web-artifacts.md](web-artifacts.md) §7 |
+| Web | T-WEB-10 | 待开始 | — |
 
-> M2 已于 2026-11-17 通过（证据见 [m2-gate.md](m2-gate.md)）；M3 于同日有条件通过，AC-11 全量分页冲突（D8）已于 2026-11-18 由 [BUG-001](bug-001-ac11-full-sync-floor.md) 修复关闭（证据见 [m3-gate.md](m3-gate.md)）；M4 于同日通过（证据见 [m4-gate.md](m4-gate.md)）；下一张为 T-REL-01。
+> M2 已于 2026-11-17 通过（证据见 [m2-gate.md](m2-gate.md)）；M3 于同日有条件通过，AC-11 全量分页冲突（D8）已于 2026-11-18 由 [BUG-001](bug-001-ac11-full-sync-floor.md) 修复关闭（证据见 [m3-gate.md](m3-gate.md)）；M4 于同日通过（证据见 [m4-gate.md](m4-gate.md)）；下一张为 T-REL-09。T-WEB-09 尚余四平台补验收，M6 未关闭。
 
 ## 7. 统一 DoD
 
@@ -269,7 +292,7 @@ flowchart LR
 | 工具箱 | TOOL-001…009 | T-UI-11…16 |
 | 设置 | SET-001…011 | T-UI-08/09/10、T-CORE-03/12/13 |
 | 平台 | PLAT-001…009 | 全部 UI / iOS / Release 卡 |
-| 官网 | WEB-001…0NN | T-WEB-02…09 |
+| 官网 | WEB-CONTENT / I18N / DL / SELF / HOST / NFR | T-WEB-02…10 |
 | 非功能 | NFR-001…017 | T-S-07/11、T-REL-07、各卡验收 |
 
 最终 AC-01…AC-20 的逐条证据在 T-REL-06 汇总。
@@ -283,6 +306,7 @@ flowchart LR
 - 官网需求与验收：`docs/web-功能需求.md`
 - 官网实现细节：`docs/web-架构.md`
 - 官网托管决策：`docs/adr/0004-web-static-hosting.md`
+- 多平台发布与 release-only CI 决策：`docs/adr/0005-v1-multiplatform-release.md`
 - 领域术语：`docs/GLOSSARY.md`
 - 视觉与交互基准：`design/Clipbox 三端设计.html`、`design/README.md`、`design/brand-spec.md`
 - 执行协议与不变量：仓库根目录 `AGENTS.md`

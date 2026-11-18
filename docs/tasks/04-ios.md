@@ -1,8 +1,8 @@
 # iOS 任务卡（T-IOS）
 
 工程：`ClipboxClient/iosApp/`（SwiftUI 宿主 + Share Extension）与 `composeApp` 的 iOS targets。
-Bundle ID：`com.wangxingxing.clipbox`；最低 iOS 16.0；只交付模拟器构建与验收。
-当前环境**未安装 Xcode**，T-IOS-01 是用户动作卡：Agent 给出命令与验证标准，用户执行，Agent 复核。
+Bundle ID：`com.wangxingxing.clipbox`；最低 iOS 16.0；v1.0.0 只交付模拟器构建与验收，真机发布前置见 T-IOS-10。
+当前环境已安装 Xcode 27.2；真机签名、TestFlight 与 App Store 上架不在 v1.0.0 范围。
 
 ---
 
@@ -427,3 +427,50 @@ xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp \
 
 - 不要把模拟器限制当成功能缺失而不记录。
 - 不要为通过验收修改服务端契约。
+
+---
+
+## T-IOS-10 iOS 真机发布前置清单（延后）
+
+| 字段 | 值 |
+| --- | --- |
+| 里程碑 | M5（文档） |
+| 前置 | T-IOS-09 |
+| 需求 | REQ-PLAT-008 |
+| 预估 | 0.5 天 |
+| 执行者 | Agent 编写清单；真机发布由用户后续决策 |
+
+**目标**：在不申请账号、不改工程的前提下，把 iOS 真机 / TestFlight / App Store 所需条件、缺口与验证步骤写成可执行清单。
+
+**必读**：`docs/tasks/04-ios.md` T-IOS-01…T-IOS-09、`docs/功能需求文档.md` REQ-PLAT-008、[ADR-0005](../adr/0005-v1-multiplatform-release.md)。
+
+**涉及路径**：`docs/tasks/ios-release-prerequisites.md`（新增）、`docs/tasks/04-ios.md`。
+
+**实现要点**
+
+- 覆盖 Apple Developer Program、Team ID、App ID、App Group、证书与描述文件。
+- 覆盖 AppIcon、PrivacyInfo.xcprivacy、隐私政策、ATS 例外说明、出口合规。
+- 覆盖 App Store Connect、TestFlight、版本与构建号、商店素材与三语元数据。
+- 明确当前缺口：无开发者账号、无 AppIcon、无 PrivacyInfo、无 `DEVELOPMENT_TEAM`、未做真机归档。
+- 只写前置与验证步骤，不申请证书、不新增 iOS 资产、不改 Xcode 工程。
+
+**验收**
+
+```bash
+cd /Users/wangxingxing/AndroidStudioProjects/MyProjects/Clipbox
+ls docs/tasks/ios-release-prerequisites.md
+grep -nE "Apple Developer|App Store Connect|PrivacyInfo|AppIcon|TestFlight|ATS" docs/tasks/ios-release-prerequisites.md
+```
+
+预期：清单覆盖账号、签名、隐私、资产、测试与上架六类前置；当前缺口逐条可核对。
+
+**DoD**
+
+- [ ] 不改 `iosApp/` 与 `composeApp/iosMain/` 任何文件。
+- [ ] 清单区分「v1.0.0 已有」与「真机发布待补」。
+- [ ] 一卡一提交：`T-IOS-10: <一句话>`。
+
+**禁止**
+
+- 不要申请开发者账号、证书或描述文件。
+- 不要为过审而移除 ATS 例外或修改学习版网络基线；HTTPS 方案只在清单中列为后续项。

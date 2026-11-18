@@ -1,7 +1,7 @@
 # 安全与隐私复查（T-REL-07）
 
 > 学习版基线：HTTP + IP 直连（[ADR-0003](../adr/0003-http-ip-learning-deployment.md)）。本文件只记录证据与结论，不修改任何已冻结的需求、接口与架构文档。
-> 复查日期：2026-11-18。
+> 复查日期：2026-11-18；同日复核发布范围扩展（公开仓库 + 官网公开分发）。
 
 ## 1. 复查基线
 
@@ -125,7 +125,7 @@
 | 本地 `ClipboxServer/data/clipbox.db`、`dist/*.dmg`、`dist/*.apk` 均被忽略 | `git check-ignore -v` → `.gitignore:29`、`.gitignore:32` |
 | Docker 构建上下文排除 `.env`、`data/`、数据库与构建缓存 | `ClipboxServer/.dockerignore` |
 | 镜像不以 root 运行、根文件系统只读、`/tmp` tmpfs、内存上限 512m | `ClipboxServer/Dockerfile:15-28`；`docker-compose.yml:18-27` |
-| **F4（用户决策）**：`ClipboxClient/signing/clipbox-release.jks` 与 `keystore.properties`（含明文口令）仍被 git 跟踪 | `git ls-files ClipboxClient/signing`；提交 `64a3bea`；见 §5、§6 |
+| **F4（用户决策）**：`ClipboxClient/signing/clipbox-release.jks` 与 `keystore.properties`（含明文口令）仍被 git 跟踪 | `git ls-files ClipboxClient/signing`；提交 `64a3bea`；仓库为 public（`xingfengwxx/Clipbox`），APK 将通过官网公开分发；用户 2026-11-18 复核后维持现状；见 §5、§6 |
 | 观察项：设计稿演示数据含一条 SSH 命令（私网地址、root、非标端口、密钥文件名） | `design/Clipbox 三端设计.html:1208`；不可路由私网地址，建议后续泛化为占位符（不在本卡范围） |
 
 ### 3.8 依赖
@@ -166,7 +166,7 @@
 | 1 | 设备令牌与剪贴正文在公网以明文 HTTP / WS 传输，链路中间人可读取与篡改 | ADR-0003；REQ-NFR-001 学习版基线 | 仅个人学习与可信网络使用，不对外分发为安全产品；应用层安全全部保留；未来加 TLS 终止并改 `PUBLIC_BASE_URL` 即可，无需改协议 |
 | 2 | 客户端数据（令牌、记录、分享草稿）以明文存储于沙箱，无 Keystore / Keychain 封装、无端到端加密 | `docs/客户端技术架构.md` 已登记；REQ-NFR-002 | 依赖系统应用沙箱隔离；「关于」页与 `docs/README.md` 明确披露；v1.0.0 不引入加密封装 |
 | 3 | 启动日志打印一次自动生成的配对码，可读容器日志者可换取设备令牌 | REQ-NFR-003 明确允许（自助配对） | 每次启动仅一条、10 分钟有效、一次性消费；容器日志轮转与访问权限由服务器侧控制（T-REL-03） |
-| 4 | `ClipboxClient/signing/clipbox-release.jks` 与明文口令 `keystore.properties` 已进入 Git 历史（提交 `64a3bea`），仍被跟踪 | **用户 2026-11-18 决策：仅记录，不改仓库** | 学习版签名仅用于 debug / release 覆盖安装，不用于公开分发；建议后续（T-REL-08 前确认）：轮换密钥库口令或重建密钥库、`git rm --cached` 并忽略 `signing/`、必要时清理历史并重克隆 |
+| 4 | `ClipboxClient/signing/clipbox-release.jks` 与明文口令 `keystore.properties` 已进入 Git 历史（提交 `64a3bea`），仍被跟踪 | **用户 2026-11-18 决策：仅记录，不改仓库** | 学习版签名用于本版 APK 覆盖安装与官网公开分发；密钥已随公开仓库暴露，任何人均可签同名 APK，SHA-256 只能校验完整性，不能证明发布者；不得用于应用商店。建议后续：轮换密钥库口令或重建密钥库、`git rm --cached` 并忽略 `signing/`、必要时清理历史并重克隆；轮换后老用户可能需卸载重装 |
 | 5 | WebSocket 未认证的升级请求不计入设备尝试闸门与连接上限，可能被用于连接耗尽 | api.md §8 只要求「10 次/分钟/设备」；单实例学习版 | 5 秒认证超时回收、单设备仅一个活跃连接、全局连接上限 100；HTTPS / 反代层限流不在学习版范围 |
 | 6 | 容器 `/tmp` 使用 `tmpfs: /tmp:exec`，放松了默认 noexec | sqlite-jdbc 需解压原生库并 `System.load`（`docker-compose.yml:23-26` 注释） | 根文件系统只读、非 root、`/tmp` 不持久化、无外部写入面 |
 | 7 | 诊断日志中令牌一律脱敏，与 REQ-SET-011「诊断开启可见令牌」原文存在偏差 | M3 Gate D4（用户批准） | 比需求更严格；仍保留请求 / 响应体输出用于排障；日志不落盘、不上传 |
@@ -228,4 +228,4 @@ BUILD SUCCESSFUL in 10s
 
 - 必须修复项 F1、F2、F3 已全部闭环；F4 按用户 2026-11-18 决策记录为接受风险，未修改仓库与 git 历史。
 - 无未处置的高危项；所有「接受风险」均与 ADR-0003 学习版边界或已批准的 M3 Gate 偏差一致。
-- 可以进入 T-REL-08；发版前需用户再次确认 F4（签名材料历史暴露）的处置方式。
+- 可以进入 T-REL-08；F4 已由用户于 2026-11-18 复核并维持现状，风险随官网公开分发扩大，已在 [ADR-0005](../adr/0005-v1-multiplatform-release.md) 登记。

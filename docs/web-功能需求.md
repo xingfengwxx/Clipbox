@@ -27,13 +27,13 @@
 
 - 单页静态站：Hero、核心能力、工作方式、安全与隐私、下载、自建服务端、FAQ、页脚。
 - 简中（默认）/ 繁中 / English 三语。
-- 下载矩阵：Android（release 签名 APK）、macOS（DMG）、iOS / Windows / Linux 可用性说明。
+- 下载矩阵：Android（release 签名 APK）、macOS（arm64 DMG）、Windows（x64 MSI）、Linux（x86_64 DEB）、iOS（模拟器构建说明）；桌面安装包均未签名。
 - 自建服务端说明与参考文件（compose 片段、`.env` 示例）。
 - Ktor 静态托管、缓存策略、CSP、Docker 构建链与远程部署。
 
 ### 1.3 非目标
 
-不做账号、评论、博客、文档站、支付、PWA、SSR、搜索引擎优化专项、第三方统计、Cookie、A/B 测试、CI 与全量 UI 自动化。
+不做账号、评论、博客、文档站、支付、PWA、SSR、搜索引擎优化专项、第三方统计、Cookie、A/B 测试、站内 CI 与全量 UI 自动化；发布流水线独立于站内验收（[ADR-0005](./adr/0005-v1-multiplatform-release.md)）。
 
 ---
 
@@ -44,7 +44,8 @@
 | 新访客 | 从分享页或朋友处听说 | 这是什么？安全吗？怎么用？ |
 | Android 用户 | 想安装 | 下载哪个包？多大？如何校验？ |
 | macOS 用户 | 想安装桌面端 | 是否支持 Apple Silicon？为什么打不开？ |
-| iOS / Windows / Linux 用户 | 找安装包 | 现在有没有包？为什么没有？ |
+| iOS 用户 | 找安装包 | 现在有没有包？为什么没有？ |
+| Windows / Linux 用户 | 想安装 | 下载哪个包？未签名怎么安装？ |
 | 自建者 | 想部署服务端 | 需要什么环境？怎么启动？为什么是 HTTP？ |
 
 ---
@@ -74,7 +75,7 @@
 1. 对外品牌只用「字匣」（简繁同字）与「Theca」；`Clipbox` 不出现在任何可见文案、title、meta 中。
 2. 一句话：离线优先的跨设备文本中转与本地工具箱；Android、iPhone / iPad 与电脑之间传文本，不必发消息给自己，也不必登录网页。
 3. 产品事实必须与 `docs/功能需求文档.md` 一致：64 KiB 上限、最近的 200 条 + 全部置顶、分享 1h/24h/7d/阅后即焚、5 个本地工具、无账号、无端到端加密。
-4. 诚实披露：v1.0.0 学习版为 HTTP 明文；macOS DMG 未签名；iOS 只有模拟器构建；Windows / Linux 未产出安装包。
+4. 诚实披露：v1.0.0 学习版为 HTTP 明文；macOS DMG、Windows MSI 与 Linux DEB 均未签名；iOS 只有模拟器构建。
 5. 页面不得硬编码服务器 IP；自建说明统一使用 `<SERVER_IP>` 占位。
 6. 截图只能来自 `design/shots/` 与 `design/brand/shots/` 的真实设计产物，不使用生成图、stock 图或人物插画。
 7. 文案语气：陈述事实、短句、主动语态；不使用「最强」「永久免费」等无法验证的营销词。
@@ -137,7 +138,7 @@ Given 390px 宽度，When 分别使用简中、繁中、英文，Then 无截断�
 
 #### WEB-DL-001 五端矩阵
 
-Given 访客进入下载区，When 查看列表，Then 看到 Android、iOS、macOS、Windows、Linux 五个平台条目，每条含状态（可下载 / 暂未提供）与一句说明。
+Given 访客进入下载区，When 查看列表，Then 看到 Android、iOS、macOS、Windows、Linux 五个平台条目，每条含状态（可下载 / 暂未提供）与一句说明；Windows / Linux 可下载，iOS 说明仅模拟器构建。
 
 #### WEB-DL-002 Android 安装包
 
@@ -147,9 +148,9 @@ Given 平台为 Android，When 点击下载，Then 得到 `/downloads/Theca-1.0.
 
 Given 平台为 macOS，When 点击下载，Then 得到 `/downloads/Theca-1.0.0-macos-arm64.dmg`，页面注明 macOS 12+、Apple Silicon、未签名及「右键 → 打开」提示。
 
-#### WEB-DL-004 不可用平台
+#### WEB-DL-004 iOS 不可用说明
 
-Given 平台为 iOS、Windows 或 Linux，When 查看条目，Then 显示「暂未提供」与具体原因（iOS 仅模拟器构建；Windows / Linux 未产出安装包），且不存在指向不存在文件的下载按钮。
+Given 平台为 iOS，When 查看条目，Then 显示「暂未提供」与原因「仅模拟器构建」，且不存在下载按钮。
 
 #### WEB-DL-005 校验文件
 
@@ -162,6 +163,14 @@ Given 支持 Range 的客户端，When 请求 `Range: bytes=0-1023`，Then 返�
 #### WEB-DL-007 下载区警示
 
 Given 访客准备安装，When 阅读下载区，Then 能看到学习版定位与 HTTP 明文警示。
+
+#### WEB-DL-008 Windows 未签名提示
+
+Given 平台为 Windows，When 查看条目或首次运行 MSI，Then 能看到「未签名，SmartScreen 可能提示未知发布者；选择更多信息 → 仍要运行」的说明，并展示 SHA-256。
+
+#### WEB-DL-009 Linux 安装包与校验
+
+Given 平台为 Linux，When 点击下载，Then 得到 `/downloads/Theca-1.0.0-linux-x86_64.deb`；页面注明 x86_64、`dpkg -i` 安装、未签名且不提供 apt 仓库，并展示 SHA-256。
 
 ### 5.4 自建服务端
 
@@ -223,7 +232,7 @@ Given 干净环境，When 执行 `npm ci && npm run build`，Then 产出 `dist/`
 
 #### WEB-NFR-005 验收方式
 
-Given 任务完成，When 验收，Then 使用任务卡列出的构建命令、Ktor 测试与人工截图，不引入 CI 或全量 UI 自动化。
+Given 任务完成，When 验收，Then 使用任务卡列出的构建命令、Ktor 测试与人工截图；站内验收不依赖 CI 或全量 UI 自动化，release-only 发布流水线不参与站内验收。
 
 ---
 
@@ -233,10 +242,11 @@ Given 任务完成，When 验收，Then 使用任务卡列出的构建命令、K
 | --- | --- | --- |
 | 构建与类型 | `cd ClipboxWeb && npm ci && npm run build` | NFR-004 |
 | 视觉三语 | 1440/768/390 × 明暗 × 三语截图 | CONTENT-001/002/003、I18N-001…005、NFR-002/003 |
-| 下载矩阵 | 浏览器点击 + `sha256sum` + `SHA256SUMS.txt` | DL-001…007 |
-| Range | `curl -H 'Range: bytes=0-1023'` 期望 206 | DL-006 |
+| 下载矩阵 | 浏览器点击 + `sha256sum` + `SHA256SUMS.txt`（四平台） | DL-001…009 |
+| Range | `curl -H 'Range: bytes=0-1023'` 期望 206（四个下载） | DL-006 |
+| Windows / Linux 安装包 | 页面状态 + HEAD + `dpkg-deb --info` | DL-001/008/009 |
 | 服务端回归 | `./gradlew test`；本地 `run` 后 curl 四类路径 | HOST-001…006 |
-| 远程 | `/`、`/healthz`、`/s/<token>`、`/downloads/*`、日志 grep | HOST-001…006、DL-002/003/006 |
+| 远程 | `/`、`/healthz`、`/s/<token>`、`/downloads/*`（四个产物）、日志 grep | HOST-001…006、DL-002/003/006/008/009 |
 | 自建说明 | 文案与片段目检、`.env` 示例下载 | SELF-001…003 |
 | 安全头 | `curl -I` 对比三类路径 | HOST-003/004 |
 
@@ -245,10 +255,10 @@ Given 任务完成，When 验收，Then 使用任务卡列出的构建命令、K
 ## 7. 排除项
 
 - 账号、评论、订阅、支付、博客、文档站、搜索、PWA、SSR、A/B 测试。
-- iOS 真机包、Windows / Linux 包、服务端二进制分发。
+- iOS 真机包、服务端二进制分发。
 - TLS、域名、Caddy、HSTS。
 - 第三方统计、崩溃上报、Cookie、外部字体与 CDN。
-- 自动部署流水线、CI、全量 UI 自动化。
+- 站内 CI、PR 流水线、全量 UI 自动化；release-only 发布流水线不属于站内验收。
 
 ---
 
@@ -257,3 +267,4 @@ Given 任务完成，When 验收，Then 使用任务卡列出的构建命令、K
 | 日期 | 变更 |
 | --- | --- |
 | 2026-11-18 | 首版：三语单页、五端下载矩阵、自建服务端说明、Ktor 同容器托管与 Range 支持 |
+| 2026-11-18 | 开放 Windows x64 MSI 与 Linux x86_64 DEB 下载；iOS 仅模拟器构建；新增未签名提示；站内验收与 release-only CI 解耦（ADR-0005） |

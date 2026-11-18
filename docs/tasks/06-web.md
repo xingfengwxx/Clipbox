@@ -1,6 +1,6 @@
 # 官网任务卡（T-WEB）
 
-M6 目标：交付字匣 Theca 官网 v1.0.0 —— 三语单页站、五端下载矩阵、自建服务端说明，由现有 Ktor 服务端同容器托管，并完成远程部署与验收。
+M6 目标：交付字匣 Theca 官网 v1.0.0 —— 三语单页站、五端下载矩阵（Windows / Linux 可下载、iOS 说明）、自建服务端说明，由现有 Ktor 服务端同容器托管，并完成远程部署与验收。
 
 前置：M5 已产出 `dist/composeApp-debug.apk`、`dist/Theca-1.0.0.dmg`；release 签名已配置（commit `64a3bea`）。学习版仍为 HTTP + IP 直连（[ADR-0003](../adr/0003-http-ip-learning-deployment.md)），官网托管决策见 [ADR-0004](../adr/0004-web-static-hosting.md)。
 
@@ -217,7 +217,7 @@ cd ClipboxWeb && npm run build && npm run preview
 - 构建：`./gradlew :composeApp:assembleRelease`；用 SDK 37 `apksigner verify --print-certs` 验证签名，记录 debuggable=false。
 - 产物复制并重命名：`Theca-1.0.0-android.apk`、`Theca-1.0.0-macos-arm64.dmg`；生成 `SHA256SUMS.txt`。
 - 页面展示版本、大小、SHA-256（等宽、可换行）、平台要求与不可用原因；链接指向 `/downloads/<file>`。
-- 不提供 iOS / Windows / Linux 的无效按钮。
+- 本卡只开放 Android 与 macOS；iOS 不提供下载按钮，Windows / Linux 由 T-WEB-10 开放。
 - 新建 `docs/tasks/web-artifacts.md` 记录命令、大小、SHA、签名输出与截图路径。
 
 **验收**
@@ -405,15 +405,17 @@ curl -sS localhost:8080/healthz
 | 字段 | 值 |
 | --- | --- |
 | 里程碑 | M6 |
-| 前置 | T-WEB-08 |
-| 需求 | WEB-HOST-001…006、WEB-DL-002/003/006、WEB-NFR-005 |
-| 预估 | 0.5 天 |
+| 前置 | T-WEB-08（首轮）；T-WEB-10（四平台补验收） |
+| 需求 | WEB-HOST-001…006、WEB-DL-002/003/006/008/009、WEB-NFR-005 |
+| 预估 | 0.5 天 + 补验收 0.25 天 |
 
 **目标**：用 rsync 把代码与下载包同步到 `/root/clipbox`，远端重建容器并完成线上验收。
 
+**执行记录**：2026-11-18 首轮部署完成（`d2ad070`），范围仅 APK / DMG。按本卡更新后的四平台验收，MSI / DEB 需在 T-WEB-10 产出后补同步与验证，故状态保持「进行中」。
+
 **必读**：`docs/web-架构.md` §10、`docs/tasks/05-release.md` T-REL-03/04、`scripts/backup.sh`。
 
-**涉及路径**：`scripts/deploy-web.sh`（新增）、`docs/tasks/web-artifacts.md`（追加部署记录）、`docs/tasks/README.md`（状态更新）。
+**涉及路径**：`scripts/deploy-web.sh`（新增）、`docs/tasks/web-artifacts.md`（追加部署记录）、`docs/tasks/README.md`（状态更新）、服务器 `downloads/`（运行期，不入库）。
 
 **实现要点**
 
@@ -431,10 +433,17 @@ curl -sS http://<SERVER_IP>:8080/ | head
 curl -sS http://<SERVER_IP>:8080/healthz
 curl -sS -D- -o /dev/null -H 'Range: bytes=0-1023' \
   http://<SERVER_IP>:8080/downloads/Theca-1.0.0-android.apk | head -20
+curl -sS -D- -o /dev/null -H 'Range: bytes=0-1023' \
+  http://<SERVER_IP>:8080/downloads/Theca-1.0.0-macos-arm64.dmg | head -20
+curl -sS -D- -o /dev/null -H 'Range: bytes=0-1023' \
+  http://<SERVER_IP>:8080/downloads/Theca-1.0.0-windows-x64.msi | head -20
+curl -sS -D- -o /dev/null -H 'Range: bytes=0-1023' \
+  http://<SERVER_IP>:8080/downloads/Theca-1.0.0-linux-x86_64.deb | head -20
+curl -sS http://<SERVER_IP>:8080/downloads/SHA256SUMS.txt
 ssh root@<SERVER_IP> 'cd /root/clipbox && docker compose logs --tail=100 | grep -Ei "token|content|code" || true'
 ```
 
-预期：官网可访问；206 生效；下载 SHA 与页面一致；分享页与 API 正常；日志无敏感信息。
+预期：官网可访问；四个下载均返回 206；下载 SHA 与页面一致；分享页与 API 正常；日志无敏感信息。
 
 **DoD**
 
@@ -448,3 +457,56 @@ ssh root@<SERVER_IP> 'cd /root/clipbox && docker compose logs --tail=100 | grep 
 - 不 push 仓库、不打 tag、不改远程防火墙。
 - 不跳过备份直接重建容器。
 - 不把 `.env`、令牌或日志原文写入仓库。
+
+---
+
+## T-WEB-10 Windows / Linux 下载开放与未签名提示
+
+| 字段 | 值 |
+| --- | --- |
+| 里程碑 | M6 |
+| 前置 | T-REL-12 |
+| 需求 | WEB-DL-001/003/004/005/007/008/009、WEB-I18N-001/004/005 |
+| 预估 | 1 天 |
+
+**目标**：把 Windows x64 MSI 与 Linux x86_64 DEB 接入官网下载矩阵，填正式 CI 实测值，并用三语披露未签名风险；iOS 继续显示「暂未提供」。
+
+**必读**：`docs/web-功能需求.md` §5.3、[ADR-0005](../adr/0005-v1-multiplatform-release.md)、`docs/tasks/release-artifacts.md`、`docs/tasks/web-artifacts.md`。
+
+**涉及路径**：`ClipboxWeb/src/data/downloads.ts`、`ClipboxWeb/src/components/DownloadSection.vue`、`ClipboxWeb/src/i18n/locales/zh-CN.ts`、`zh-TW.ts`、`en.ts`、`docs/tasks/web-artifacts.md`。
+
+**实现要点**
+
+- `downloads.ts` 使用 tag CI 产物：`Theca-1.0.0-windows-x64.msi`、`Theca-1.0.0-linux-x86_64.deb`；大小与 SHA-256 来自 T-REL-12 台账，不填占位。
+- Windows / Linux `available: true`；iOS 保持 `false`，说明「仅模拟器构建」。
+- 按钮文案扩为 APK / DMG / MSI / DEB；Windows 说明 SmartScreen「更多信息 → 仍要运行」；Linux 说明 x86_64、`dpkg -i` 与无 apt 仓库。
+- macOS 继续保留未签名与「右键 → 打开」；下载区与页脚保留 HTTP 明文警示。
+- FAQ q5/a5 改为「Windows / Linux 已提供；iOS 仅模拟器构建」；三份 locale 键集合保持一致。
+- 390px 下英文与繁中按钮、SHA 文本不截断、不横向溢出。
+
+**验收**
+
+```bash
+cd ClipboxWeb
+npm run build
+grep -nE "windows-x64|linux-x86_64" src/data/downloads.ts
+grep -rnE "SmartScreen|dpkg|msiButton|debButton" src/i18n/locales
+npm run preview
+# 390px × 三语截图；四平台状态与下载链接可点击
+```
+
+预期：构建通过；Windows / Linux 显示可下载且数值与台账一致；iOS 只有说明；三语无溢出。
+
+**DoD**
+
+- [ ] 页面、`SHA256SUMS.txt` 与实际文件三者 SHA 一致。
+- [ ] 未签名的 Windows / macOS 与无签名的 Linux 均有明确提示。
+- [ ] 无硬编码服务器 IP、无外部链接、无新增依赖。
+- [ ] 完成后触发 T-WEB-09 补验收：同步 MSI / DEB 并验证四平台下载。
+- [ ] 一卡一提交：`T-WEB-10: <一句话>`。
+
+**禁止**
+
+- 不要为 Windows / Linux 生成无效按钮或占位哈希。
+- 不要把未签名安装包描述为「已验证安全」。
+- 不要改动 T-WEB-05 已记录的 Android / macOS 首轮产物口径；以 tag CI 产物为准更新。
