@@ -97,6 +97,7 @@ export default {
   'selfhost.model':
     '字匣没有公共服务器。用 Docker 在一台自己的机器上起一个容器，所有设备连到它；记录、令牌与分享都留在你那台机器上。',
   'selfhost.noBinary': '不提供独立服务端二进制，请用仓库代码构建镜像。',
+  'selfhost.commandsTitle': '四步部署命令',
   'selfhost.req.title': '环境要求',
   'selfhost.req.docker': '已安装 Docker 与 Docker Compose 的 Linux 或 macOS 主机。',
   'selfhost.req.resources': '2 核 CPU、2 GB 内存起步；SQLite 数据落在 ./data 目录。',

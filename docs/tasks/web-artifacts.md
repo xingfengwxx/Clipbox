@@ -40,7 +40,16 @@ V2 Signer: certificate MD5 digest: dd18a7d5e68c83203556a850af56de81
 - 下载链接使用 `/downloads/<file>` 相对根路径，由 Ktor 静态托管（T-WEB-08）提供，Range 支持在 T-WEB-08 验收。
 - iOS / Windows / Linux 只渲染说明，不渲染下载按钮。
 
-## 5. 已知限制
+## 5. 自建示例文件（T-WEB-06）
+
+| 文件（`downloads/`） | 来源 | 说明 |
+| --- | --- | --- |
+| `theca-docker-compose.example.yml` | 与仓库 `docker-compose.yml` 目标形态一致（T-WEB-08 落地） | 含 `read_only`、`tmpfs` 的 `/tmp:exec`、日志轮转与 `./downloads` 只读挂载；Ruby YAML 解析通过 |
+| `theca.env.example` | 与仓库 `.env.example` 同内容 | 只有占位令牌与 `<SERVER_IP>`，无真实值 |
+
+`downloads/` 不入库，示例文件随部署由 rsync 上传；站点中的 compose 片段与这两份示例保持同一内容。
+
+## 6. 已知限制
 
 1. **APK 为学习版 release 包**：`isMinifyEnabled=false`，未开启代码压缩；签名密钥在仓库内公开，仅用于学习分发。
 2. **DMG 未签名**：macOS 12+ / Apple Silicon，首次打开需右键 → 打开；无公证。

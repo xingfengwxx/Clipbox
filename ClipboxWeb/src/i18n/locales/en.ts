@@ -97,6 +97,7 @@ export default {
   'selfhost.model':
     'Theca has no public server. Run one container on a machine you own and connect every device to it; records, tokens and shares stay on that machine.',
   'selfhost.noBinary': 'There is no standalone server binary; build the image from the repository.',
+  'selfhost.commandsTitle': 'Four deployment commands',
   'selfhost.req.title': 'Requirements',
   'selfhost.req.docker': 'A Linux or macOS host with Docker and Docker Compose installed.',
   'selfhost.req.resources': 'Two CPU cores and 2 GB of RAM to start; the SQLite database lives in ./data.',

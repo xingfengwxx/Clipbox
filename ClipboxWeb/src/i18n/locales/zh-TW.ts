@@ -97,6 +97,7 @@ export default {
   'selfhost.model':
     '字匣沒有公共伺服器。用 Docker 在自己的機器上啟動一個容器，所有裝置連到它；紀錄、權杖與分享都留在你那台機器上。',
   'selfhost.noBinary': '不提供獨立服務端執行檔，請用倉庫程式碼建置映像。',
+  'selfhost.commandsTitle': '四步部署指令',
   'selfhost.req.title': '環境需求',
   'selfhost.req.docker': '已安裝 Docker 與 Docker Compose 的 Linux 或 macOS 主機。',
   'selfhost.req.resources': '2 核 CPU、2 GB 記憶體起跳；SQLite 資料落在 ./data 目錄。',

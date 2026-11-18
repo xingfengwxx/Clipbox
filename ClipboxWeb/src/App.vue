@@ -7,6 +7,7 @@ import FeatureGrid from './components/FeatureGrid.vue'
 import HowItWorks from './components/HowItWorks.vue'
 import PrivacySection from './components/PrivacySection.vue'
 import DownloadSection from './components/DownloadSection.vue'
+import SelfHostSection from './components/SelfHostSection.vue'
 import FaqSection from './components/FaqSection.vue'
 import SiteFooter from './components/SiteFooter.vue'
 
@@ -32,6 +33,7 @@ watchEffect(() => {
     <HowItWorks />
     <PrivacySection />
     <DownloadSection />
+    <SelfHostSection />
     <FaqSection />
   </main>
 
