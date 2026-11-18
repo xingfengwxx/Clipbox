@@ -54,7 +54,6 @@ class ShareCreateTest {
     @TempDir
     lateinit var tempDir: Path
 
-    private val adminToken = "a".repeat(32)
     private val deviceId = "01J8Y6Z3K4M5N6P7Q8R9S0T1V2"
     private val deviceToken = "d".repeat(43)
 
@@ -269,7 +268,6 @@ class ShareCreateTest {
     private fun testConfig() = AppConfig(
         port = 8080,
         dataDir = tempDir,
-        adminToken = adminToken,
         publicBaseUrl = BASE_URL,
     )
 

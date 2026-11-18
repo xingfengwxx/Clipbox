@@ -50,6 +50,8 @@ object DeviceRepository {
             it[lastSeenAt] = at
         }
 
+    fun count(): Long = DevicesTable.selectAll().count()
+
     private fun ResultRow.toDeviceRow() = DeviceRow(
         id = this[DevicesTable.id],
         name = this[DevicesTable.name],

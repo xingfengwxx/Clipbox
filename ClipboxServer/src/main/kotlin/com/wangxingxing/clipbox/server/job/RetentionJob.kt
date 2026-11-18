@@ -12,8 +12,8 @@ package com.wangxingxing.clipbox.server.job
 import com.wangxingxing.clipbox.server.db.ClipRepository
 import com.wangxingxing.clipbox.server.db.ClipsTable
 import com.wangxingxing.clipbox.server.db.DatabaseFactory
+import com.wangxingxing.clipbox.server.db.DevicePairingCodesTable
 import com.wangxingxing.clipbox.server.db.MetaRepository
-import com.wangxingxing.clipbox.server.db.PairingCodesTable
 import com.wangxingxing.clipbox.server.db.SeqAllocator
 import com.wangxingxing.clipbox.server.db.SharesTable
 import com.wangxingxing.clipbox.server.service.Broadcaster
@@ -181,19 +181,19 @@ class RetentionJob(
         return total
     }
 
-    /** 配对码无论是否使用，过期 24 小时后删除；使用记录保留到该时刻以便排查。 */
+    /** 设备配对码无论是否使用，过期 24 小时后删除；使用记录保留到该时刻以便排查。 */
     private suspend fun deleteExpiredPairingCodes(now: Long): Int {
         val cutoff = now - EXPIRED_GRACE.toMillis()
         var total = 0
         while (true) {
             val deleted = databaseFactory.writeTransaction {
-                val codes = PairingCodesTable.select(PairingCodesTable.code)
-                    .where { PairingCodesTable.expiresAt less cutoff }
+                val deviceIds = DevicePairingCodesTable.select(DevicePairingCodesTable.deviceId)
+                    .where { DevicePairingCodesTable.expiresAt less cutoff }
                     .limit(EXPIRY_BATCH)
-                    .map { row -> row[PairingCodesTable.code] }
-                if (codes.isEmpty()) return@writeTransaction 0
+                    .map { row -> row[DevicePairingCodesTable.deviceId] }
+                if (deviceIds.isEmpty()) return@writeTransaction 0
 
-                PairingCodesTable.deleteWhere { PairingCodesTable.code inList codes }
+                DevicePairingCodesTable.deleteWhere { DevicePairingCodesTable.deviceId inList deviceIds }
             }
             if (deleted == 0) break
             total += deleted

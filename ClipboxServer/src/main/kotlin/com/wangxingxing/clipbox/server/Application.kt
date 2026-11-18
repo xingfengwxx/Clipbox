@@ -5,7 +5,7 @@
  * description : 服务端入口与模块装配：读取并校验环境配置，按访问日志、安全头、限流、请求体限制、序列化、错误映射、认证、
  *               WebSocket、静态托管、路由的顺序安装管线，最后启动 Ktor Netty；官网与下载包由同一实例托管。
  *               注意：配置校验、数据库打开与迁移必须先于服务器启动完成，任一项失败立即退出，不得进入半启动状态；
- *                     启动日志只含版本、监听地址、数据目录与迁移版本，不得输出管理令牌、设备令牌或正文；
+ *                     启动日志只含版本、监听地址、数据目录与迁移版本，不得输出设备令牌、配对码或正文；
  *                     静态目录缺失时跳过注册而不是失败；PartialContent 与 AutoHeadResponse 必须在路由前安装，
  *                     Range 与 HEAD 才会生效；站点不做 SPA 兜底，缺失文件返回统一 404。
  */
@@ -33,9 +33,9 @@ import com.wangxingxing.clipbox.server.routes.healthRoutes
 import com.wangxingxing.clipbox.server.routes.pairingRoutes
 import com.wangxingxing.clipbox.server.routes.publicShareRoutes
 import com.wangxingxing.clipbox.server.routes.shareRoutes
-import com.wangxingxing.clipbox.server.service.AdminService
 import com.wangxingxing.clipbox.server.service.Broadcaster
 import com.wangxingxing.clipbox.server.service.ClipService
+import com.wangxingxing.clipbox.server.service.DevicePairingCodeService
 import com.wangxingxing.clipbox.server.service.PairingService
 import com.wangxingxing.clipbox.server.service.ShareService
 import com.wangxingxing.clipbox.server.ws.ConnectionRegistry
@@ -57,7 +57,6 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import java.io.File
 import kotlin.system.exitProcess
-import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("com.wangxingxing.clipbox.server.Application")
@@ -107,9 +106,9 @@ fun Application.module(
     }
     monitor.subscribe(ApplicationStopped) { factory.close() }
 
-    val adminService = AdminService(factory, config.adminToken)
     val pairingService = PairingService(factory)
-    // 启动日志只含版本、监听地址、数据目录与迁移版本；ADMIN_TOKEN、设备令牌与正文一律不出现。
+    val pairingCodeService = DevicePairingCodeService(factory)
+    // 启动日志只含版本、监听地址、数据目录与迁移版本；设备令牌、配对码与正文一律不出现。
     logger.info(
         "Clipbox 服务端 {} 启动：listen=http://0.0.0.0:{} dataDir={} schemaVersion={}",
         SERVER_VERSION,
@@ -117,10 +116,6 @@ fun Application.module(
         config.dataDir.toAbsolutePath(),
         schemaVersion,
     )
-    // 启动即补发自助配对码，保证容器日志里始终可用；生成失败直接终止启动，不进入无码可用的状态。
-    runBlocking { adminService.ensureStartupCode() }?.let { code ->
-        logger.info("[PAIRING-CODE] 启动自动生成配对码：{}（10 分钟内有效，一次性使用）", code)
-    }
 
     val webDir = config.webDir.toFile()
     val downloadDir = config.downloadDir.toFile()
@@ -151,7 +146,7 @@ fun Application.module(
         // 创建与访问共用同一服务实例，分享 URL 拼接口径保持一致。
         val shareService = ShareService(factory, config.publicBaseUrl)
         healthRoutes(factory::isHealthy)
-        pairingRoutes(adminService, pairingService)
+        pairingRoutes(pairingService, pairingCodeService)
         clipRoutes(ClipService(factory, broadcaster))
         shareRoutes(shareService)
         publicShareRoutes(shareService)

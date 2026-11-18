@@ -47,8 +47,13 @@ class RepositoryTest {
                         serverSeq = 1,
                     ),
                 )
-                PairingRepository.insert(code = "000123", createdAt = 3_000, expiresAt = 3_600)
-                PairingRepository.markUsed("000123", usedAt = 3_300)
+                PairingRepository.upsertCode(
+                    deviceId = "device-1",
+                    codeHash = "pairing-hash",
+                    createdAt = 3_000,
+                    expiresAt = 3_600,
+                )
+                PairingRepository.markUsedIfUnused("pairing-hash", usedAt = 3_300)
                 ShareRepository.insert(
                     ShareRow(
                         tokenHash = "share-hash",
@@ -75,7 +80,8 @@ class RepositoryTest {
                 assertNull(clip.deletedAt)
                 assertEquals(1, clip.serverSeq)
 
-                val pairing = assertNotNull(PairingRepository.findByCode("000123"))
+                val pairing = assertNotNull(PairingRepository.findByCodeHash("pairing-hash"))
+                assertEquals("device-1", pairing.deviceId)
                 assertEquals(3_300, pairing.usedAt)
 
                 val share = assertNotNull(ShareRepository.findByTokenHash("share-hash"))

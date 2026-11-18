@@ -45,7 +45,6 @@ class DatabaseStartupTest {
     }
 
     private fun validEnv(dataDir: Path): Map<String, String> = mapOf(
-        "ADMIN_TOKEN" to "a".repeat(32),
         "PUBLIC_BASE_URL" to "http://203.0.113.10:8080",
         "DATA_DIR" to dataDir.toString(),
     )

@@ -13,6 +13,8 @@ import com.wangxingxing.clipbox.server.db.ClipRepository
 import com.wangxingxing.clipbox.server.db.ClipRow
 import com.wangxingxing.clipbox.server.db.ClipsTable
 import com.wangxingxing.clipbox.server.db.DatabaseFactory
+import com.wangxingxing.clipbox.server.db.DeviceRepository
+import com.wangxingxing.clipbox.server.db.DeviceRow
 import com.wangxingxing.clipbox.server.db.MetaRepository
 import com.wangxingxing.clipbox.server.db.PairingRepository
 import com.wangxingxing.clipbox.server.db.SeqAllocator
@@ -217,21 +219,52 @@ class RetentionTest {
     @Test
     fun `pairing codes are cleaned 24 hours after expiry whether used or not`() = runBlocking {
         factory.writeTransaction {
-            PairingRepository.insert("100000", createdAt = NOW - 2 * DAY, expiresAt = NOW - GRACE - 1)
-            PairingRepository.insert("200000", createdAt = NOW - DAY, expiresAt = NOW - 60_000)
-            PairingRepository.insert("300000", createdAt = NOW, expiresAt = NOW + 600_000)
-            PairingRepository.markUsed("300000", NOW - 1_000)
-            PairingRepository.insert("400000", createdAt = NOW - 2 * DAY, expiresAt = NOW - GRACE - 1)
-            PairingRepository.markUsed("400000", NOW - 2 * DAY)
+            repeat(4) { index ->
+                DeviceRepository.insert(
+                    DeviceRow(
+                        id = "DEVICE-$index",
+                        name = "Device $index",
+                        tokenHash = "device-hash-$index",
+                        createdAt = 1_000,
+                        lastSeenAt = null,
+                    ),
+                )
+            }
+            PairingRepository.upsertCode(
+                deviceId = "DEVICE-0",
+                codeHash = "hash-100000",
+                createdAt = NOW - 2 * DAY,
+                expiresAt = NOW - GRACE - 1,
+            )
+            PairingRepository.upsertCode(
+                deviceId = "DEVICE-1",
+                codeHash = "hash-200000",
+                createdAt = NOW - DAY,
+                expiresAt = NOW - 60_000,
+            )
+            PairingRepository.upsertCode(
+                deviceId = "DEVICE-2",
+                codeHash = "hash-300000",
+                createdAt = NOW,
+                expiresAt = NOW + 600_000,
+            )
+            PairingRepository.markUsedIfUnused("hash-300000", NOW - 1_000)
+            PairingRepository.upsertCode(
+                deviceId = "DEVICE-3",
+                codeHash = "hash-400000",
+                createdAt = NOW - 2 * DAY,
+                expiresAt = NOW - GRACE - 1,
+            )
+            PairingRepository.markUsedIfUnused("hash-400000", NOW - 2 * DAY)
         }
 
         val summary = job.runOnce()
 
         assertEquals(2, summary.deletedPairingCodes)
-        assertNull(factory.readTransaction { PairingRepository.findByCode("100000") })
-        assertNull(factory.readTransaction { PairingRepository.findByCode("400000") })
-        assertNotNull(factory.readTransaction { PairingRepository.findByCode("200000") })
-        assertNotNull(factory.readTransaction { PairingRepository.findByCode("300000") })
+        assertNull(factory.readTransaction { PairingRepository.findByCodeHash("hash-100000") })
+        assertNull(factory.readTransaction { PairingRepository.findByCodeHash("hash-400000") })
+        assertNotNull(factory.readTransaction { PairingRepository.findByCodeHash("hash-200000") })
+        assertNotNull(factory.readTransaction { PairingRepository.findByCodeHash("hash-300000") })
     }
 
     @Test

@@ -23,12 +23,12 @@ class MigrationTest {
     @Test
     fun `empty database is migrated with schema and meta defaults`() {
         DatabaseFactory.open(tempDir).use { factory ->
-            assertEquals(1, factory.migrate())
+            assertEquals(2, factory.migrate())
         }
 
         withDatabase { connection ->
             assertEquals(
-                setOf("schema_version", "devices", "clips", "pairing_codes", "shares", "meta"),
+                setOf("schema_version", "devices", "clips", "shares", "meta", "device_pairing_codes"),
                 connection.tableNames(),
             )
             assertEquals(
@@ -36,12 +36,12 @@ class MigrationTest {
                     "idx_clips_server_seq",
                     "idx_clips_created_at",
                     "idx_clips_retention",
-                    "idx_pairing_expires",
+                    "idx_dpc_expires",
                     "idx_shares_expires",
                 ),
                 connection.indexNames(),
             )
-            assertEquals(listOf(1), connection.appliedVersions())
+            assertEquals(listOf(1, 2), connection.appliedVersions())
             assertEquals("0", connection.metaValue("server_seq"))
             assertEquals("0", connection.metaValue("sync_floor"))
         }
@@ -53,14 +53,16 @@ class MigrationTest {
             factory.migrate()
         }
         val firstAppliedAt = withDatabase { connection -> connection.appliedAt(1) }
+        val secondAppliedAt = withDatabase { connection -> connection.appliedAt(2) }
 
         DatabaseFactory.open(tempDir).use { factory ->
-            assertEquals(1, factory.migrate())
+            assertEquals(2, factory.migrate())
         }
 
         withDatabase { connection ->
-            assertEquals(listOf(1), connection.appliedVersions())
+            assertEquals(listOf(1, 2), connection.appliedVersions())
             assertEquals(firstAppliedAt, connection.appliedAt(1))
+            assertEquals(secondAppliedAt, connection.appliedAt(2))
             assertEquals(6, connection.tableNames().size)
         }
     }

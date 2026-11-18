@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-17 11:05
  * email : 1099420259@qq.com
- * description : 请求防护测试：512 KiB 请求体上限（含分块）、415、405、六类限流额度、Retry-After 与转发头不可绕过。
+ * description : 请求防护测试：512 KiB 请求体上限（含分块）、415、405、分项限流额度、Retry-After 与转发头不可绕过。
  *               注意：每个用例使用独立临时目录与全新应用实例，限流计数因此互不影响；
  *                     断言中不得输出令牌或配对码明文。
  */
@@ -12,7 +12,6 @@ import com.wangxingxing.clipbox.server.config.AppConfig
 import com.wangxingxing.clipbox.server.db.DatabaseFactory
 import com.wangxingxing.clipbox.server.db.DeviceRepository
 import com.wangxingxing.clipbox.server.db.DeviceRow
-import com.wangxingxing.clipbox.server.db.PairingCodesTable
 import com.wangxingxing.clipbox.server.plugins.FixedWindowRateLimiter
 import com.wangxingxing.clipbox.server.plugins.MAX_REQUEST_BODY_BYTES
 import com.wangxingxing.clipbox.server.plugins.RateLimitDecision
@@ -61,13 +60,12 @@ class LimitsTest {
     @TempDir
     lateinit var tempDir: Path
 
-    private val adminToken = "a".repeat(32)
     private val deviceId = "01J8Y6Z3K4M5N6P7Q8R9S0T1V2"
     private val deviceToken = "d".repeat(43)
 
     @Test
-    fun `sixth pairing attempt from the same ip is rate limited`() = withApp { factory, client ->
-        val code = unknownCode(factory)
+    fun `sixth pairing attempt from the same ip is rate limited`() = withApp { _, client ->
+        val code = UNKNOWN_CODE
         repeat(5) { attempt ->
             val response = client.pair(code)
             assertEquals(HttpStatusCode.BadRequest, response.status, "第 ${attempt + 1} 次应进入业务校验")
@@ -80,20 +78,35 @@ class LimitsTest {
     }
 
     @Test
-    fun `admin pairing code endpoint stops after ten attempts`() = withApp { _, client ->
+    fun `device pairing code endpoint stops after ten attempts`() = withApp { factory, client ->
+        seedDevice(factory)
         repeat(10) {
-            assertEquals(HttpStatusCode.Created, client.createCode().status)
+            assertEquals(HttpStatusCode.Created, client.createDeviceCode().status)
         }
 
-        val limited = client.createCodeResponse()
+        val limited = client.createDeviceCode()
         assertEquals(HttpStatusCode.TooManyRequests, limited.status)
         assertEquals("RATE_LIMITED", errorCode(limited.bodyAsText()))
         assertRetryAfter(limited)
     }
 
     @Test
-    fun `x forwarded for header does not bypass the ip limit`() = withApp { factory, client ->
-        val code = unknownCode(factory)
+    fun `bootstrap stops after three attempts from the same ip`() = withApp { _, client ->
+        repeat(3) { attempt ->
+            val response = client.bootstrap("Pixel $attempt")
+            val expected = if (attempt == 0) HttpStatusCode.Created else HttpStatusCode.Conflict
+            assertEquals(expected, response.status, "第 ${attempt + 1} 次应先进入业务校验")
+        }
+
+        val limited = client.bootstrap("Pixel 4")
+        assertEquals(HttpStatusCode.TooManyRequests, limited.status)
+        assertEquals("RATE_LIMITED", errorCode(limited.bodyAsText()))
+        assertRetryAfter(limited)
+    }
+
+    @Test
+    fun `x forwarded for header does not bypass the ip limit`() = withApp { _, client ->
+        val code = UNKNOWN_CODE
         repeat(5) { attempt ->
             val response = client.pair(code, forwardedFor = "203.0.113.$attempt")
             assertEquals(HttpStatusCode.BadRequest, response.status, "第 ${attempt + 1} 次应进入业务校验")
@@ -225,7 +238,7 @@ class LimitsTest {
         val factory = DatabaseFactory.open(tempDir)
         factory.migrate()
         application { module(testConfig(), factory, rateLimitSettings = settings) }
-        // 首个请求触发模块启动，确保自动配对码已生成后再进入用例。
+        // 首个请求触发模块初始化；应用启动不再生成任何配对码。
         client.get(HEALTH)
         block(factory, client)
     }
@@ -236,19 +249,9 @@ class LimitsTest {
         }
     }
 
-    private suspend fun unknownCode(factory: DatabaseFactory): String {
-        val known = factory.readTransaction {
-            PairingCodesTable.selectAll().map { it[PairingCodesTable.code] }.toSet()
-        }
-        return generateSequence(0) { it + 1 }
-            .map { it.toString().padStart(6, '0') }
-            .first { it !in known }
-    }
-
     private fun testConfig() = AppConfig(
         port = 8080,
         dataDir = tempDir,
-        adminToken = adminToken,
         publicBaseUrl = "http://127.0.0.1:8080",
     )
 
@@ -259,10 +262,16 @@ class LimitsTest {
             setBody("""{"code":"$code","deviceName":"Pixel 8"}""")
         }
 
-    private suspend fun HttpClient.createCodeResponse(): HttpResponse =
-        post("/api/v1/admin/pairing-codes") { header("X-Admin-Token", adminToken) }
+    private suspend fun HttpClient.bootstrap(deviceName: String): HttpResponse =
+        post("/api/v1/bootstrap") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"deviceName":"$deviceName"}""")
+        }
 
-    private suspend fun HttpClient.createCode(): HttpResponse = createCodeResponse()
+    private suspend fun HttpClient.createDeviceCode(): HttpResponse =
+        post("/api/v1/devices/me/pairing-code") {
+            header(HttpHeaders.Authorization, "Bearer $deviceToken")
+        }
 
     private suspend fun HttpClient.authorizedGet(): HttpResponse =
         get(CLIPS) { header(HttpHeaders.Authorization, "Bearer $deviceToken") }
@@ -306,5 +315,6 @@ class LimitsTest {
         private const val HEALTH = "/healthz"
         private const val CLIPS = "/api/v1/clips"
         private const val CLIP_ID = "01J8Z6Z3K4M5N6P7Q8R9S0T1V2"
+        private const val UNKNOWN_CODE = "999999"
     }
 }

@@ -47,7 +47,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 import kotlinx.serialization.json.put
 
-internal val ADMIN_TOKEN = "a".repeat(32)
 internal const val PUBLIC_BASE_URL = "http://127.0.0.1:8080"
 internal const val CREATED_AT = 1_730_000_000_000L
 private const val SYNC_PATH = "/api/v1/sync"
@@ -55,7 +54,8 @@ private const val SYNC_PATH = "/api/v1/sync"
 /** 集成用例默认额度：足够支撑 200 并发请求，避免限流掩盖业务断言。 */
 internal val LOOSE_LIMITS = RateLimitSettings(
     pairPerMinute = 1_000,
-    adminPerMinute = 1_000,
+    bootstrapPerMinute = 1_000,
+    pairingCodePerMinute = 1_000,
     devicePerMinute = 100_000,
     sharePagePerMinute = 100_000,
     healthPerMinute = 100_000,
@@ -82,7 +82,6 @@ internal fun integrationApp(
             config = AppConfig(
                 port = 8080,
                 dataDir = tempDir,
-                adminToken = ADMIN_TOKEN,
                 publicBaseUrl = PUBLIC_BASE_URL,
             ),
             databaseFactory = factory,
@@ -90,7 +89,7 @@ internal fun integrationApp(
             rateLimitSettings = rateLimitSettings,
         )
     }
-    // 首个请求触发模块启动，确保启动自助配对码已落库后再执行用例。
+    // 首个请求触发模块初始化，之后的用例再操作配对与同步。
     client.get("/healthz")
     IntegrationContext(this, factory, registry).block()
 }
@@ -102,16 +101,31 @@ internal class IntegrationContext(
 ) {
     val client: HttpClient get() = app.client
 
-    suspend fun pairingCode(): String {
-        val response = client.post("/api/v1/admin/pairing-codes") {
-            header("X-Admin-Token", ADMIN_TOKEN)
+    // 首台设备经 bootstrap 建立；后续新设备都用它的配对码加入同一用户空间。
+    private var anchorDevice: DeviceSession? = null
+
+    suspend fun bootstrapDevice(name: String): DeviceSession {
+        val response = client.post("/api/v1/bootstrap") {
+            contentType(ContentType.Application.Json)
+            setBody(buildJsonObject { put("deviceName", name) }.toString())
         }
+        check(response.status == HttpStatusCode.Created) { "空库初始化失败：${response.status}" }
+        val body = json(response)
+        return DeviceSession(body.str("deviceId"), body.str("token"), body.str("deviceName"))
+    }
+
+    suspend fun pairingCode(token: String): String {
+        val response = client.post("/api/v1/devices/me/pairing-code") { bearer(token) }
         check(response.status == HttpStatusCode.Created) { "生成配对码失败：${response.status}" }
         return json(response).str("code")
     }
 
     suspend fun pairDevice(name: String = "Pixel 8"): DeviceSession {
-        val code = pairingCode()
+        val anchor = anchorDevice ?: bootstrapDevice(name).also {
+            anchorDevice = it
+            return it
+        }
+        val code = pairingCode(anchor.token)
         val response = client.post("/api/v1/pair") {
             contentType(ContentType.Application.Json)
             setBody(buildJsonObject { put("code", code); put("deviceName", name) }.toString())

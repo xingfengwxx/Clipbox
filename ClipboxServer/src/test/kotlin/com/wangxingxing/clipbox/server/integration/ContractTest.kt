@@ -275,7 +275,8 @@ class ContractTest {
     companion object {
         private val STRICT_PAIR_LIMITS = RateLimitSettings(
             pairPerMinute = 1,
-            adminPerMinute = 100,
+            bootstrapPerMinute = 100,
+            pairingCodePerMinute = 100,
             devicePerMinute = 100,
             sharePagePerMinute = 100,
             healthPerMinute = 100,
@@ -284,7 +285,8 @@ class ContractTest {
 
         private val STRICT_DEVICE_LIMITS = RateLimitSettings(
             pairPerMinute = 100,
-            adminPerMinute = 100,
+            bootstrapPerMinute = 100,
+            pairingCodePerMinute = 100,
             devicePerMinute = 2,
             sharePagePerMinute = 100,
             healthPerMinute = 100,

@@ -33,7 +33,6 @@ class HealthRoutesTest {
                 AppConfig(
                     port = 8080,
                     dataDir = tempDir,
-                    adminToken = "a".repeat(32),
                     publicBaseUrl = "http://203.0.113.10:8080",
                 ),
             )

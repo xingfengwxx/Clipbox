@@ -16,6 +16,7 @@ private data class Migration(val version: Int, val resource: String)
 
 private val MIGRATIONS = listOf(
     Migration(version = 1, resource = "migrations/V001__init.sql"),
+    Migration(version = 2, resource = "migrations/V002__device_pairing_codes.sql"),
 )
 
 class Migrator(private val dataSource: DataSource) {

@@ -200,7 +200,6 @@ class SharePageTest {
     private fun testConfig() = AppConfig(
         port = 8080,
         dataDir = tempDir,
-        adminToken = "a".repeat(32),
         publicBaseUrl = "http://127.0.0.1:8080",
     )
 

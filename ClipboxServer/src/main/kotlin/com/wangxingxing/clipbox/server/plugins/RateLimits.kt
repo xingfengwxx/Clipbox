@@ -22,7 +22,8 @@ import java.util.concurrent.atomic.AtomicInteger
 /** 限流额度；测试可注入更宽松或更严格的值，避免影响并发用例。 */
 data class RateLimitSettings(
     val pairPerMinute: Int = 5,
-    val adminPerMinute: Int = 10,
+    val bootstrapPerMinute: Int = 3,
+    val pairingCodePerMinute: Int = 10,
     val devicePerMinute: Int = 120,
     val sharePagePerMinute: Int = 60,
     val healthPerMinute: Int = 120,
@@ -76,13 +77,14 @@ class FixedWindowRateLimiter(
     }
 }
 
-/** 六类额度各用一个独立实例，key 之间互不影响。 */
+/** 七类额度各用一个独立实例，key 之间互不影响。 */
 class RateLimiters(
     settings: RateLimitSettings = RateLimitSettings(),
     now: () -> Long = System::currentTimeMillis,
 ) {
     val pair = FixedWindowRateLimiter(settings.pairPerMinute, settings.windowMillis, now)
-    val admin = FixedWindowRateLimiter(settings.adminPerMinute, settings.windowMillis, now)
+    val bootstrap = FixedWindowRateLimiter(settings.bootstrapPerMinute, settings.windowMillis, now)
+    val pairingCode = FixedWindowRateLimiter(settings.pairingCodePerMinute, settings.windowMillis, now)
     val device = FixedWindowRateLimiter(settings.devicePerMinute, settings.windowMillis, now)
     val sharePage = FixedWindowRateLimiter(settings.sharePagePerMinute, settings.windowMillis, now)
     val health = FixedWindowRateLimiter(settings.healthPerMinute, settings.windowMillis, now)
@@ -120,7 +122,8 @@ private fun limiterFor(
     limiters: RateLimiters,
 ): FixedWindowRateLimiter? = when {
     method == HttpMethod.Post && path == "/api/v1/pair" -> limiters.pair
-    method == HttpMethod.Post && path == "/api/v1/admin/pairing-codes" -> limiters.admin
+    method == HttpMethod.Post && path == "/api/v1/bootstrap" -> limiters.bootstrap
+    method == HttpMethod.Post && path == "/api/v1/devices/me/pairing-code" -> limiters.pairingCode
     path == "/healthz" -> limiters.health
     path.startsWith("/s/") && path.length > 3 -> limiters.sharePage
     else -> null

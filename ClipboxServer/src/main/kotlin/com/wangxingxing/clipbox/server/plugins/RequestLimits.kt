@@ -74,7 +74,7 @@ private suspend fun rejectOversizedBody(call: ApplicationCall): Boolean {
 
 private suspend fun rejectNonJsonBody(call: ApplicationCall): Boolean {
     if (call.request.httpMethod !in BODY_METHODS) return false
-    // 无请求体的 POST（如管理端生成配对码）允许缺省 Content-Type，避免把空体当媒体类型错误。
+    // 无请求体的 POST（如已配对设备取码）允许缺省 Content-Type，避免把空体当媒体类型错误。
     if (!hasBody(call)) return false
 
     if (call.request.contentType().withoutParameters().match(ContentType.Application.Json)) return false
@@ -97,7 +97,8 @@ private val CLIP_ID_PATH = Regex("^/api/v1/clips/[^/]+$")
 private fun allowedMethods(path: String): Set<HttpMethod>? = when {
     path == "/healthz" -> setOf(HttpMethod.Get)
     path == "/api/v1/pair" -> setOf(HttpMethod.Post)
-    path == "/api/v1/admin/pairing-codes" -> setOf(HttpMethod.Post)
+    path == "/api/v1/bootstrap" -> setOf(HttpMethod.Post)
+    path == "/api/v1/devices/me/pairing-code" -> setOf(HttpMethod.Post)
     path == "/api/v1/clips" -> setOf(HttpMethod.Get, HttpMethod.Post)
     CLIP_ID_PATH.matches(path) -> setOf(HttpMethod.Patch, HttpMethod.Delete)
     path == "/api/v1/shares" -> setOf(HttpMethod.Post)

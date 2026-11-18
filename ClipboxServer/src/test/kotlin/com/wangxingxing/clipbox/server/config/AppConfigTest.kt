@@ -22,28 +22,9 @@ class AppConfigTest {
     lateinit var tempDir: Path
 
     private fun validEnv(): MutableMap<String, String> = mutableMapOf(
-        "ADMIN_TOKEN" to "a".repeat(32),
         "PUBLIC_BASE_URL" to "http://203.0.113.10:8080",
         "DATA_DIR" to tempDir.resolve("data").toString(),
     )
-
-    @Test
-    fun `missing admin token fails`() {
-        val env = validEnv().apply { remove("ADMIN_TOKEN") }
-
-        val error = assertFailsWith<ConfigException> { AppConfig.fromEnv(env) }
-
-        assertTrue(error.message.orEmpty().contains("ADMIN_TOKEN"))
-    }
-
-    @Test
-    fun `short admin token fails`() {
-        val env = validEnv().apply { put("ADMIN_TOKEN", "a".repeat(31)) }
-
-        val error = assertFailsWith<ConfigException> { AppConfig.fromEnv(env) }
-
-        assertTrue(error.message.orEmpty().contains("32"))
-    }
 
     @Test
     fun `missing public base url fails`() {
@@ -78,7 +59,6 @@ class AppConfigTest {
 
         assertEquals(8080, config.port)
         assertEquals("http://203.0.113.10:8080", config.publicBaseUrl)
-        assertEquals("a".repeat(32), config.adminToken)
         assertTrue(Files.isDirectory(config.dataDir))
     }
 

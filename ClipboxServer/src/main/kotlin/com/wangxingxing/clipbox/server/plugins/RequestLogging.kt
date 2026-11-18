@@ -57,7 +57,8 @@ fun Application.configureRequestLogging() {
 fun requestPathTemplate(path: String): String = when {
     path == "/healthz" -> "/healthz"
     path == "/api/v1/pair" -> "/api/v1/pair"
-    path == "/api/v1/admin/pairing-codes" -> "/api/v1/admin/pairing-codes"
+    path == "/api/v1/bootstrap" -> "/api/v1/bootstrap"
+    path == "/api/v1/devices/me/pairing-code" -> "/api/v1/devices/me/pairing-code"
     path == "/api/v1/clips" -> "/api/v1/clips"
     CLIP_ID_PATH.matches(path) -> "/api/v1/clips/{id}"
     path == "/api/v1/shares" -> "/api/v1/shares"

@@ -2,8 +2,8 @@
  * author : 王星星
  * date : 2026-11-17 11:05
  * email : 1099420259@qq.com
- * description : 日志脱敏测试：请求日志只含白名单字段，正文/设备令牌/配对码/分享令牌不落日志，
- *               /s/{token} 按模板记录，启动日志包含版本、监听地址、数据目录与迁移版本且不含管理令牌。
+ * description : 日志脱敏测试：请求日志只含白名单字段，正文/设备令牌/配对码（含设备生成的临时码）/分享令牌不落日志，
+ *               /s/{token} 与设备取码路径按模板记录，启动日志包含版本、监听地址、数据目录与迁移版本且不打印任何配对码。
  *               注意：通过 logback ListAppender 捕获指定 logger，不修改 logback.xml。
  */
 package com.wangxingxing.clipbox.server
@@ -21,6 +21,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -31,6 +32,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.io.TempDir
 import org.slf4j.LoggerFactory
 
@@ -39,7 +43,6 @@ class LoggingTest {
     @TempDir
     lateinit var tempDir: Path
 
-    private val adminToken = "a".repeat(32)
     private val deviceId = "01J8Y6Z3K4M5N6P7Q8R9S0T1V2"
     private val deviceToken = "d".repeat(43)
 
@@ -112,6 +115,25 @@ class LoggingTest {
     }
 
     @Test
+    fun `device pairing code never appears in the request log`() = capture(REQUEST_LOGGER) { appender ->
+        lateinit var issuedCode: String
+        withApp(seedDevice = true) { client ->
+            appender.list.clear()
+            val response = client.post("/api/v1/devices/me/pairing-code") {
+                header(HttpHeaders.Authorization, "Bearer $deviceToken")
+            }
+            assertEquals(HttpStatusCode.Created, response.status)
+            issuedCode = Json.parseToJsonElement(response.bodyAsText())
+                .jsonObject.getValue("code").jsonPrimitive.content
+        }
+
+        val message = singleRequestLog(appender)
+        assertTrue(message.contains("pathTemplate=/api/v1/devices/me/pairing-code"), message)
+        assertTrue(message.contains("deviceId=$deviceId"), "已认证请求应记录设备 ID：$message")
+        assertFalse(message.contains(issuedCode), "设备生成的配对码不得进入日志：$message")
+    }
+
+    @Test
     fun `startup log reports version listen address data dir and schema version`() {
         val appender = capture(APPLICATION_LOGGER) { capture ->
             testApplication {
@@ -128,9 +150,8 @@ class LoggingTest {
         assertTrue(startup.contains("1.0.0"), startup)
         assertTrue(startup.contains("listen=http://0.0.0.0:8080"), startup)
         assertTrue(startup.contains("dataDir="), startup)
-        assertTrue(startup.contains("schemaVersion=1"), startup)
-        assertEquals(1, messages.count { it.contains("[PAIRING-CODE]") }, "自动配对码只应打印一次")
-        messages.forEach { assertFalse(it.contains(adminToken), "管理令牌不得进入日志：$it") }
+        assertTrue(startup.contains("schemaVersion=2"), startup)
+        assertEquals(0, messages.count { it.contains("[PAIRING-CODE]") }, "启动不得再打印任何配对码")
     }
 
     // --- 夹具 ---
@@ -173,7 +194,6 @@ class LoggingTest {
     private fun testConfig() = AppConfig(
         port = 8080,
         dataDir = tempDir,
-        adminToken = adminToken,
         publicBaseUrl = "http://127.0.0.1:8080",
     )
 
