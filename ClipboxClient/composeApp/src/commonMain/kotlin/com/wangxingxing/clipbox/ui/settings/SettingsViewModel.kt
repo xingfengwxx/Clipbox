@@ -3,6 +3,7 @@
  * date : 2026-11-17 15:33
  * email : 1099420259@qq.com
  * description : 设置页状态机；聚合设置持久值、同步状态与最近同步时间，改址与解绑统一交给 AppContainer 重建会话。
+ *               配对码只在内存状态中保管，关闭弹层立即清空，不写设置也不写数据库。
  *               注意：已配对时改址必须先把新地址落盘再解绑，否则重建出的会话仍指向旧服务器
  */
 package com.wangxingxing.clipbox.ui.settings
@@ -11,6 +12,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wangxingxing.clipbox.app.AppContainer
 import com.wangxingxing.clipbox.model.ApiFailure
+import com.wangxingxing.clipbox.platform.ClipboardWriteResult
+import com.wangxingxing.clipbox.repository.PairingCodeError
+import com.wangxingxing.clipbox.repository.PairingCodeResult
 import com.wangxingxing.clipbox.repository.SyncRepository
 import com.wangxingxing.clipbox.settings.AppLanguage
 import com.wangxingxing.clipbox.settings.ServerUrlValidation
@@ -20,7 +24,9 @@ import com.wangxingxing.clipbox.settings.ThemeMode
 import com.wangxingxing.clipbox.sync.SyncNowResult
 import com.wangxingxing.clipbox.sync.SyncStatusHolder
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -48,6 +54,9 @@ class SettingsViewModel(
 
     private val _events = Channel<SettingsEvent>(Channel.BUFFERED)
     val events: Flow<SettingsEvent> = _events.receiveAsFlow()
+
+    private var cooldownJob: Job? = null
+    private var generateCodeJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -147,5 +156,75 @@ class SettingsViewModel(
 
     fun setLanguage(language: AppLanguage) {
         viewModelScope.launch { settingsRepository.setAppLanguage(language) }
+    }
+
+    fun generatePairingCode() {
+        if (!_state.value.canGenerateCode) return
+        _state.update { it.copy(isGeneratingCode = true, codeError = null) }
+        generateCodeJob = viewModelScope.launch {
+            val result = try {
+                container.requireSession().pairingCodeRepository.create()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                PairingCodeResult.Failure(PairingCodeError.Server)
+            }
+
+            when (result) {
+                is PairingCodeResult.Success -> _state.update {
+                    it.copy(
+                        isGeneratingCode = false,
+                        pairingCode = result.pairingCode.code,
+                        pairingCodeExpiresAt = result.pairingCode.expiresAt,
+                    )
+                }
+
+                is PairingCodeResult.Failure -> {
+                    _state.update { it.copy(isGeneratingCode = false, codeError = result.error) }
+                    (result.error as? PairingCodeError.RateLimited)?.let { startCodeCooldown(it.retryAfterSeconds) }
+                }
+            }
+        }
+    }
+
+    // 关闭弹层即销毁明文：取消在途请求并清空全部取码状态
+    fun clearPairingCode() {
+        generateCodeJob?.cancel()
+        generateCodeJob = null
+        _state.update {
+            it.copy(
+                pairingCode = null,
+                pairingCodeExpiresAt = null,
+                isGeneratingCode = false,
+                codeError = null,
+            )
+        }
+    }
+
+    fun copyPairingCode() {
+        val code = _state.value.pairingCode ?: return
+        viewModelScope.launch {
+            val event = when (container.requireSession().clipboardService.writeText(code)) {
+                ClipboardWriteResult.Success -> SettingsEvent.PairingCodeCopied
+                ClipboardWriteResult.Failed -> SettingsEvent.PairingCodeCopyFailed
+            }
+            _events.send(event)
+        }
+    }
+
+    private fun startCodeCooldown(retryAfterSeconds: Long?) {
+        cooldownJob?.cancel()
+        val seconds = (retryAfterSeconds ?: DEFAULT_COOLDOWN_SECONDS).coerceAtLeast(1L).toInt()
+        cooldownJob = viewModelScope.launch {
+            _state.update { it.copy(codeCooldownSeconds = seconds) }
+            repeat(seconds) {
+                delay(1_000)
+                _state.update { it.copy(codeCooldownSeconds = (it.codeCooldownSeconds - 1).coerceAtLeast(0)) }
+            }
+        }
+    }
+
+    private companion object {
+        const val DEFAULT_COOLDOWN_SECONDS = 60L
     }
 }

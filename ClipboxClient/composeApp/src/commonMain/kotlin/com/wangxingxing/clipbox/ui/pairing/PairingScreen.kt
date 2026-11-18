@@ -2,7 +2,8 @@
  * author : 王星星
  * date : 2026-11-16 17:20
  * email : 1099420259@qq.com
- * description : 配对页 S10 / S11A / S11B：未加密警示、6 位码与设备名输入、错误分类提示与 429 冷却；服务器地址只来自构建配置
+ * description : 配对页 S10 / S11A / S11B：未加密警示、6 位码与设备名输入、错误分类提示与 429 冷却；
+ *               空库首次部署可在表单下方二次确认后自助初始化；服务器地址只来自构建配置
  */
 package com.wangxingxing.clipbox.ui.pairing
 
@@ -29,10 +30,14 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
@@ -50,6 +55,7 @@ import com.wangxingxing.clipbox.resources.pair_code_placeholder
 import com.wangxingxing.clipbox.resources.pair_cooldown
 import com.wangxingxing.clipbox.resources.pair_description
 import com.wangxingxing.clipbox.resources.pair_device_label
+import com.wangxingxing.clipbox.resources.pair_error_already_initialized
 import com.wangxingxing.clipbox.resources.pair_error_code_expired
 import com.wangxingxing.clipbox.resources.pair_error_code_used
 import com.wangxingxing.clipbox.resources.pair_error_device_name
@@ -59,6 +65,11 @@ import com.wangxingxing.clipbox.resources.pair_error_rate_limited
 import com.wangxingxing.clipbox.resources.pair_error_server
 import com.wangxingxing.clipbox.resources.pair_error_server_url
 import com.wangxingxing.clipbox.resources.pair_expired_hint
+import com.wangxingxing.clipbox.resources.pair_init_action
+import com.wangxingxing.clipbox.resources.pair_init_body
+import com.wangxingxing.clipbox.resources.pair_init_confirm
+import com.wangxingxing.clipbox.resources.pair_init_submitting
+import com.wangxingxing.clipbox.resources.pair_init_title
 import com.wangxingxing.clipbox.resources.pair_insecure_warning
 import com.wangxingxing.clipbox.resources.pair_kicker
 import com.wangxingxing.clipbox.resources.pair_note
@@ -67,6 +78,7 @@ import com.wangxingxing.clipbox.resources.pair_server_label
 import com.wangxingxing.clipbox.resources.pair_submit
 import com.wangxingxing.clipbox.resources.pair_submitting
 import com.wangxingxing.clipbox.resources.pair_title
+import com.wangxingxing.clipbox.ui.components.ConfirmDialog
 import com.wangxingxing.clipbox.ui.theme.ClipboxTokens
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.pluralStringResource
@@ -91,6 +103,7 @@ fun PairingRoute(modifier: Modifier = Modifier) {
         onCodeChange = viewModel::onCodeChange,
         onDeviceNameChange = viewModel::onDeviceNameChange,
         onSubmit = viewModel::submit,
+        onInitialize = viewModel::initialize,
         modifier = modifier,
     )
 }
@@ -102,12 +115,14 @@ private fun PairingScreen(
     onCodeChange: (String) -> Unit,
     onDeviceNameChange: (String) -> Unit,
     onSubmit: () -> Unit,
+    onInitialize: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = ClipboxTokens.colors
     val spacing = ClipboxTokens.spacing
     val radii = ClipboxTokens.radii
     val typography = ClipboxTokens.typography
+    var showInitConfirm by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -207,6 +222,22 @@ private fun PairingScreen(
                     )
                 }
 
+                Spacer(Modifier.height(spacing.s))
+                TextButton(
+                    onClick = { showInitConfirm = true },
+                    enabled = state.canInitialize,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = stringResource(
+                            if (state.isInitializing) Res.string.pair_init_submitting else Res.string.pair_init_action,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (state.canInitialize) colors.accent else colors.ink3,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+
                 Spacer(Modifier.height(spacing.l))
                 Text(
                     text = stringResource(Res.string.pair_note),
@@ -216,6 +247,19 @@ private fun PairingScreen(
                 Spacer(Modifier.height(spacing.xxl))
             }
         }
+    }
+
+    if (showInitConfirm) {
+        ConfirmDialog(
+            title = stringResource(Res.string.pair_init_title),
+            body = stringResource(Res.string.pair_init_body),
+            confirmText = stringResource(Res.string.pair_init_confirm),
+            onConfirm = {
+                showInitConfirm = false
+                onInitialize()
+            },
+            onDismiss = { showInitConfirm = false },
+        )
     }
 }
 
@@ -373,5 +417,6 @@ private fun PairingError.messageResource(): StringResource = when (this) {
     PairingError.Network -> Res.string.pair_error_network
     PairingError.ServerUrl -> Res.string.pair_error_server_url
     PairingError.Server -> Res.string.pair_error_server
+    PairingError.AlreadyInitialized -> Res.string.pair_error_already_initialized
     is PairingError.RateLimited -> Res.string.pair_error_rate_limited
 }

@@ -37,6 +37,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -47,13 +48,31 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.wangxingxing.clipbox.repository.PairingCodeError
 import com.wangxingxing.clipbox.resources.Res
 import com.wangxingxing.clipbox.resources.app_name
+import com.wangxingxing.clipbox.resources.clipboard_write_failed
+import com.wangxingxing.clipbox.resources.code_dialog_body
+import com.wangxingxing.clipbox.resources.code_dialog_close
+import com.wangxingxing.clipbox.resources.code_dialog_copied
+import com.wangxingxing.clipbox.resources.code_dialog_copy
+import com.wangxingxing.clipbox.resources.code_dialog_expired
+import com.wangxingxing.clipbox.resources.code_dialog_generating
+import com.wangxingxing.clipbox.resources.code_dialog_regenerate
+import com.wangxingxing.clipbox.resources.code_dialog_remaining
+import com.wangxingxing.clipbox.resources.code_error_network
+import com.wangxingxing.clipbox.resources.code_error_rate_limited
+import com.wangxingxing.clipbox.resources.code_error_server
+import com.wangxingxing.clipbox.resources.code_error_unauthorized
 import com.wangxingxing.clipbox.resources.history_cancel
 import com.wangxingxing.clipbox.resources.history_pair
+import com.wangxingxing.clipbox.resources.pair_cooldown
 import com.wangxingxing.clipbox.resources.pair_insecure_warning
 import com.wangxingxing.clipbox.resources.settings_about_build
 import com.wangxingxing.clipbox.resources.settings_about_storage
@@ -85,6 +104,7 @@ import com.wangxingxing.clipbox.resources.settings_language_tw
 import com.wangxingxing.clipbox.resources.settings_last_sync
 import com.wangxingxing.clipbox.resources.settings_last_sync_never
 import com.wangxingxing.clipbox.resources.settings_paired
+import com.wangxingxing.clipbox.resources.settings_pair_new_device
 import com.wangxingxing.clipbox.resources.settings_pairing_status
 import com.wangxingxing.clipbox.resources.settings_privacy_body
 import com.wangxingxing.clipbox.resources.settings_privacy_title
@@ -122,7 +142,11 @@ import com.wangxingxing.clipbox.ui.components.ConfirmDialog
 import com.wangxingxing.clipbox.ui.components.SyncStatusBar
 import com.wangxingxing.clipbox.ui.i18n.LocalAppLanguage
 import com.wangxingxing.clipbox.ui.theme.ClipboxTokens
+import com.wangxingxing.clipbox.util.clipNowMillis
 import com.wangxingxing.clipbox.util.formatAbsoluteTime
+import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -133,6 +157,7 @@ private sealed interface SettingsDialog {
     data object ConfirmUnpair : SettingsDialog
     data object ConfirmAutoSend : SettingsDialog
     data object ConfirmDiagnostic : SettingsDialog
+    data object PairingCode : SettingsDialog
 }
 
 @Composable
@@ -152,6 +177,8 @@ fun SettingsRoute(
     val syncOfflineMessage = stringResource(Res.string.settings_sync_offline)
     val syncUnpairedMessage = stringResource(Res.string.settings_sync_unpaired)
     val syncUnauthorizedMessage = stringResource(Res.string.settings_sync_unauthorized)
+    val codeCopiedMessage = stringResource(Res.string.code_dialog_copied)
+    val codeCopyFailedMessage = stringResource(Res.string.clipboard_write_failed)
 
     LaunchedEffect(
         viewModel,
@@ -161,6 +188,8 @@ fun SettingsRoute(
         syncOfflineMessage,
         syncUnpairedMessage,
         syncUnauthorizedMessage,
+        codeCopiedMessage,
+        codeCopyFailedMessage,
     ) {
         viewModel.events.collect { event ->
             val message = when (event) {
@@ -170,6 +199,8 @@ fun SettingsRoute(
                 SettingsEvent.SyncOffline -> syncOfflineMessage
                 SettingsEvent.SyncUnpaired -> syncUnpairedMessage
                 SettingsEvent.SyncUnauthorized -> syncUnauthorizedMessage
+                SettingsEvent.PairingCodeCopied -> codeCopiedMessage
+                SettingsEvent.PairingCodeCopyFailed -> codeCopyFailedMessage
             }
             snackbarHostState.showSnackbar(message)
         }
@@ -194,6 +225,10 @@ fun SettingsRoute(
             },
             onChangeServer = { dialog = SettingsDialog.ChangeServer },
             onUnpair = { dialog = SettingsDialog.ConfirmUnpair },
+            onPairNewDevice = {
+                dialog = SettingsDialog.PairingCode
+                viewModel.generatePairingCode()
+            },
         )
         SnackbarHost(
             hostState = snackbarHostState,
@@ -263,6 +298,17 @@ fun SettingsRoute(
             },
             onDismiss = { dialog = SettingsDialog.None },
         )
+
+        SettingsDialog.PairingCode -> PairingCodeDialog(
+            state = state,
+            onGenerate = viewModel::generatePairingCode,
+            onCopy = viewModel::copyPairingCode,
+            onDismiss = {
+                dialog = SettingsDialog.None
+                viewModel.clearPairingCode()
+            },
+            onClear = viewModel::clearPairingCode,
+        )
     }
 }
 
@@ -277,6 +323,7 @@ private fun SettingsScreen(
     onDiagnosticChange: (Boolean) -> Unit,
     onChangeServer: () -> Unit,
     onUnpair: () -> Unit,
+    onPairNewDevice: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = ClipboxTokens.colors
@@ -363,6 +410,15 @@ private fun SettingsScreen(
                     ),
                     valueColor = if (state.paired) colors.ok else colors.ink3,
                 )
+            }
+            if (state.paired) {
+                item {
+                    ChevronRow(
+                        label = stringResource(Res.string.settings_pair_new_device),
+                        value = null,
+                        onClick = onPairNewDevice,
+                    )
+                }
             }
 
             if (state.isDesktop) {
@@ -753,6 +809,153 @@ private fun ServerAddressDialog(
             }
         },
     )
+}
+
+@Composable
+private fun PairingCodeDialog(
+    state: SettingsUiState,
+    onGenerate: () -> Unit,
+    onCopy: () -> Unit,
+    onDismiss: () -> Unit,
+    onClear: () -> Unit,
+) {
+    val colors = ClipboxTokens.colors
+    val spacing = ClipboxTokens.spacing
+    val expiresAt = state.pairingCodeExpiresAt
+    var remainingSeconds by remember(expiresAt) { mutableStateOf(secondsUntil(expiresAt)) }
+
+    // 弹层被销毁（关闭或页面切换）时立刻清空内存中的明文码
+    DisposableEffect(Unit) { onDispose(onClear) }
+
+    LaunchedEffect(expiresAt) {
+        while (true) {
+            remainingSeconds = secondsUntil(expiresAt)
+            if (remainingSeconds <= 0) break
+            delay(1_000)
+        }
+    }
+
+    val regenerateLabel = when {
+        state.isGeneratingCode -> stringResource(Res.string.code_dialog_generating)
+        state.codeCooldownSeconds > 0 -> pluralStringResource(
+            Res.plurals.pair_cooldown,
+            state.codeCooldownSeconds,
+            state.codeCooldownSeconds,
+        )
+
+        else -> stringResource(Res.string.code_dialog_regenerate)
+    }
+    val code = state.pairingCode
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = colors.background,
+        titleContentColor = colors.ink,
+        textContentColor = colors.ink2,
+        title = { Text(stringResource(Res.string.settings_pair_new_device)) },
+        text = {
+            Column {
+                Text(
+                    text = stringResource(Res.string.code_dialog_body),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.ink2,
+                )
+                Spacer(Modifier.height(spacing.l))
+                if (code == null) {
+                    Text(
+                        text = if (state.isGeneratingCode) {
+                            stringResource(Res.string.code_dialog_generating)
+                        } else {
+                            "—"
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        style = ClipboxTokens.typography.mono,
+                        color = colors.ink2,
+                        textAlign = TextAlign.Center,
+                    )
+                } else {
+                    Text(
+                        text = code,
+                        modifier = Modifier.fillMaxWidth(),
+                        style = ClipboxTokens.typography.mono.copy(
+                            fontSize = 32.sp,
+                            lineHeight = 38.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = 8.sp,
+                            textAlign = TextAlign.Center,
+                        ),
+                        color = if (remainingSeconds > 0) colors.ink else colors.ink3,
+                    )
+                    Spacer(Modifier.height(spacing.xs))
+                    Text(
+                        text = if (remainingSeconds > 0) {
+                            stringResource(
+                                Res.string.code_dialog_remaining,
+                                formatCountdown(remainingSeconds),
+                            )
+                        } else {
+                            stringResource(Res.string.code_dialog_expired)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        style = ClipboxTokens.typography.mono,
+                        color = if (remainingSeconds > 0) colors.ink2 else colors.warn,
+                        textAlign = TextAlign.Center,
+                    )
+                    if (remainingSeconds > 0) {
+                        TextButton(
+                            onClick = onCopy,
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.code_dialog_copy),
+                                color = colors.accent,
+                            )
+                        }
+                    }
+                }
+                state.codeError?.let { error ->
+                    Spacer(Modifier.height(spacing.s))
+                    Text(
+                        text = stringResource(error.messageResource()),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.danger,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onGenerate, enabled = state.canGenerateCode) {
+                Text(
+                    text = regenerateLabel,
+                    color = if (state.canGenerateCode) colors.accent else colors.ink3,
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(Res.string.code_dialog_close), color = colors.ink2)
+            }
+        },
+    )
+}
+
+// 错误分类到文案的唯一映射点，界面不拼接服务端 message
+private fun PairingCodeError.messageResource(): StringResource = when (this) {
+    PairingCodeError.Unauthorized -> Res.string.code_error_unauthorized
+    PairingCodeError.Network -> Res.string.code_error_network
+    PairingCodeError.Server -> Res.string.code_error_server
+    is PairingCodeError.RateLimited -> Res.string.code_error_rate_limited
+}
+
+private fun secondsUntil(expiresAt: Long?): Int {
+    if (expiresAt == null) return 0
+    return ((expiresAt - clipNowMillis()).coerceAtLeast(0L) / 1_000).toInt()
+}
+
+private fun formatCountdown(totalSeconds: Int): String {
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return "$minutes:${seconds.toString().padStart(2, '0')}"
 }
 
 private const val DEVICE_ID_DISPLAY_LENGTH = 8

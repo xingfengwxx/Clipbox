@@ -2,7 +2,8 @@
  * author : 王星星
  * date : 2026-11-16 17:18
  * email : 1099420259@qq.com
- * description : 配对页状态机；输入只生成状态、提交期禁止重复请求、429 按 Retry-After 启动冷却，成功后发出一次性事件
+ * description : 配对页状态机；输入只生成状态、提交期禁止重复请求、429 按 Retry-After 启动冷却，成功后发出一次性事件；
+ *               空库初始化与配对共用冷却与错误映射，成功后走同一重建会话事件
  */
 package com.wangxingxing.clipbox.ui.pairing
 
@@ -97,6 +98,42 @@ class PairingViewModel(
 
                 is PairResult.Failure -> {
                     _state.update { it.copy(isSubmitting = false, error = result.error) }
+                    (result.error as? PairingError.RateLimited)?.let { startCooldown(it.retryAfterSeconds) }
+                }
+            }
+        }
+    }
+
+    /** 空库首次初始化；成功后与配对一致重建会话并进入历史页 */
+    fun initialize() {
+        val current = _state.value
+        if (!current.canInitialize) return
+        if (current.deviceName.trim().length > DEVICE_NAME_MAX_LENGTH) {
+            _state.update { it.copy(error = PairingError.DeviceName) }
+            return
+        }
+
+        _state.update { it.copy(isInitializing = true, error = null) }
+        viewModelScope.launch {
+            val result = try {
+                repository.initialize(
+                    serverUrl = current.serverUrl,
+                    deviceName = current.deviceName,
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                PairResult.Failure(PairingError.Server)
+            }
+
+            when (result) {
+                PairResult.Success -> {
+                    _state.update { it.copy(isInitializing = false) }
+                    _pairedEvents.send(Unit)
+                }
+
+                is PairResult.Failure -> {
+                    _state.update { it.copy(isInitializing = false, error = result.error) }
                     (result.error as? PairingError.RateLimited)?.let { startCooldown(it.retryAfterSeconds) }
                 }
             }
