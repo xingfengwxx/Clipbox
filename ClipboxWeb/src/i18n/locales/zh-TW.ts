@@ -4,6 +4,7 @@ export default {
     '字匣 Theca 是離線優先的跨裝置文字中轉工具：手機與桌面之間傳遞文字，產生唯讀分享頁，附帶本機開發者工具箱。',
   'a11y.skip': '跳到主要內容',
   'nav.label': '主要導覽',
+  'nav.menu': '選單',
   'nav.features': '功能',
   'nav.how': '運作方式',
   'nav.privacy': '安全性與隱私',

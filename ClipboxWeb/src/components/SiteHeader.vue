@@ -1,10 +1,26 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { SUPPORTED_LOCALES, setLocale, type Locale } from '../i18n'
 
 const { t, locale } = useI18n()
 
 const localeOptions: Locale[] = [...SUPPORTED_LOCALES]
+
+const links = [
+  { id: 'features', key: 'nav.features' },
+  { id: 'how', key: 'nav.how' },
+  { id: 'download', key: 'nav.download' },
+  { id: 'selfhost', key: 'nav.selfhost' },
+  { id: 'faq', key: 'nav.faq' },
+] as const
+
+const menu = ref<HTMLDetailsElement | null>(null)
+
+// 窄屏菜单用原生 details，不做依赖 JS 的弹层；锚点跳转后手动收起，以免面板盖住目标区块。
+function closeMenu() {
+  if (menu.value) menu.value.open = false
+}
 </script>
 
 <template>
@@ -24,12 +40,22 @@ const localeOptions: Locale[] = [...SUPPORTED_LOCALES]
       </a>
 
       <nav class="site-nav" :aria-label="t('nav.label')">
-        <a href="#features">{{ t('nav.features') }}</a>
-        <a href="#how">{{ t('nav.how') }}</a>
-        <a href="#download">{{ t('nav.download') }}</a>
-        <a href="#selfhost">{{ t('nav.selfhost') }}</a>
-        <a href="#faq">{{ t('nav.faq') }}</a>
+        <a v-for="link in links" :key="link.id" :href="`#${link.id}`">{{ t(link.key) }}</a>
       </nav>
+
+      <details ref="menu" class="menu">
+        <summary class="menu__toggle">{{ t('nav.menu') }}</summary>
+        <nav class="menu__panel" :aria-label="t('nav.label')">
+          <a
+            v-for="link in links"
+            :key="link.id"
+            :href="`#${link.id}`"
+            @click="closeMenu"
+          >
+            {{ t(link.key) }}
+          </a>
+        </nav>
+      </details>
 
       <div class="lang-switch" role="group" :aria-label="t('lang.group')">
         <button

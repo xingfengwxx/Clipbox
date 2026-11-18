@@ -106,6 +106,7 @@ svg {
 }
 
 .site-header__inner {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-6);
@@ -162,6 +163,52 @@ svg {
 
 .site-nav a:hover {
   color: var(--ink);
+}
+
+/* 窄屏导航：原生 details 折叠，不引入第三方组件 */
+.menu {
+  display: none;
+  position: static;
+  margin-inline-start: auto;
+}
+
+.menu__toggle {
+  list-style: none;
+  padding: 6px var(--space-3);
+  font-size: 14px;
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+}
+
+.menu__toggle::-webkit-details-marker {
+  display: none;
+}
+
+/* 面板相对页头容器定位：若锚在小尺寸菜单按钮上，左缘会在 390px 视口被裁切 */
+.menu__panel {
+  position: absolute;
+  top: calc(100% + 1px);
+  right: var(--space-5);
+  z-index: 20;
+  min-width: 200px;
+  padding-block: var(--space-2);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-btn);
+}
+
+.menu__panel a {
+  display: block;
+  padding: var(--space-2) var(--space-4);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.menu__panel a:hover {
+  color: var(--ink);
+  background: var(--panel-2);
 }
 
 .lang-switch {
@@ -268,8 +315,15 @@ svg {
     display: none;
   }
 
-  .lang-switch {
-    margin-inline-start: auto;
+  .menu {
+    display: block;
+  }
+}
+
+/* 英文页头用 Menu / Download，比中文更宽；600px 起收紧间距，否则语言切换会被页头裁切 */
+@media (max-width: 600px) {
+  .site-header__inner {
+    gap: var(--space-2);
   }
 }
 
@@ -280,6 +334,10 @@ svg {
 
   .header-cta {
     padding-inline: var(--space-3);
+  }
+
+  .lang-switch button {
+    padding-inline: 6px;
   }
 
   .site-footer__group--end {

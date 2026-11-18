@@ -4,6 +4,7 @@ export default {
     'Theca is an offline-first text relay: move text between your phone and desktop, publish read-only share pages, and use a local developer toolbox.',
   'a11y.skip': 'Skip to main content',
   'nav.label': 'Main navigation',
+  'nav.menu': 'Menu',
   'nav.features': 'Features',
   'nav.how': 'How it works',
   'nav.privacy': 'Security & privacy',

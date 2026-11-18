@@ -522,7 +522,7 @@
   color: var(--warn);
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1119px) {
   .selfhost {
     grid-template-columns: 1fr;
     gap: var(--space-6);
