@@ -2,9 +2,11 @@
  * author : 王星星
  * date : 2026-11-16 15:21
  * email : 1099420259@qq.com
- * description : 设备 Bearer 认证与全局安全响应头：解析 Authorization、SHA-256 查设备令牌哈希、按设备限流、暴露 DevicePrincipal。
+ * description : 设备 Bearer 认证与按路径安全响应头：解析 Authorization、SHA-256 查设备令牌哈希、按设备限流、暴露 DevicePrincipal；
+ *               响应头侧区分接口 / 分享页 / 健康检查、站点资源与下载包的缓存策略，并只给站点追加 CSP。
  *               注意：认证失败只返回统一的 401 JSON，不区分令牌缺失、格式错误与不存在；设备超限返回 429 且不注入 principal；
- *                     令牌与哈希不得进入日志；未使用 Ktor bearer provider 的默认 challenge，因为其响应体固定为空，无法满足 api.md §1.5。
+ *                     令牌与哈希不得进入日志；未使用 Ktor bearer provider 的默认 challenge，因为其响应体固定为空，无法满足 api.md §1.5；
+ *                     分享页的 CSP 由分享路由逐响应追加，本文件不得覆盖。
  */
 package com.wangxingxing.clipbox.server.plugins
 
@@ -26,6 +28,7 @@ import io.ktor.server.auth.AuthenticationContext
 import io.ktor.server.auth.AuthenticationFailedCause
 import io.ktor.server.auth.AuthenticationProvider
 import io.ktor.server.request.header
+import io.ktor.server.request.path
 import io.ktor.server.response.header
 
 const val DEVICE_AUTH_PROVIDER = "device"
@@ -51,15 +54,39 @@ fun Application.configureDeviceAuth(
     }
 }
 
-/** 全局安全响应头；分享页的 CSP 由分享页自行追加，这里不写 HSTS（学习版为明文 HTTP）。 */
+/** 站点 CSP 与分享页 CSP 相互独立；学习版为明文 HTTP，不写 HSTS。 */
+const val SITE_PAGE_CSP =
+    "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; " +
+        "font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+
+/** 按路径写安全响应头；接口、分享页与健康检查必须维持 no-store，站点资源才允许长缓存。 */
 fun Application.configureSecurityHeaders() {
     intercept(ApplicationCallPipeline.Call) {
+        val path = call.request.path()
         call.response.header("X-Content-Type-Options", "nosniff")
         call.response.header("Referrer-Policy", "no-referrer")
-        call.response.header(HttpHeaders.CacheControl, "no-store")
+        call.response.header(HttpHeaders.CacheControl, cacheControlFor(path))
+        if (isSitePath(path)) {
+            call.response.header("Content-Security-Policy", SITE_PAGE_CSP)
+        }
         proceed()
     }
 }
+
+private fun cacheControlFor(path: String): String = when {
+    isNoStorePath(path) -> "no-store"
+    path.startsWith("/assets/") -> "public, max-age=31536000, immutable"
+    path.startsWith("/downloads/") -> "public, max-age=86400"
+    else -> "no-cache"
+}
+
+private fun isNoStorePath(path: String): Boolean =
+    path == "/api" || path.startsWith("/api/") ||
+        path == "/s" || path.startsWith("/s/") ||
+        path == "/healthz"
+
+private fun isSitePath(path: String): Boolean =
+    !isNoStorePath(path) && path != "/downloads" && !path.startsWith("/downloads/")
 
 class DeviceAuthenticationProvider(
     private val databaseFactory: DatabaseFactory,

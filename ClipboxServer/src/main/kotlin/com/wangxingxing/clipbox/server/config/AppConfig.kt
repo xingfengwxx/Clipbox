@@ -3,7 +3,8 @@
  * date : 2026-11-16 10:33
  * email : 1099420259@qq.com
  * description : 服务端启动配置的读取与校验；非法配置在启动前抛出 ConfigException。
- *               注意：错误信息只描述缺失项或格式约束，不得回显 ADMIN_TOKEN 明文。
+ *               注意：错误信息只描述缺失项或格式约束，不得回显 ADMIN_TOKEN 明文；
+ *                     站点与下载目录只解析路径、不创建也不校验存在性，缺少目录时由路由层跳过托管。
  */
 package com.wangxingxing.clipbox.server.config
 
@@ -22,10 +23,14 @@ data class AppConfig(
     val dataDir: Path,
     val adminToken: String,
     val publicBaseUrl: String,
+    val webDir: Path = Paths.get(DEFAULT_WEB_DIR),
+    val downloadDir: Path = Paths.get(DEFAULT_DOWNLOAD_DIR),
 ) {
     companion object {
         private const val DEFAULT_PORT = 8080
         private const val DEFAULT_DATA_DIR = "./data"
+        private const val DEFAULT_WEB_DIR = "./web"
+        private const val DEFAULT_DOWNLOAD_DIR = "./downloads"
         private const val MIN_ADMIN_TOKEN_LENGTH = 32
 
         fun fromEnv(env: Map<String, String>): AppConfig {
@@ -52,11 +57,22 @@ data class AppConfig(
             val dataDirRaw = env["DATA_DIR"]?.takeIf { it.isNotBlank() } ?: DEFAULT_DATA_DIR
             val dataDir = resolveWritableDataDir(dataDirRaw)
 
+            val webDir = resolveStaticDir(
+                env["WEB_DIR"]?.takeIf { it.isNotBlank() } ?: DEFAULT_WEB_DIR,
+                "WEB_DIR",
+            )
+            val downloadDir = resolveStaticDir(
+                env["DOWNLOAD_DIR"]?.takeIf { it.isNotBlank() } ?: DEFAULT_DOWNLOAD_DIR,
+                "DOWNLOAD_DIR",
+            )
+
             return AppConfig(
                 port = port,
                 dataDir = dataDir,
                 adminToken = adminToken,
                 publicBaseUrl = publicBaseUrl,
+                webDir = webDir,
+                downloadDir = downloadDir,
             )
         }
 
@@ -78,6 +94,14 @@ data class AppConfig(
                 throw ConfigException("PUBLIC_BASE_URL 需要完整的 http:// 或 https:// 绝对地址（含主机、无尾斜杠）")
             }
         }
+
+        // 站点与下载目录允许缺失：测试夹具、本地 API 调试与未装站点的部署都要能启动。
+        private fun resolveStaticDir(raw: String, name: String): Path =
+            try {
+                Paths.get(raw)
+            } catch (e: InvalidPathException) {
+                throw ConfigException("$name 不是合法路径：$raw", e)
+            }
 
         private fun resolveWritableDataDir(raw: String): Path {
             val path = try {

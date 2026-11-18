@@ -20,6 +20,10 @@ dependencies {
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.websockets)
+    // 静态内容 staticFiles 自 Ktor 3 起在 ktor-server-core 内，无独立 artifact；Range 仍需 partial-content。
+    implementation(libs.ktor.server.partial.content)
+    // curl -I 等 HEAD 探测要复用 GET 语义（含 401 与分享页 CSP），否则会落到统一 404。
+    implementation(libs.ktor.server.auto.head.response)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.logback.classic)
     implementation(libs.exposed.core)

@@ -1,0 +1,25 @@
+# 构建上下文为仓库根；只有 ClipboxServer/ 与 ClipboxWeb/ 需要进入构建。
+.git
+.idea
+.vscode
+.qoder
+.DS_Store
+docs
+design
+scripts
+dist
+data
+downloads
+ClipboxClient
+.env
+.env.*
+**/node_modules
+**/dist
+**/build
+**/.gradle
+**/.kotlin
+**/data
+**/*.db
+**/*.db-wal
+**/*.db-shm
+**/*.log

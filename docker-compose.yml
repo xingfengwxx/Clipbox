@@ -4,7 +4,10 @@
 #   mkdir -p data && sudo chown -R 10001:10001 data  # 容器以 uid 10001 写 SQLite
 services:
   clipbox:
-    build: ./ClipboxServer
+    # 构建上下文是仓库根：Dockerfile 同时需要 ClipboxWeb/（站点）与 ClipboxServer/（服务端）。
+    build:
+      context: .
+      dockerfile: ClipboxServer/Dockerfile
     ports:
       - "8080:8080"
     environment:
@@ -17,6 +20,8 @@ services:
       JAVA_OPTS: "-Xmx256m"
     volumes:
       - ./data:/data
+      # 安装包由宿主提供，只读挂载，不进镜像；Range/断点续传由服务端 PartialContent 处理。
+      - ./downloads:/app/downloads:ro
     restart: unless-stopped
     mem_limit: 512m
     read_only: true

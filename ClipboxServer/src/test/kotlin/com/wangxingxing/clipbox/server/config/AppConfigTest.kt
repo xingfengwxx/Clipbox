@@ -8,9 +8,11 @@ package com.wangxingxing.clipbox.server.config
 
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.io.TempDir
 
@@ -85,5 +87,30 @@ class AppConfigTest {
         val env = validEnv().apply { put("PORT", "70000") }
 
         assertFailsWith<ConfigException> { AppConfig.fromEnv(env) }
+    }
+
+    @Test
+    fun `web and download dirs use relative defaults`() {
+        val config = AppConfig.fromEnv(validEnv())
+
+        assertEquals(Paths.get("./web"), config.webDir)
+        assertEquals(Paths.get("./downloads"), config.downloadDir)
+    }
+
+    @Test
+    fun `missing static dirs are accepted and not created`() {
+        val web = tempDir.resolve("site")
+        val downloads = tempDir.resolve("downloads")
+        val env = validEnv().apply {
+            put("WEB_DIR", web.toString())
+            put("DOWNLOAD_DIR", downloads.toString())
+        }
+
+        val config = AppConfig.fromEnv(env)
+
+        assertEquals(web, config.webDir)
+        assertEquals(downloads, config.downloadDir)
+        assertFalse(Files.exists(web))
+        assertFalse(Files.exists(downloads))
     }
 }
