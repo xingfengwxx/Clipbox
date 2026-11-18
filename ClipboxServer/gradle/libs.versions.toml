@@ -1,4 +1,5 @@
 [versions]
+shadow = "9.6.1"
 kotlin = "2.3.21"
 ktor = "3.4.3"
 logback = "1.5.38"
@@ -26,3 +27,4 @@ sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }

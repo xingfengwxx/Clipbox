@@ -1,0 +1,32 @@
+# Clipbox v1.0 学习版：仅 server 容器，HTTP + IP 直连（ADR-0003），不引入 Caddy/TLS/域名。
+# 首次部署：
+#   cp .env.example .env                             # 填真实 ADMIN_TOKEN 与服务器 IP；.env 不入库
+#   mkdir -p data && sudo chown -R 10001:10001 data  # 容器以 uid 10001 写 SQLite
+services:
+  clipbox:
+    build: ./ClipboxServer
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      DATA_DIR: /data
+      ADMIN_TOKEN: "${ADMIN_TOKEN}"
+      PUBLIC_BASE_URL: "${PUBLIC_BASE_URL}"
+      MAX_CLIP_BYTES: "65536"
+      MAX_REQUEST_BYTES: "524288"
+      JAVA_OPTS: "-Xmx256m"
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+    mem_limit: 512m
+    read_only: true
+    tmpfs:
+      # Docker 的 tmpfs 默认带 noexec，而 sqlite-jdbc 会把原生库解压到 /tmp 再 System.load；
+      # 显式 exec 覆盖默认值（选项逆序合并，后置者生效）。
+      - /tmp:exec
+    # 容器日志轮转（服务端技术架构 §12 建议），防止 json-file 无限增长。
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

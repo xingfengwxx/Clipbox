@@ -1,0 +1,14 @@
+# 构建上下文为 ClipboxServer/；gradlew、gradle/wrapper 与 gradle/libs.versions.toml 必须保留。
+.gradle/
+build/
+.kotlin/
+.idea/
+*.iml
+data/
+*.db
+*.db-wal
+*.db-shm
+.env
+.env.*
+*.log
+.DS_Store
