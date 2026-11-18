@@ -1,3 +1,4 @@
+import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -134,6 +135,18 @@ compose.resources {
 compose.desktop {
     application {
         mainClass = "com.wangxingxing.clipbox.MainKt"
+        nativeDistributions {
+            // 对外品牌名与版本：DMG/应用包显示 Theca，版本与 Android versionName 对齐
+            packageName = "Theca"
+            packageVersion = "1.0.0"
+            // 未显式声明 targetFormats 时 Compose 1.9 不注册 packageDmg；本版只交付 macOS DMG
+            targetFormats(TargetFormat.Dmg)
+            // 默认 jlink 运行时缺少 jdk.unsupported，DataStore 的 protobuf 反射会因 sun.misc.Unsafe 缺失启动失败
+            modules("jdk.unsupported")
+            macOS {
+                bundleID = "com.wangxingxing.clipbox"
+            }
+        }
     }
 }
 
