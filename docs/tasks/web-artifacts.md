@@ -60,8 +60,8 @@ V2 Signer: certificate MD5 digest: dd18a7d5e68c83203556a850af56de81
 ## 7. 远程部署与验收（T-WEB-09）
 
 - 日期：2026-11-18
-- 目标：`root@117.72.121.6:/root/clipbox`（脚本与仓库均不含 IP，运行时传入）
-- 命令：`scripts/deploy-web.sh root@117.72.121.6`
+- 目标：`root@<SERVER_IP>:/root/clipbox`（部署脚本不含 IP，运行时传入）
+- 命令：`scripts/deploy-web.sh root@<SERVER_IP>`
 - 结果：脚本 exit 0；`healthz ready after 4s`；容器 `clipbox-clipbox-1` 状态 `Up (healthy)`
 - 回滚包：`/root/clipbox-rollbacks/clipbox-rollback-20261118-151847.tar.gz`（131M，排除 `data/`）；回滚方式为远端 `tar -xzf <包> -C /root` 覆盖目录后 `docker compose up -d --build`
 

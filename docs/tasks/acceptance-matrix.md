@@ -18,7 +18,7 @@
 | --- | --- |
 | L | 本地主验收实例：`/tmp/clipbox-rel06-main`（从 `ClipboxServer/data/clipbox.db` 用 `sqlite3 .backup` 复制，`PORT=8080`，`PUBLIC_BASE_URL=http://localhost:8080`，独立 `ADMIN_TOKEN` 仅存本地） |
 | I | AC-11 隔离实例：`/tmp/clipbox-rel06-ac11`（`PORT=18080`，空库，可执行 jar，不接触主数据） |
-| R | 远程部署：`117.72.121.6:8080`，容器 `clipbox-clipbox-1`（限额 512 MiB），本卡只做只读检查与采样 |
+| R | 远程部署：`<SERVER_IP>:8080`，容器 `clipbox-clipbox-1`（限额 512 MiB），本卡只做只读检查与采样 |
 | Android | `emulator-5554`，Medium_Phone_API_37（sdk_gphone64_arm64），Clipbox 1.0.0 debug；APK SHA-256 `bd4896298275f01ba795570b527075af44d0c68551732c42ca6c9e979c948d0b`（T-REL-05） |
 | iOS 手机 | iPhone 16 模拟器，UDID `0278FBBD-82F0-4092-AF60-B6B44C8228A9`，iOS 27.2 |
 | iOS 平板 | iPad (A16) 模拟器，UDID `301101B4-D695-45D1-ABCB-782FF20DDCCB`，iOS 27.2 |
