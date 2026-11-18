@@ -1,6 +1,6 @@
 # Clipbox / Theca
 
-离线优先的跨设备文本中转 + 本地开发者工具箱。v1.0.0 交付 Android、iOS 模拟器、macOS、Windows 与 Linux；服务端为单实例 Ktor + SQLite。
+离线优先的跨设备文本中转工具，附带本地开发者工具箱。跨平台，使用 Kotlin Multiplatform 与 Compose Multiplatform 构建。v1.0.0 交付 Android、iOS 模拟器、macOS、Windows 与 Linux；服务端为单实例 Ktor + SQLite。
 
 - 客户端：`ClipboxClient/`（Kotlin Multiplatform + Compose Multiplatform）
 - 服务端：`ClipboxServer/`（Kotlin + Ktor + Exposed + SQLite WAL）
