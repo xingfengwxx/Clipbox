@@ -316,6 +316,110 @@
   color: var(--ink-2);
 }
 
+/* 下载矩阵：每行一个平台，可用行带实测大小与哈希，不可用行只陈述原因 */
+.dl-list {
+  border-bottom: 1px solid var(--line);
+}
+
+.dl-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-4) var(--space-6);
+  align-items: center;
+  padding-block: var(--space-5);
+  border-top: 1px solid var(--line);
+}
+
+.dl-row__name {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.dl-row__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+
+.dl-row__status.is-ok {
+  color: var(--ok);
+}
+
+.dl-row__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+
+.dl-row__note {
+  max-width: 56em;
+  margin-top: var(--space-2);
+  font-size: 14.5px;
+  color: var(--ink-2);
+}
+
+.dl-row__meta {
+  margin-top: var(--space-3);
+}
+
+.dl-row__sha {
+  margin-top: var(--space-1);
+  overflow-wrap: anywhere;
+}
+
+.dl-row__action {
+  justify-self: end;
+}
+
+.dl-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-5);
+  margin-top: var(--space-5);
+}
+
+.dl-foot__checksums {
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.dl-foot__checksums:hover {
+  color: var(--ink);
+}
+
+.dl-foot__note {
+  max-width: 52em;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.dl-warning {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--warn);
+}
+
+@media (max-width: 768px) {
+  .dl-row {
+    grid-template-columns: 1fr;
+  }
+
+  .dl-row__action {
+    justify-self: start;
+  }
+}
+
 @media (max-width: 1024px) {
   .hero {
     padding-block: var(--space-7);

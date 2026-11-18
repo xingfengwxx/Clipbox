@@ -30,6 +30,7 @@ captures/
 
 # 本地打包产物（APK/DMG/哈希），不入库
 /dist/
+/downloads/
 
 # 官网依赖与构建产物
 /ClipboxWeb/node_modules/

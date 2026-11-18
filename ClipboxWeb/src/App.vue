@@ -6,6 +6,7 @@ import HeroSection from './components/HeroSection.vue'
 import FeatureGrid from './components/FeatureGrid.vue'
 import HowItWorks from './components/HowItWorks.vue'
 import PrivacySection from './components/PrivacySection.vue'
+import DownloadSection from './components/DownloadSection.vue'
 import FaqSection from './components/FaqSection.vue'
 import SiteFooter from './components/SiteFooter.vue'
 
@@ -30,6 +31,7 @@ watchEffect(() => {
     <FeatureGrid />
     <HowItWorks />
     <PrivacySection />
+    <DownloadSection />
     <FaqSection />
   </main>
 
