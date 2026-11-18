@@ -177,7 +177,7 @@
     <string name="settings_about_version">Version</string>
     <string name="settings_about_build">Build</string>
     <string name="settings_about_storage">Storage</string>
-    <string name="settings_about_storage_body">Clips and settings stay on this device. The latest 200 unpinned clips and all pinned clips are kept.</string>
+    <string name="settings_about_storage_body">Clips and settings stay on this device. Synced clips are stored unencrypted on the server; v1.0.0 has no end-to-end encryption. The latest 200 unpinned clips and all pinned clips are kept locally.</string>
     <string name="settings_about_transport">Transport</string>
     <string name="settings_about_transport_body">Unencrypted connection, for learning only</string>
     <string name="settings_section_danger">Danger zone</string>

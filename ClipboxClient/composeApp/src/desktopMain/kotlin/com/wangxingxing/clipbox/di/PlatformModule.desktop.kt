@@ -43,6 +43,7 @@ private class DesktopPlatformServices : PlatformServices {
     override fun createDatabase(): ClipboxDatabase =
         createClipboxDatabase()
 
+    // REQ-SET-011：诊断日志 debug 默认开、release 默认关；打包产物不带 debugBuild 标记，按 release 处理
     override fun createSettingsRepository(): SettingsRepository =
-        createSettingsRepository(appScope, diagnosticLoggingDefault = true)
+        createSettingsRepository(appScope, diagnosticLoggingDefault = isDebug)
 }

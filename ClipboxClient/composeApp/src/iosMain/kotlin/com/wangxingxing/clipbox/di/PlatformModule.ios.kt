@@ -51,6 +51,7 @@ private class IosPlatformServices : PlatformServices {
     override fun createDatabase(): ClipboxDatabase =
         createClipboxDatabase()
 
+    // REQ-SET-011：诊断日志 debug 默认开、release 默认关；release 开启时必须走设置页的风险确认
     override fun createSettingsRepository(): SettingsRepository =
-        createSettingsRepository(appScope, diagnosticLoggingDefault = true)
+        createSettingsRepository(appScope, diagnosticLoggingDefault = isDebug)
 }

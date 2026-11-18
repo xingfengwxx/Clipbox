@@ -169,7 +169,7 @@
     <string name="settings_about_version">版本</string>
     <string name="settings_about_build">构建</string>
     <string name="settings_about_storage">数据存储</string>
-    <string name="settings_about_storage_body">记录与设置只保存在本机；保留最近 200 条非置顶与全部置顶。</string>
+    <string name="settings_about_storage_body">记录与设置保存在本机；同步内容在服务端以明文存储，v1.0.0 不含端到端加密。本地保留最近 200 条非置顶与全部置顶。</string>
     <string name="settings_about_transport">传输</string>
     <string name="settings_about_transport_body">未加密连接，仅用于学习</string>
     <string name="settings_section_danger">危险操作</string>
