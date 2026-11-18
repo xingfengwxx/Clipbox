@@ -168,12 +168,27 @@ compose.desktop {
             // 对外品牌名与版本：DMG/应用包显示 Theca，版本与 Android versionName 对齐
             packageName = "Theca"
             packageVersion = "1.0.0"
-            // 未显式声明 targetFormats 时 Compose 1.9 不注册 packageDmg；本版只交付 macOS DMG
-            targetFormats(TargetFormat.Dmg)
+            // 显式声明三种目标格式；本机只能在 macOS 构建 DMG，MSI / DEB 由 release CI 在对应系统构建
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             // 默认 jlink 运行时缺少 jdk.unsupported，DataStore 的 protobuf 反射会因 sun.misc.Unsafe 缺失启动失败
             modules("jdk.unsupported")
             macOS {
                 bundleID = "com.wangxingxing.clipbox"
+                iconFile.set(project.file("packaging/Theca.icns"))
+            }
+            windows {
+                iconFile.set(project.file("packaging/Theca.ico"))
+                menuGroup = "Theca"
+                // 固定 upgradeUuid，后续版本不得更换，否则 MSI 升级会被识别为另一款应用
+                upgradeUuid = "303373F5-1A67-467C-9FEA-93EC78EC4564"
+                perUserInstall = true
+            }
+            linux {
+                packageName = "theca"
+                iconFile.set(project.file("packaging/Theca.png"))
+                debMaintainer = "1099420259@qq.com"
+                appCategory = "utils"
+                appRelease = "1"
             }
         }
     }
