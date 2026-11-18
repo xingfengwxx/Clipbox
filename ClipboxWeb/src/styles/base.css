@@ -198,33 +198,7 @@ svg {
   white-space: nowrap;
 }
 
-/* 首屏空壳 */
-.hero {
-  padding-block: var(--space-9) var(--space-8);
-}
-
-.hero__title {
-  max-width: 15em;
-  font-size: clamp(40px, 6.5vw, 66px);
-  line-height: 1.12;
-  font-weight: 650;
-  letter-spacing: -0.035em;
-}
-
-.hero__subtitle {
-  max-width: 34em;
-  margin-top: var(--space-5);
-  font-size: 17px;
-  color: var(--ink-2);
-}
-
-.hero__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-top: var(--space-6);
-}
-
+/* 主次按钮：下载区块与首屏共用 */
 .button-primary,
 .button-secondary {
   display: inline-flex;
@@ -253,10 +227,6 @@ svg {
 
 .button-secondary:hover {
   border-color: var(--ink-3);
-}
-
-.hero__meta {
-  margin-top: var(--space-6);
 }
 
 /* 页脚 */
@@ -300,10 +270,6 @@ svg {
 
   .lang-switch {
     margin-inline-start: auto;
-  }
-
-  .hero {
-    padding-block: var(--space-8) var(--space-7);
   }
 }
 

@@ -1,0 +1,384 @@
+/* 区块骨架与内容网格：发丝线是唯一的分隔手段；阴影只出现在中继带的桌面窗框上。 */
+
+.section {
+  padding-block: var(--space-8);
+  border-top: 1px solid var(--line);
+  scroll-margin-top: var(--header-height);
+}
+
+.section__head {
+  max-width: 44em;
+  margin-bottom: var(--space-6);
+}
+
+.section__title {
+  font-size: clamp(26px, 3vw, 31px);
+  line-height: 1.2;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.section__subtitle {
+  margin-top: var(--space-3);
+  font-size: 15px;
+  color: var(--ink-2);
+}
+
+/* Hero：左文右图，右图是唯一的记忆点——桌面窗与手机屏由一条发丝线连接 */
+.hero {
+  padding-block: var(--space-8) var(--space-7);
+}
+
+.hero__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
+  gap: var(--space-7);
+  align-items: center;
+}
+
+.hero__title {
+  max-width: 12em;
+  font-size: clamp(40px, 5.4vw, 64px);
+  line-height: 1.12;
+  font-weight: 650;
+  letter-spacing: -0.035em;
+}
+
+.hero__subtitle {
+  max-width: 32em;
+  margin-top: var(--space-5);
+  font-size: 17px;
+  color: var(--ink-2);
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.hero__meta {
+  margin-top: var(--space-6);
+}
+
+.relay {
+  position: relative;
+  margin: 0;
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--line);
+}
+
+.relay__status {
+  position: absolute;
+  top: 0;
+  left: var(--space-2);
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-inline: var(--space-2);
+  background: var(--bg);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.relay__dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+
+.relay__frames {
+  display: flex;
+  align-items: flex-end;
+}
+
+.relay__desktop {
+  flex: 1 1 auto;
+  min-width: 0;
+  box-shadow: 0 24px 48px -30px rgba(25, 23, 18, 0.4);
+}
+
+.relay__desktop img,
+.relay__phone img {
+  width: 100%;
+  height: auto;
+}
+
+.relay__hand {
+  flex: 0 0 40px;
+  align-self: center;
+  position: relative;
+  height: 1px;
+  background: var(--line);
+}
+
+.relay__hand::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: -2px;
+  width: 5px;
+  height: 5px;
+  background: var(--accent);
+}
+
+.relay__phone {
+  flex: 0 0 180px;
+}
+
+/* 能力网格与隐私清单共用发丝线表格骨架 */
+.hairline-grid {
+  display: grid;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+.features {
+  grid-template-columns: 1fr 1fr;
+}
+
+.feature {
+  background: var(--bg);
+  padding: var(--space-5);
+}
+
+.feature__title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.feature__desc {
+  max-width: 34em;
+  margin-top: var(--space-2);
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--ink-2);
+}
+
+/* 工作方式：真实序列，编号用等宽读数 */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-5);
+  counter-reset: step;
+}
+
+.step {
+  counter-increment: step;
+  border-top: 1px solid var(--line);
+  padding-top: var(--space-4);
+}
+
+.step::before {
+  content: counter(step, decimal-leading-zero);
+  display: block;
+  margin-bottom: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+}
+
+.step__title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.step__desc {
+  margin-top: var(--space-2);
+  font-size: 14.5px;
+  color: var(--ink-2);
+}
+
+/* 安全与隐私 */
+.privacy {
+  grid-template-columns: 1fr 1fr;
+}
+
+.privacy__item {
+  background: var(--bg);
+  padding: var(--space-5);
+}
+
+.privacy__item--wide {
+  grid-column: 1 / -1;
+}
+
+.privacy__item--warn .privacy__title {
+  color: var(--warn);
+}
+
+.privacy__title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.privacy__desc {
+  max-width: 68ch;
+  margin-top: var(--space-2);
+  font-size: 14.5px;
+  color: var(--ink-2);
+}
+
+.not-doing {
+  margin-top: var(--space-6);
+}
+
+.not-doing__title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.not-doing__list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0 var(--space-6);
+  margin-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+
+.not-doing__list li {
+  padding-block: var(--space-2);
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+/* FAQ */
+.faq {
+  max-width: 820px;
+  border-top: 1px solid var(--line);
+}
+
+.faq__item {
+  border-bottom: 1px solid var(--line);
+}
+
+.faq__q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block: var(--space-4);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+}
+
+.faq__q::-webkit-details-marker {
+  display: none;
+}
+
+.faq__marker {
+  position: relative;
+  flex: none;
+  width: 12px;
+  height: 12px;
+}
+
+.faq__marker::before,
+.faq__marker::after {
+  content: "";
+  position: absolute;
+  background: var(--ink-2);
+}
+
+.faq__marker::before {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+}
+
+.faq__marker::after {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transition: transform 0.18s ease;
+}
+
+.faq__item[open] .faq__marker::after {
+  transform: scaleY(0);
+}
+
+.faq__a {
+  max-width: 68ch;
+  padding-bottom: var(--space-4);
+  font-size: 15px;
+  color: var(--ink-2);
+}
+
+@media (max-width: 1024px) {
+  .hero {
+    padding-block: var(--space-7);
+  }
+
+  .hero__inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+
+  .relay {
+    max-width: 640px;
+  }
+}
+
+@media (max-width: 900px) {
+  .relay__hand {
+    flex-basis: 24px;
+  }
+
+  .relay__phone {
+    flex-basis: 132px;
+  }
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding-block: var(--space-7);
+  }
+
+  .features,
+  .privacy {
+    grid-template-columns: 1fr;
+  }
+
+  .privacy__item--wide {
+    grid-column: auto;
+  }
+
+  .steps {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .not-doing__list {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .relay__hand {
+    flex-basis: 16px;
+  }
+
+  .relay__phone {
+    flex-basis: 104px;
+  }
+
+  .relay__status {
+    left: 0;
+  }
+
+  .not-doing__list {
+    grid-template-columns: 1fr;
+  }
+}
