@@ -1,0 +1,26 @@
+export default {
+  'meta.title': 'Theca · Text relay across your devices',
+  'meta.description':
+    'Theca is an offline-first text relay: move text between your phone and desktop, publish read-only share pages, and use a local developer toolbox.',
+  'a11y.skip': 'Skip to main content',
+  'nav.label': 'Main navigation',
+  'nav.features': 'Features',
+  'nav.how': 'How it works',
+  'nav.download': 'Downloads',
+  'nav.selfhost': 'Self-hosting',
+  'nav.faq': 'FAQ',
+  'nav.cta': 'Download',
+  'lang.group': 'Switch language',
+  'lang.zh-CN': '简',
+  'lang.zh-TW': '繁',
+  'lang.en': 'EN',
+  'hero.title': 'Passing text around, like handing over a note.',
+  'hero.subtitle':
+    'A phone, a desktop window, and a read-only share page. Theca moves what you just copied to your other device; when the network drops it queues, and catches up by itself.',
+  'hero.primary': 'Download v1.0.0',
+  'hero.secondary': 'See what it does',
+  'hero.meta': 'v1.0.0 · 5 platforms · 64 KiB per clip · shares 1h / 24h / 7d',
+  'footer.tagline': 'Offline-first text relay with a local developer toolbox.',
+  'footer.version': 'Theca · v1.0.0',
+  'footer.notice': 'Unencrypted connection, for personal learning only.',
+}

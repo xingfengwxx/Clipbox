@@ -1,0 +1,52 @@
+/* 品牌令牌：数值与 design/brand-spec.md 完全一致；明暗只由系统偏好切换，不做手动开关。 */
+:root {
+  color-scheme: light dark;
+  --bg: #f3f0e8;
+  --panel: #fbf9f3;
+  --panel-2: #eae6da;
+  --ink: #191712;
+  --ink-2: #5b5446;
+  --ink-3: #6b6455;
+  --line: #d0caba;
+  --accent: #a8430f;
+  --on-accent: #fff8f0;
+  --ok: #2f6b45;
+  --warn: #7a4e0c;
+  --danger: #a03024;
+
+  --font-ui: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+    "Noto Sans SC", "Microsoft YaHei", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: Menlo, Consolas, "Courier New", monospace;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  --radius-btn: 3px;
+  --radius-input: 3px;
+  --container: 1120px;
+  --header-height: 64px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17150f;
+    --panel: #1e1b14;
+    --panel-2: #262218;
+    --ink: #ede9dc;
+    --ink-2: #b7b0a0;
+    --ink-3: #9a9384;
+    --line: #3a352b;
+    --accent: #e8823f;
+    --on-accent: #17150f;
+    --ok: #7ed6a4;
+    --warn: #e0b05a;
+    --danger: #f08a75;
+  }
+}

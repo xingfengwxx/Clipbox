@@ -1,0 +1,26 @@
+export default {
+  'meta.title': '字匣 Theca · 跨设备文本中转',
+  'meta.description':
+    '字匣 Theca 是离线优先的跨设备文本中转工具：手机与桌面之间传递文本，生成只读分享页，附带本地开发者工具箱。',
+  'a11y.skip': '跳到主要内容',
+  'nav.label': '主要导航',
+  'nav.features': '功能',
+  'nav.how': '工作方式',
+  'nav.download': '下载',
+  'nav.selfhost': '自建服务端',
+  'nav.faq': '常见问题',
+  'nav.cta': '下载',
+  'lang.group': '切换语言',
+  'lang.zh-CN': '简',
+  'lang.zh-TW': '繁',
+  'lang.en': 'EN',
+  'hero.title': '文本中转，像把一张纸条递过去。',
+  'hero.subtitle':
+    '一部手机、一扇桌面窗口、一张只读分享页。字匣把剪贴板里那点东西稳稳送到另一台设备；断网时先排队，恢复后自动补上。',
+  'hero.primary': '下载 v1.0.0',
+  'hero.secondary': '看看能做什么',
+  'hero.meta': 'v1.0.0 · 5 端 · 单条 64 KiB · 分享 1h / 24h / 7d',
+  'footer.tagline': '离线优先的跨设备文本中转，附本地开发者工具箱。',
+  'footer.version': '字匣 Theca · v1.0.0',
+  'footer.notice': '未加密连接，仅用于学习。',
+}
