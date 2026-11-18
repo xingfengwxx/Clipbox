@@ -269,9 +269,19 @@ svg {
 .site-footer__inner {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2) var(--space-6);
-  align-items: baseline;
+  gap: var(--space-4) var(--space-6);
   justify-content: space-between;
+}
+
+.site-footer__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.site-footer__group--end {
+  align-items: flex-end;
+  text-align: right;
 }
 
 .site-footer__tagline {
@@ -304,6 +314,11 @@ svg {
 
   .header-cta {
     padding-inline: var(--space-3);
+  }
+
+  .site-footer__group--end {
+    align-items: flex-start;
+    text-align: left;
   }
 }
 
