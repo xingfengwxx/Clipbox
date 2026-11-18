@@ -15,7 +15,7 @@ export const platforms: PlatformDownload[] = [
   {
     id: 'android',
     available: true,
-    file: 'Theca-1.0.0-android.apk',
+    file: 'Theca-v1.0.0-android-release.apk',
     sizeBytes: 16030091,
     sha256: 'a8a3324bf8e0aff61d4aef6017ba5ede372c70d856a752868f7cd3a15ddb7f55',
   },
@@ -26,9 +26,9 @@ export const platforms: PlatformDownload[] = [
   {
     id: 'macos',
     available: true,
-    file: 'Theca-1.0.0-macos-arm64.dmg',
-    sizeBytes: 83276402,
-    sha256: '75b91ae0d07c9fab4e26a0cec338cbc36879cbb19233aaa6c0f3943bff90fd47',
+    file: 'Theca-v1.0.0-macos-arm64-release.dmg',
+    sizeBytes: 83019219,
+    sha256: '9a840108438b9f19b828f4d5cb38df0d6803780e8dc34710b59db6ea138167d3',
   },
   {
     id: 'windows',

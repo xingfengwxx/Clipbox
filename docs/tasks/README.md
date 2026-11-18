@@ -260,8 +260,8 @@ T-WEB-09 首轮远程部署已于 2026-11-18 完成，范围仅 APK / DMG；T-WE
 | iOS | T-IOS-10 | 待开始 | — |
 | Release | T-REL-01…T-REL-07 | 已完成 | 最后一张 `1eee62b`（T-REL-07）；T-REL-01/03 为用户动作与远程部署 |
 | Release | T-REL-08 | 待开始 | — |
-| Release | T-REL-09 | 进行中 | — |
-| Release | T-REL-10…T-REL-12 | 待开始 | — |
+| Release | T-REL-09…T-REL-12 | 待开始 | — |
+| Release | T-REL-13 | 进行中 | — |
 | Web | T-WEB-01…T-WEB-08 | 已完成 | 最后一张 `57ab06c`（T-WEB-08） |
 | Web | T-WEB-09 | 进行中 | 首轮 `d2ad070`（仅 APK / DMG）；MSI / DEB 补验收待 T-WEB-10 后执行，证据见 [web-artifacts.md](web-artifacts.md) §7 |
 | Web | T-WEB-10 | 待开始 | — |

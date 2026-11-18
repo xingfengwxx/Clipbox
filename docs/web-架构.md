@@ -102,8 +102,8 @@ ClipboxWeb/
 
 | 文件 | 来源 | 说明 |
 | --- | --- | --- |
-| `Theca-1.0.0-android.apk` | `ClipboxClient/composeApp/build/outputs/apk/release/composeApp-release.apk` | release 签名，debuggable=false |
-| `Theca-1.0.0-macos-arm64.dmg` | `dist/Theca-1.0.0.dmg` | macOS 12+，arm64，未签名 |
+| `Theca-v1.0.0-android-release.apk` | `ClipboxClient/composeApp/build/outputs/apk/release/composeApp-release.apk` | release 签名，debuggable=false |
+| `Theca-v1.0.0-macos-arm64-release.dmg` | `ClipboxClient/composeApp/build/compose/binaries/main/dmg/Theca-1.0.0.dmg` | macOS 12+，arm64，未签名 |
 | `SHA256SUMS.txt` | `sha256sum` 生成 | 与页面展示一致 |
 | `theca-docker-compose.example.yml` | 由根 `docker-compose.yml` 复制 | 自建参考 |
 | `theca.env.example` | 由根 `.env.example` 复制 | 自建参考 |

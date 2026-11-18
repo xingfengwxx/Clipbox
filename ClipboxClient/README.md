@@ -61,6 +61,7 @@ cd ClipboxClient
 # 产物：composeApp/build/compose/binaries/main/deb/ 下的 .deb，CI 统一重命名
 ```
 
+- 交付命名统一为 `Theca-v<version>-<platform>[-<arch>]-<debug|release>.<ext>`：Gradle 内部产物名保持不变（`composeApp-release.apk`、`Theca-1.0.0.dmg/.msi/.deb`），由 CI staging 或本地交付时改名。Android 为 universal 单包，不加架构段；正式产物均为 `-release`，本地 debug 交付示例 `Theca-v1.0.0-android-debug.apk`。
 - `compose.desktop { nativeDistributions }` 锁定 `packageName = "Theca"`、`packageVersion = "1.0.0"`、`targetFormats(Dmg, Msi, Deb)`、三个平台图标与 macOS bundleID；默认 jlink 运行时额外包含 `jdk.unsupported`（DataStore 的 protobuf 依赖 `sun.misc.Unsafe`，缺失时打包产物启动即失败）。
 - 图标位于 `composeApp/packaging/`：`Theca.icns`（macOS）、`Theca.ico`（Windows，16–256 多尺寸）、`Theca.png`（Linux，512×512），均由 `design/brand/exports/` 的 PNG 生成，不依赖额外构建插件。
 - 对外正式产物由 tag 触发的 release-only GitHub Actions 构建并上传 GitHub Release；本机 macOS 只回归 DMG，MSI / DEB 由 `windows-2022` 与 `ubuntu-24.04` runner 构建，不在 macOS 上伪造。

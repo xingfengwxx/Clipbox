@@ -142,11 +142,11 @@ Given 访客进入下载区，When 查看列表，Then 看到 Android、iOS、ma
 
 #### WEB-DL-002 Android 安装包
 
-Given 平台为 Android，When 点击下载，Then 得到 `/downloads/Theca-1.0.0-android.apk`（release 签名、debuggable=false），页面显示大小与 SHA-256，并注明 Android 8.0+。
+Given 平台为 Android，When 点击下载，Then 得到 `/downloads/Theca-v1.0.0-android-release.apk`（release 签名、debuggable=false），页面显示大小与 SHA-256，并注明 Android 8.0+。
 
 #### WEB-DL-003 macOS 安装包
 
-Given 平台为 macOS，When 点击下载，Then 得到 `/downloads/Theca-1.0.0-macos-arm64.dmg`，页面注明 macOS 12+、Apple Silicon、未签名及「右键 → 打开」提示。
+Given 平台为 macOS，When 点击下载，Then 得到 `/downloads/Theca-v1.0.0-macos-arm64-release.dmg`，页面注明 macOS 12+、Apple Silicon、未签名及「右键 → 打开」提示。
 
 #### WEB-DL-004 iOS 不可用说明
 
@@ -170,7 +170,7 @@ Given 平台为 Windows，When 查看条目或首次运行 MSI，Then 能看到�
 
 #### WEB-DL-009 Linux 安装包与校验
 
-Given 平台为 Linux，When 点击下载，Then 得到 `/downloads/Theca-1.0.0-linux-x86_64.deb`；页面注明 x86_64、`dpkg -i` 安装、未签名且不提供 apt 仓库，并展示 SHA-256。
+Given 平台为 Linux，When 点击下载，Then 得到 `/downloads/Theca-v1.0.0-linux-amd64-release.deb`；页面注明 amd64（x86_64）、`dpkg -i` 安装、未签名且不提供 apt 仓库，并展示 SHA-256。
 
 ### 5.4 自建服务端
 

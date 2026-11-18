@@ -29,10 +29,12 @@ V2 Signer: certificate MD5 digest: dd18a7d5e68c83203556a850af56de81
 
 | 文件（`downloads/`） | 字节数 | 页面显示 | SHA-256 |
 | --- | --- | --- | --- |
-| `Theca-1.0.0-android.apk` | 16,030,091 | 15.3 MB | `a8a3324bf8e0aff61d4aef6017ba5ede372c70d856a752868f7cd3a15ddb7f55` |
-| `Theca-1.0.0-macos-arm64.dmg` | 83,276,402 | 79.4 MB | `75b91ae0d07c9fab4e26a0cec338cbc36879cbb19233aaa6c0f3943bff90fd47` |
+| `Theca-v1.0.0-android-release.apk` | 16,030,091 | 15.3 MB | `a8a3324bf8e0aff61d4aef6017ba5ede372c70d856a752868f7cd3a15ddb7f55` |
+| `Theca-v1.0.0-macos-arm64-release.dmg` | 83,019,219 | 79.2 MB | `9a840108438b9f19b828f4d5cb38df0d6803780e8dc34710b59db6ea138167d3` |
 
-`SHA256SUMS.txt` 由 `shasum -a 256` 生成，`shasum -a 256 -c SHA256SUMS.txt` 两项均为 `OK`。DMG 哈希与 T-REL-05 记录一致，说明产物未变更。
+2026-11-18 起产物统一命名为 `Theca-v<version>-<platform>[-<arch>]-<debug|release>.<ext>`。APK 字节与哈希未变；DMG 换用 T-REL-10 之后的含图标构建，大小与哈希由 `83,276,402 / 75b91ae0…` 更新为本表值。
+
+`SHA256SUMS.txt` 由 `shasum -a 256` 生成，`shasum -a 256 -c SHA256SUMS.txt` 两项均为 `OK`。APK 哈希与首版一致；DMG 已更新为 T-REL-10 之后的含图标构建。
 
 ## 4. 页面契约
 

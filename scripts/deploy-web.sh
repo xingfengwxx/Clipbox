@@ -27,7 +27,9 @@ log() { printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S%z')" "$*"; }
 fail() { log "ERROR $*" >&2; exit 1; }
 
 [ -d "$DOWNLOADS_DIR" ] || fail "缺少下载目录：$DOWNLOADS_DIR"
-for required in SHA256SUMS.txt Theca-1.0.0-android.apk Theca-1.0.0-macos-arm64.dmg; do
+# 交付文件名含版本号，统一从版本校验脚本取版本，避免脚本与产物命名再次漂移。
+VERSION="$("$REPO_ROOT/scripts/check-release-version.sh" --print-version)" || fail "版本校验失败"
+for required in SHA256SUMS.txt "Theca-v${VERSION}-android-release.apk" "Theca-v${VERSION}-macos-arm64-release.dmg"; do
     [ -f "$DOWNLOADS_DIR/$required" ] || fail "缺少下载产物：$required"
 done
 command -v rsync >/dev/null 2>&1 || fail "未找到 rsync"

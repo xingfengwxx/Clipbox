@@ -516,7 +516,7 @@ ls -l composeApp/packaging/Theca.ico composeApp/packaging/Theca.png composeApp/p
 - Job：`test-server`（ubuntu）、`test-client`（macos-15）、`android`、`linux`、`windows`、`macos`、`release`；构建前跑版本检查。
 - Runner 固定 `ubuntu-24.04`、`windows-2022`、`macos-15`；只使用 GitHub 官方 actions。
 - Windows 确认 WiX 3.14，缺失时用官方安装方式补齐；Linux 用 `dpkg-deb --info` 校验。
-- 产物命名：`Theca-1.0.0-{android,macos-arm64,windows-x64,linux-x86_64}.{apk,dmg,msi,deb}`；生成 `SHA256SUMS.txt`。
+- 产物命名：`Theca-v<version>-<platform>[-<arch>]-release.<ext>`，本版即 `Theca-v1.0.0-{android,macos-arm64,windows-amd64,linux-amd64}-release.{apk,dmg,msi,deb}`；生成 `SHA256SUMS.txt`。
 - 不读取 GitHub Secrets；Android 签名直接使用仓库内 `ClipboxClient/signing/`（用户接受风险 F4）。
 - `workflow_dispatch` 先做 dry run，不创建 Release；tag 构建才执行 `gh release create`。
 - 推送 workflow 与 tag 前必须取得用户明确授权。
@@ -594,3 +594,55 @@ grep -nE "windows-x64|linux-x86_64|未做安装|SHA-256" docs/tasks/release-arti
 
 - 不要把本地 debug APK / 旧 DMG 的哈希写进正式台账。
 - 不要把未安装验收描述成「已验证安装」。
+
+---
+
+## T-REL-13 产物命名规范化与交付同步
+
+| 字段 | 值 |
+| --- | --- |
+| 里程碑 | M5 |
+| 前置 | T-REL-11 |
+| 需求 | REQ-PLAT-005、交付范围 |
+| 预估 | 0.25 天 |
+
+**目标**：对外产物统一命名为 `Theca-v<version>-<platform>[-<arch>]-<debug|release>.<ext>`，官网下载数据、部署校验与台账同步；不改页面布局、不新增打包时间、不拆 Android ABI。
+
+**必读**：[ADR-0005](../adr/0005-v1-multiplatform-release.md)、`docs/web-架构.md` §7、`docs/tasks/web-artifacts.md`。
+
+**涉及路径**：`.github/workflows/release.yml`、`scripts/deploy-web.sh`、`ClipboxWeb/src/data/downloads.ts`、`README.md`、`ClipboxClient/README.md`、`docs/` 相关文档、`downloads/`（运行期，不入库）。
+
+**实现要点**
+
+- 四平台 release 产物统一 `v` 前缀、平台小写、架构 `arm64`/`amd64`、末尾 `-release`；Android 为 universal 单包，不加架构段。
+- Gradle 内部产物名保持不变，CI staging 与本地交付时改名；本地 debug 交付示例 `Theca-v1.0.0-android-debug.apk`。
+- `downloads/` 重命名 APK、替换 T-REL-10 之后的含图标 DMG，重建 `SHA256SUMS.txt`；官网数值以实测为准。
+- `scripts/deploy-web.sh` 用 `scripts/check-release-version.sh --print-version` 推导版本，不再硬编码产物名。
+- 不写打包时间；不改页面布局、组件与 i18n 文案。
+
+**验收**
+
+```bash
+cd /Users/wangxingxing/AndroidStudioProjects/MyProjects/Clipbox
+scripts/check-release-version.sh
+ls downloads/Theca-v1.0.0-android-release.apk downloads/Theca-v1.0.0-macos-arm64-release.dmg
+(cd downloads && shasum -a 256 -c SHA256SUMS.txt)
+grep -n "Theca-v1.0.0" ClipboxWeb/src/data/downloads.ts
+ruby -ryaml -e 'YAML.load_file(".github/workflows/release.yml"); puts "yaml ok"'
+(cd ClipboxWeb && npm run build)
+```
+
+预期：版本校验通过；四平台命名在 CI、官网、部署脚本与文档一致；下载文件、`SHA256SUMS.txt` 与 `downloads.ts` 三方哈希一致。
+
+**DoD**
+
+- [ ] 四平台 CI 命名与官网、部署脚本、文档一致。
+- [ ] `downloads/` 与新 DMG 实测值一致；旧名文件已清理。
+- [ ] 不 push、不打 tag；远程部署待用户授权。
+- [ ] 一卡一提交：`T-REL-13: <一句话>`。
+
+**禁止**
+
+- 不要为命名改动 Gradle 内部产物名或新增打包时间字段。
+- 不要拆分 Android ABI，不要改动官网页面布局。
+- 不要在没有用户授权时推送、打 tag 或部署远端。

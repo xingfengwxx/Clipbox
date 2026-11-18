@@ -405,9 +405,9 @@ curl -sS localhost:8080/healthz
 | 字段 | 值 |
 | --- | --- |
 | 里程碑 | M6 |
-| 前置 | T-WEB-08（首轮）；T-WEB-10（四平台补验收） |
+| 前置 | T-WEB-08 |
 | 需求 | WEB-HOST-001…006、WEB-DL-002/003/006/008/009、WEB-NFR-005 |
-| 预估 | 0.5 天 + 补验收 0.25 天 |
+| 预估 | 0.5 天 |
 
 **目标**：用 rsync 把代码与下载包同步到 `/root/clipbox`，远端重建容器并完成线上验收。
 
@@ -432,13 +432,13 @@ scripts/deploy-web.sh root@<SERVER_IP>
 curl -sS http://<SERVER_IP>:8080/ | head
 curl -sS http://<SERVER_IP>:8080/healthz
 curl -sS -D- -o /dev/null -H 'Range: bytes=0-1023' \
-  http://<SERVER_IP>:8080/downloads/Theca-1.0.0-android.apk | head -20
+  http://<SERVER_IP>:8080/downloads/Theca-v1.0.0-android-release.apk | head -20
 curl -sS -D- -o /dev/null -H 'Range: bytes=0-1023' \
-  http://<SERVER_IP>:8080/downloads/Theca-1.0.0-macos-arm64.dmg | head -20
+  http://<SERVER_IP>:8080/downloads/Theca-v1.0.0-macos-arm64-release.dmg | head -20
 curl -sS -D- -o /dev/null -H 'Range: bytes=0-1023' \
-  http://<SERVER_IP>:8080/downloads/Theca-1.0.0-windows-x64.msi | head -20
+  http://<SERVER_IP>:8080/downloads/Theca-v1.0.0-windows-amd64-release.msi | head -20
 curl -sS -D- -o /dev/null -H 'Range: bytes=0-1023' \
-  http://<SERVER_IP>:8080/downloads/Theca-1.0.0-linux-x86_64.deb | head -20
+  http://<SERVER_IP>:8080/downloads/Theca-v1.0.0-linux-amd64-release.deb | head -20
 curl -sS http://<SERVER_IP>:8080/downloads/SHA256SUMS.txt
 ssh root@<SERVER_IP> 'cd /root/clipbox && docker compose logs --tail=100 | grep -Ei "token|content|code" || true'
 ```
@@ -469,7 +469,7 @@ ssh root@<SERVER_IP> 'cd /root/clipbox && docker compose logs --tail=100 | grep 
 | 需求 | WEB-DL-001/003/004/005/007/008/009、WEB-I18N-001/004/005 |
 | 预估 | 1 天 |
 
-**目标**：把 Windows x64 MSI 与 Linux x86_64 DEB 接入官网下载矩阵，填正式 CI 实测值，并用三语披露未签名风险；iOS 继续显示「暂未提供」。
+**目标**：把 Windows amd64 MSI 与 Linux amd64 DEB 接入官网下载矩阵，填正式 CI 实测值，并用三语披露未签名风险；iOS 继续显示「暂未提供」。
 
 **必读**：`docs/web-功能需求.md` §5.3、[ADR-0005](../adr/0005-v1-multiplatform-release.md)、`docs/tasks/release-artifacts.md`、`docs/tasks/web-artifacts.md`。
 
@@ -477,9 +477,9 @@ ssh root@<SERVER_IP> 'cd /root/clipbox && docker compose logs --tail=100 | grep 
 
 **实现要点**
 
-- `downloads.ts` 使用 tag CI 产物：`Theca-1.0.0-windows-x64.msi`、`Theca-1.0.0-linux-x86_64.deb`；大小与 SHA-256 来自 T-REL-12 台账，不填占位。
+- `downloads.ts` 使用 tag CI 产物：`Theca-v1.0.0-windows-amd64-release.msi`、`Theca-v1.0.0-linux-amd64-release.deb`；大小与 SHA-256 来自 T-REL-12 台账，不填占位。
 - Windows / Linux `available: true`；iOS 保持 `false`，说明「仅模拟器构建」。
-- 按钮文案扩为 APK / DMG / MSI / DEB；Windows 说明 SmartScreen「更多信息 → 仍要运行」；Linux 说明 x86_64、`dpkg -i` 与无 apt 仓库。
+- 按钮文案扩为 APK / DMG / MSI / DEB；Windows 说明 SmartScreen「更多信息 → 仍要运行」；Linux 说明 amd64（x86_64）、`dpkg -i` 与无 apt 仓库。
 - macOS 继续保留未签名与「右键 → 打开」；下载区与页脚保留 HTTP 明文警示。
 - FAQ q5/a5 改为「Windows / Linux 已提供；iOS 仅模拟器构建」；三份 locale 键集合保持一致。
 - 390px 下英文与繁中按钮、SHA 文本不截断、不横向溢出。
@@ -489,7 +489,7 @@ ssh root@<SERVER_IP> 'cd /root/clipbox && docker compose logs --tail=100 | grep 
 ```bash
 cd ClipboxWeb
 npm run build
-grep -nE "windows-x64|linux-x86_64" src/data/downloads.ts
+grep -nE "windows-amd64|linux-amd64" src/data/downloads.ts
 grep -rnE "SmartScreen|dpkg|msiButton|debButton" src/i18n/locales
 npm run preview
 # 390px × 三语截图；四平台状态与下载链接可点击

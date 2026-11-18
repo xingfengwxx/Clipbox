@@ -36,11 +36,13 @@ v1.0.0 由 release-only GitHub Actions 构建，产物上传 GitHub Release：
 
 | 平台 | 产物 |
 | --- | --- |
-| Android | `Theca-1.0.0-android.apk`（release 签名） |
-| macOS arm64 | `Theca-1.0.0-macos-arm64.dmg`（未签名、无公证） |
-| Windows x64 | `Theca-1.0.0-windows-x64.msi`（未签名） |
-| Linux x86_64 | `Theca-1.0.0-linux-x86_64.deb`（未签名） |
+| Android | `Theca-v1.0.0-android-release.apk`（release 签名） |
+| macOS arm64 | `Theca-v1.0.0-macos-arm64-release.dmg`（未签名、无公证） |
+| Windows amd64 | `Theca-v1.0.0-windows-amd64-release.msi`（未签名） |
+| Linux amd64 | `Theca-v1.0.0-linux-amd64-release.deb`（未签名） |
 | iOS | 仅模拟器构建，不提供 IPA |
+
+- 命名规范：`Theca-v<version>-<platform>[-<arch>]-<debug|release>.<ext>`；Android 为 universal 单包，不加架构段；正式产物为 `-release`，本地 debug 交付示例 `Theca-v1.0.0-android-debug.apk`。
 
 - 触发方式：推送 `v*` tag，或在 Actions 页面手动执行 `Release`；手动执行只做 dry run，不创建 Release。
 - 版本一致性：`scripts/check-release-version.sh` 校验 Android `versionName`、Desktop `packageVersion`、iOS `MARKETING_VERSION` 与官网 `VERSION`。
