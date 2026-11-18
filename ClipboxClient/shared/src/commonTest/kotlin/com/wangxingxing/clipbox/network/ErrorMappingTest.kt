@@ -33,6 +33,18 @@ class ErrorMappingTest {
     }
 
     @Test
+    fun alreadyInitializedConflictKeepsItsCode() {
+        assertEquals(
+            ApiFailure.Permanent(ApiErrorCode.ALREADY_INITIALIZED, "server initialized"),
+            mapHttpFailure(409, ApiErrorCode.ALREADY_INITIALIZED, "server initialized", null),
+        )
+        assertEquals(
+            ApiErrorCode.ALREADY_INITIALIZED,
+            ApiErrorCode.fromWire("ALREADY_INITIALIZED"),
+        )
+    }
+
+    @Test
     fun payloadTooLargeMapsToPermanent() {
         assertEquals(
             ApiFailure.Permanent(ApiErrorCode.PAYLOAD_TOO_LARGE, null),

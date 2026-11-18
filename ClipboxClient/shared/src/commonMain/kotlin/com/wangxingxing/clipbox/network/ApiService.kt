@@ -10,6 +10,7 @@ import com.wangxingxing.clipbox.logging.AppLogger
 import com.wangxingxing.clipbox.logging.LogEvent
 import com.wangxingxing.clipbox.model.ApiErrorCode
 import com.wangxingxing.clipbox.model.ApiFailure
+import com.wangxingxing.clipbox.model.BootstrapRequest
 import com.wangxingxing.clipbox.model.CreateClipRequest
 import com.wangxingxing.clipbox.model.CreateClipResponse
 import com.wangxingxing.clipbox.model.CreateShareRequest
@@ -17,6 +18,7 @@ import com.wangxingxing.clipbox.model.CreateShareResponse
 import com.wangxingxing.clipbox.model.DeleteClipResponse
 import com.wangxingxing.clipbox.model.PairRequest
 import com.wangxingxing.clipbox.model.PairResponse
+import com.wangxingxing.clipbox.model.PairingCodeResponse
 import com.wangxingxing.clipbox.model.PatchPinnedRequest
 import com.wangxingxing.clipbox.model.PatchPinnedResponse
 import com.wangxingxing.clipbox.model.SyncResponse
@@ -61,6 +63,31 @@ class ApiService(
             }
         }
     }
+
+    suspend fun bootstrap(deviceName: String): ApiResult<PairResponse> {
+        val body = BootstrapRequest(deviceName = deviceName)
+        return request(
+            method = "POST",
+            pathTemplate = "/bootstrap",
+            operation = "bootstrap",
+            requestBody = json.encodeToString(body),
+        ) {
+            client.post("bootstrap") {
+                contentType(ContentType.Application.Json)
+                setBody(body)
+            }
+        }
+    }
+
+    // 需要设备认证；响应体含明文配对码，诊断日志依赖 LogRedactor 的 code 字段脱敏
+    suspend fun createPairingCode(): ApiResult<PairingCodeResponse> =
+        request(
+            method = "POST",
+            pathTemplate = "/devices/me/pairing-code",
+            operation = "createPairingCode",
+        ) {
+            client.post("devices/me/pairing-code")
+        }
 
     suspend fun getClips(since: Long, limit: Int = 200, full: Boolean = false): ApiResult<SyncResponse> =
         request(

@@ -34,6 +34,7 @@ class SyncRuntime internal constructor(
     val syncStatusHolder: SyncStatusHolder,
     val clipboardService: ClipboardService,
     val clipboardController: ClipboardController,
+    val apiService: ApiService,
     private val apiClient: HttpClient,
     private val socketClient: HttpClient,
 ) {
@@ -131,6 +132,7 @@ internal fun buildSyncRuntime(
         syncStatusHolder = statusHolder,
         clipboardService = clipboardService,
         clipboardController = clipboardController,
+        apiService = apiService,
         apiClient = apiClient,
         socketClient = socketClient,
     )

@@ -47,9 +47,10 @@ fun createApiHttpClient(
                 loadTokens {
                     tokenProvider()?.let { BearerTokens(it, "") }
                 }
-                // 配对接口是公开接口，不应携带设备令牌
+                // 配对与空库初始化接口公开，不应携带设备令牌
                 sendWithoutRequest { request ->
-                    !request.url.build().encodedPath.endsWith("/pair")
+                    val path = request.url.build().encodedPath
+                    !path.endsWith("/pair") && !path.endsWith("/bootstrap")
                 }
             }
         }

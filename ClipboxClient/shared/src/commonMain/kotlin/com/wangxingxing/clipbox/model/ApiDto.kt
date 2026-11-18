@@ -22,6 +22,17 @@ data class PairResponse(
 )
 
 @Serializable
+data class BootstrapRequest(
+    val deviceName: String,
+)
+
+@Serializable
+data class PairingCodeResponse(
+    val code: String,
+    val expiresAt: Long,
+)
+
+@Serializable
 data class ClipDto(
     val id: String,
     val content: String? = null,

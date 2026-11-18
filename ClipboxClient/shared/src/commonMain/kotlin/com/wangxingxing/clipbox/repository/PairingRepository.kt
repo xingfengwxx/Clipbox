@@ -2,62 +2,107 @@
  * author : 王星星
  * date : 2026-11-16 17:12
  * email : 1099420259@qq.com
- * description : 配对编排：校验地址与设备名、调用公开的 POST /pair、成功后写入 serverUrl 与设备凭据；不打印请求响应内容
+ * description : 配对编排：校验地址与设备名、调用公开的 POST /pair 或 /bootstrap、成功后写入 serverUrl 与设备凭据；
+ *               不打印请求响应内容，配对码只经本地校验后原样提交。
+ *               注意：engineFactory 仅用于测试注入 MockEngine，生产环境恒取平台默认引擎。
  */
 package com.wangxingxing.clipbox.repository
 
 import com.wangxingxing.clipbox.model.ApiErrorCode
 import com.wangxingxing.clipbox.model.ApiFailure
+import com.wangxingxing.clipbox.model.PairResponse
 import com.wangxingxing.clipbox.network.ApiResult
 import com.wangxingxing.clipbox.network.ApiService
 import com.wangxingxing.clipbox.network.createApiHttpClient
+import com.wangxingxing.clipbox.network.defaultHttpClientEngine
 import com.wangxingxing.clipbox.settings.ServerUrlValidation
 import com.wangxingxing.clipbox.settings.ServerUrlValidator
 import com.wangxingxing.clipbox.settings.SettingsRepository
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.HttpClientEngine
 
 const val PAIRING_CODE_LENGTH = 6
 const val DEVICE_NAME_MAX_LENGTH = 64
 
 class PairingRepository(
     private val settingsRepository: SettingsRepository,
+    private val engineFactory: () -> HttpClientEngine = ::defaultHttpClientEngine,
 ) {
 
     suspend fun pair(serverUrl: String, code: String, deviceName: String): PairResult {
-        val url = when (val validation = ServerUrlValidator.validate(serverUrl)) {
-            is ServerUrlValidation.Invalid -> return PairResult.Failure(PairingError.ServerUrl)
-            is ServerUrlValidation.Valid -> validation.url
-        }
-        val name = deviceName.trim()
-        if (name.isEmpty() || name.length > DEVICE_NAME_MAX_LENGTH) {
-            return PairResult.Failure(PairingError.DeviceName)
+        val target = when (val resolved = resolveTarget(serverUrl, deviceName)) {
+            is Target.Rejected -> return PairResult.Failure(resolved.error)
+            is Target.Ready -> resolved
         }
         // 服务端对格式错误的码返回 VALIDATION_ERROR，本地先拦截以免误报设备名问题
         if (code.length != PAIRING_CODE_LENGTH || code.any { it !in '0'..'9' }) {
             return PairResult.Failure(PairingError.InvalidCode)
         }
 
-        // 配对接口公开，tokenProvider 固定返回 null，客户端不携带既有令牌
-        val client = createApiHttpClient(url, tokenProvider = { null })
-        val response = try {
-            ApiService(client).pair(code = code, deviceName = name)
+        val response = execute(target.url) { client ->
+            ApiService(client).pair(code = code, deviceName = target.name)
+        }
+        return when (response) {
+            is ApiResult.Success -> persistPairing(target, response.value)
+            is ApiResult.Failure -> PairResult.Failure(response.failure.toPairingError())
+        }
+    }
+
+    /** 空库首次初始化；服务器已有设备时返回 [PairingError.AlreadyInitialized] */
+    suspend fun initialize(serverUrl: String, deviceName: String): PairResult {
+        val target = when (val resolved = resolveTarget(serverUrl, deviceName)) {
+            is Target.Rejected -> return PairResult.Failure(resolved.error)
+            is Target.Ready -> resolved
+        }
+
+        val response = execute(target.url) { client ->
+            ApiService(client).bootstrap(deviceName = target.name)
+        }
+        return when (response) {
+            is ApiResult.Success -> persistPairing(target, response.value)
+            is ApiResult.Failure -> PairResult.Failure(response.failure.toPairingError())
+        }
+    }
+
+    private fun resolveTarget(serverUrl: String, deviceName: String): Target {
+        val url = when (val validation = ServerUrlValidator.validate(serverUrl)) {
+            is ServerUrlValidation.Invalid -> return Target.Rejected(PairingError.ServerUrl)
+            is ServerUrlValidation.Valid -> validation.url
+        }
+        val name = deviceName.trim()
+        if (name.isEmpty() || name.length > DEVICE_NAME_MAX_LENGTH) {
+            return Target.Rejected(PairingError.DeviceName)
+        }
+        return Target.Ready(url, name)
+    }
+
+    // 配对与初始化接口公开，tokenProvider 固定返回 null，客户端不携带既有令牌
+    private suspend fun <T> execute(
+        url: String,
+        call: suspend (HttpClient) -> ApiResult<T>,
+    ): ApiResult<T> {
+        val client = createApiHttpClient(url, tokenProvider = { null }, engine = engineFactory())
+        return try {
+            call(client)
         } finally {
             client.close()
         }
+    }
 
-        return when (response) {
-            is ApiResult.Success -> {
-                settingsRepository.setServerUrl(url)
-                settingsRepository.setPairingInfo(
-                    deviceToken = response.value.token,
-                    deviceId = response.value.deviceId,
-                    deviceName = name,
-                    lastServerUrl = url,
-                )
-                PairResult.Success
-            }
+    private suspend fun persistPairing(target: Target.Ready, device: PairResponse): PairResult {
+        settingsRepository.setServerUrl(target.url)
+        settingsRepository.setPairingInfo(
+            deviceToken = device.token,
+            deviceId = device.deviceId,
+            deviceName = target.name,
+            lastServerUrl = target.url,
+        )
+        return PairResult.Success
+    }
 
-            is ApiResult.Failure -> PairResult.Failure(response.failure.toPairingError())
-        }
+    private sealed interface Target {
+        data class Ready(val url: String, val name: String) : Target
+        data class Rejected(val error: PairingError) : Target
     }
 }
 
@@ -74,6 +119,7 @@ sealed interface PairingError {
     data object Network : PairingError
     data object ServerUrl : PairingError
     data object Server : PairingError
+    data object AlreadyInitialized : PairingError
     data class RateLimited(val retryAfterSeconds: Long?) : PairingError
 }
 
@@ -82,6 +128,7 @@ private fun ApiFailure.toPairingError(): PairingError = when (this) {
         ApiErrorCode.INVALID_CODE -> PairingError.InvalidCode
         ApiErrorCode.CODE_EXPIRED -> PairingError.CodeExpired
         ApiErrorCode.CODE_USED -> PairingError.CodeUsed
+        ApiErrorCode.ALREADY_INITIALIZED -> PairingError.AlreadyInitialized
         ApiErrorCode.VALIDATION_ERROR -> PairingError.DeviceName
         else -> PairingError.Server
     }

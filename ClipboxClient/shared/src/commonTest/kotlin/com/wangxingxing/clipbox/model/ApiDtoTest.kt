@@ -107,6 +107,26 @@ class ApiDtoTest {
     }
 
     @Test
+    fun decodesPairingCodeResponseAndEncodesBootstrapRequest() {
+        val pairingCode = json.decodeFromString<PairingCodeResponse>(
+            """
+                {
+                  "code": "654321",
+                  "expiresAt": 1730000600000,
+                  "futureField": true
+                }
+            """.trimIndent()
+        )
+        assertEquals("654321", pairingCode.code)
+        assertEquals(1730000600000L, pairingCode.expiresAt)
+
+        val bootstrap = json.parseToJsonElement(
+            json.encodeToString(BootstrapRequest(deviceName = "Pixel 8"))
+        ).jsonObject
+        assertEquals("Pixel 8", bootstrap["deviceName"]?.jsonPrimitive?.content)
+    }
+
+    @Test
     fun decodesWriteAndShareResponses() {
         val create = json.decodeFromString<CreateClipResponse>(
             """

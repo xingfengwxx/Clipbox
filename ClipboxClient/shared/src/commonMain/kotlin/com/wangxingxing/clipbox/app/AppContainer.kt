@@ -16,6 +16,7 @@ import com.wangxingxing.clipbox.logging.LogEvent
 import com.wangxingxing.clipbox.logging.LogSink
 import com.wangxingxing.clipbox.platform.ClipboardService
 import com.wangxingxing.clipbox.repository.ClipRepository
+import com.wangxingxing.clipbox.repository.PairingCodeRepository
 import com.wangxingxing.clipbox.repository.PairingRepository
 import com.wangxingxing.clipbox.repository.ShareRepository
 import com.wangxingxing.clipbox.repository.SyncRepository
@@ -79,6 +80,7 @@ class AppSession internal constructor(
     val syncStatusHolder: SyncStatusHolder get() = runtime.syncStatusHolder
     val clipboardService: ClipboardService get() = runtime.clipboardService
     val clipboardController: ClipboardController get() = runtime.clipboardController
+    val pairingCodeRepository: PairingCodeRepository = PairingCodeRepository(runtime.apiService)
 
     internal suspend fun shutdown() {
         // 先等会话内所有协程退出，再关网络与数据库，避免关闭后仍有请求或查询在途
