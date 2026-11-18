@@ -98,3 +98,10 @@ Desktop 应用窗口在验收期间无法稳定获得前台焦点，未做窗口
 ## 2026-11-18 追加：配对模型变更（ADR-0006）
 
 上文记录的是旧管理码模型下的历史验收结果。自 ADR-0006 起，配对流程改为：空库首台设备「初始化此服务器」→ 已配对设备在设置页「配对新设备」生成 6 位码 → 新设备输入该码配对。T-REL-15 将按新流程重跑本地闭环并追加证据，不修改上述历史结论。
+
+## 2026-11-18 追加：T-REL-15 新配对模型本地闭环
+
+- 环境：全新 `DATA_DIR=/tmp/clipbox-rel15`，`PUBLIC_BASE_URL=http://localhost:8080`，日志 `/tmp/clipbox-rel15-server.log`；脚本 `/tmp/rel15_accept.py`，证据 `/tmp/rel15-acceptance.json`（仓库外，不含明文码与令牌）。
+- 结果：空库 bootstrap 201 / 重复 409 `ALREADY_INITIALIZED`；设备码为 6 位数字、TTL 600 秒；A 取码 → B 配对 201 → A/B 双向 REST 同步命中；重新生成后旧码 `INVALID_CODE`；过期码 `CODE_EXPIRED`；已用码 `CODE_USED`；`device_pairing_codes` 仅 1 行 64 位哈希、db/wal/shm 明文码 0 次；日志明文码 0 次；取码第 10 次 429 且 `Retry-After: 60`。
+- UI 级证据：T-UI-21 已在 Android 模拟器实测配对页「初始化此服务器」入口与 409 文案、设置页「配对新设备」取码弹层（倒计时、复制、重新生成、关闭清除），本卡不重复截图。
+- 本追加仅覆盖新模型；上文旧管理码模型的历史结论保持不变。

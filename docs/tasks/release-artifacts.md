@@ -78,3 +78,47 @@ DMG 元数据（`plutil` 读取 `Theca.app/Contents/Info.plist`）：`CFBundleSh
 ## 2026-11-18 追加：配对步骤变更（ADR-0006）
 
 上文“管理接口生成的 6 位码”已废弃。当前流程为：空库首台设备初始化 → 已配对设备设置页生成配对新设备码 → 新设备配对。T-REL-15 重建 Android / macOS 产物并更新台账；Windows / Linux 由 release CI 重建。
+
+---
+
+## 2026-11-18 T-REL-15：配对改造后的产物重建与本地验收
+
+- 范围：ADR-0006 新配对模型下的 Android release APK 与 macOS arm64 DMG 重建、服务端与共享层回归、全新数据目录的配对闭环与安全断言。
+- 环境：macOS arm64，JDK 21.0.13；服务端 `DATA_DIR=/tmp/clipbox-rel15 PUBLIC_BASE_URL=http://localhost:8080`，日志 `/tmp/clipbox-rel15-server.log`；验收脚本 `/tmp/rel15_accept.py`，证据 `/tmp/rel15-acceptance.json`（仓库外，不含明文码与令牌）。
+
+### 构建与回归
+
+| 命令 | 结果 |
+| --- | --- |
+| `cd ClipboxServer && ./gradlew test --rerun-tasks` | BUILD SUCCESSFUL；146 个用例，0 失败 / 0 错误 / 0 跳过 |
+| `cd ClipboxClient && ./gradlew :shared:allTests :composeApp:assembleRelease :composeApp:packageDmg` | BUILD SUCCESSFUL in 33s；共享层 797 个用例，0 失败 / 0 错误 / 0 跳过 |
+| `aapt dump badging downloads/Theca-v1.0.0-android-release.apk` | `com.wangxingxing.clipbox`，versionName=1.0.0，versionCode=1，minSdk 26，debuggable 未设置；V2 签名证书 CN=WangXingxing |
+| `cd downloads && shasum -a 256 -c SHA256SUMS.txt` | 两行均 `OK` |
+
+### 产物（downloads/，仓库忽略不提交）
+
+| 产物 | 大小 | SHA-256 |
+| --- | --- | --- |
+| `Theca-v1.0.0-android-release.apk` | 16,063,967 | `a508a9f9d6991655b7be31d30ca6ae9e7a9b0305e3af8b106f14a2fcf432077c` |
+| `Theca-v1.0.0-macos-arm64-release.dmg` | 83,106,427 | `c1270ec23b095993a7e1dcc2906e3dde44096172e98785c76133643006fea75a` |
+
+### 本地新配对闭环（真实服务端，全新数据目录）
+
+| 场景 | 证据 | 结果 |
+| --- | --- | --- |
+| 空库首台初始化 | `POST /api/v1/bootstrap` 201；重复调用 409 `ALREADY_INITIALIZED` | 通过 |
+| 设备取码 | 设备 A `POST /api/v1/devices/me/pairing-code` 201；6 位数字；`expiresAt` 距请求约 600 秒 | 通过 |
+| A 取码 → B 配对 → 双向同步 | B `POST /api/v1/pair` 201；A 写入后 B 全量读取命中；B 写入后 A 全量读取命中 | 通过 |
+| 重新生成旧码失效 | 连续取码两次；用第一枚码配对 → 400 `INVALID_CODE` | 通过 |
+| 过期码 | 将设备 A 行 `expires_at` 置为过去后用其码配对 → 400 `CODE_EXPIRED` | 通过 |
+| 已用码 | 同一枚码首次配对 201；再次使用 → 400 `CODE_USED` | 通过 |
+| 数据库仅哈希 | `device_pairing_codes` 1 行 64 位小写 hex；`devices.token_hash` 3 行同为 64 位小写 hex；db/wal/shm 中 5 枚明文码出现 0 次 | 通过 |
+| 日志零配对码 | 服务端日志中 5 枚明文码各 0 次 | 通过 |
+| 取码限流 | 同一 IP 连续取码第 10 次返回 429，`Retry-After: 60` | 通过 |
+
+### 偏差与限制
+
+1. Android / macOS 为本地重建产物（macOS 未签名分发）；Windows / Linux 仍需 tag CI 重建，官网对应平台保持 unavailable，打 tag 需另行授权。
+2. 本轮未重新安装 release APK 到模拟器做 UI 级复测；配对 UI（初始化入口、409 文案、取码弹层、倒计时、复制、重新生成、关闭清除）已在 T-UI-21 用 debug 构建与同一模型服务端实测。
+3. 远程服务器升级（重启容器应用 V002 迁移）未执行，需用户明确确认。
+4. `downloads/Theca-v1.0.0-*` 与 `SHA256SUMS.txt` 位于仓库忽略目录，不提交；官网 `ClipboxWeb/src/data/downloads.ts` 的 Android / macOS 数值已同步为本轮实测。

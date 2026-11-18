@@ -265,25 +265,25 @@ T-WEB-09 首轮远程部署已于 2026-11-18 完成，范围仅 APK / DMG；T-WE
 | 工作流 | 卡片 | 状态 | 提交 |
 | --- | --- | --- | --- |
 | Server | T-S-01…T-S-11 | 已完成 | `e57aed5`（T-S-11）；M2 Gate 见 [m2-gate.md](m2-gate.md) |
-| Server | T-S-12 | 待开始 | — |
+| Server | T-S-12 | 已完成 | `56bab9a` |
 | Client Core | T-CORE-01…T-CORE-15 | 已完成 | 最后一张 `fe04070`（T-CORE-15）；M3 见 [m3-gate.md](m3-gate.md) |
-| Client Core | T-CORE-16 | 待开始 | — |
+| Client Core | T-CORE-16 | 已完成 | `4b37ecc` |
 | Client UI | T-UI-01…T-UI-20 | 已完成 | 最后一张 T-UI-20（M3 Gate 提交）；M3 见 [m3-gate.md](m3-gate.md) |
-| Client UI | T-UI-21 | 待开始 | — |
+| Client UI | T-UI-21 | 已完成 | `15bcea1` |
 | iOS | T-IOS-01…T-IOS-09 | 已完成 | 最后一张 T-IOS-09（M4 Gate 提交）；M4 见 [m4-gate.md](m4-gate.md) |
 | iOS | T-IOS-10 | 待开始 | — |
-| iOS | T-IOS-11 | 待开始 | — |
+| iOS | T-IOS-11 | 已完成 | `790ccb7` |
 | Release | T-REL-01…T-REL-07 | 已完成 | 最后一张 `1eee62b`（T-REL-07）；T-REL-01/03 为用户动作与远程部署 |
 | Release | T-REL-08 | 待开始 | — |
 | Release | T-REL-09…T-REL-12 | 待开始 | — |
-| Release | T-REL-13 | 进行中 | — |
-| Release | T-REL-14 | 进行中 | — |
-| Release | T-REL-15 | 待开始 | — |
+| Release | T-REL-13 | 已完成 | `8344174` |
+| Release | T-REL-14 | 已完成 | `1a7aa80` |
+| Release | T-REL-15 | 已完成 | 本卡提交 |
 | Web | T-WEB-01…T-WEB-08 | 已完成 | 最后一张 `57ab06c`（T-WEB-08） |
 | Web | T-WEB-09 | 进行中 | 首轮 `d2ad070`（仅 APK / DMG）；MSI / DEB 补验收待 T-WEB-10 后执行，证据见 [web-artifacts.md](web-artifacts.md) §7 |
 | Web | T-WEB-10 | 待开始 | — |
 
-> M2 已于 2026-11-17 通过（证据见 [m2-gate.md](m2-gate.md)）；M3 于同日有条件通过，AC-11 全量分页冲突（D8）已于 2026-11-18 由 [BUG-001](bug-001-ac11-full-sync-floor.md) 修复关闭（证据见 [m3-gate.md](m3-gate.md)）；M4 于同日通过（证据见 [m4-gate.md](m4-gate.md)）；T-WEB-09 尚余四平台补验收，M6 未关闭。ADR-0006 追加的 6 张收尾卡完成前不得打 `v1.0.0` tag。
+> M2 已于 2026-11-17 通过（证据见 [m2-gate.md](m2-gate.md)）；M3 于同日有条件通过，AC-11 全量分页冲突（D8）已于 2026-11-18 由 [BUG-001](bug-001-ac11-full-sync-floor.md) 修复关闭（证据见 [m3-gate.md](m3-gate.md)）；M4 于同日通过（证据见 [m4-gate.md](m4-gate.md)）；T-WEB-09 尚余四平台补验收，M6 未关闭。ADR-0006 追加的 6 张收尾卡已完成，T-REL-08 打 tag 与远程部署仍需用户另行授权。
 
 ## 7. 统一 DoD
 

@@ -10,14 +10,14 @@ export interface PlatformDownload {
   sha256?: string
 }
 
-// 大小与哈希来自 downloads/ 实测产物（2026-11-18）；重新打包后必须同步更新，页面不臆造数值。
+// 大小与哈希来自 downloads/ 实测产物（2026-11-18，T-REL-15 配对改造后重建）；重新打包后必须同步更新，页面不臆造数值。
 export const platforms: PlatformDownload[] = [
   {
     id: 'android',
     available: true,
     file: 'Theca-v1.0.0-android-release.apk',
-    sizeBytes: 16030091,
-    sha256: 'a8a3324bf8e0aff61d4aef6017ba5ede372c70d856a752868f7cd3a15ddb7f55',
+    sizeBytes: 16063967,
+    sha256: 'a508a9f9d6991655b7be31d30ca6ae9e7a9b0305e3af8b106f14a2fcf432077c',
   },
   {
     id: 'ios',
@@ -27,8 +27,8 @@ export const platforms: PlatformDownload[] = [
     id: 'macos',
     available: true,
     file: 'Theca-v1.0.0-macos-arm64-release.dmg',
-    sizeBytes: 83019219,
-    sha256: '9a840108438b9f19b828f4d5cb38df0d6803780e8dc34710b59db6ea138167d3',
+    sizeBytes: 83106427,
+    sha256: 'c1270ec23b095993a7e1dcc2906e3dde44096172e98785c76133643006fea75a',
   },
   {
     id: 'windows',
