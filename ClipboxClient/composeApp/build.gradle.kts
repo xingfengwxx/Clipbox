@@ -1,5 +1,6 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -37,6 +38,14 @@ val generateBundledConfig = tasks.register("generateBundledConfig") {
             |}
             |""".trimMargin(),
         )
+    }
+}
+
+// 发布签名材料只放在本地 signing/ 目录（已被 .gitignore 整目录忽略）；缺失时 release 保持未签名，不阻塞其他环境构建
+val releaseSigningPropsFile = rootProject.file("signing/keystore.properties")
+val releaseSigningProps = Properties().apply {
+    if (releaseSigningPropsFile.exists()) {
+        releaseSigningPropsFile.inputStream().use { load(it) }
     }
 }
 
@@ -110,9 +119,29 @@ android {
         versionName = "1.0.0"
     }
 
+    signingConfigs {
+        if (releaseSigningPropsFile.exists()) {
+            create("release") {
+                storeFile = rootProject.file(releaseSigningProps.getProperty("storeFile"))
+                storePassword = releaseSigningProps.getProperty("storePassword")
+                keyAlias = releaseSigningProps.getProperty("keyAlias")
+                keyPassword = releaseSigningProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
+        debug {
+            // 与 release 共用签名：已安装应用可直接覆盖安装，避免签名不一致必须先卸载
+            if (releaseSigningPropsFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
         release {
             isMinifyEnabled = false
+            if (releaseSigningPropsFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 

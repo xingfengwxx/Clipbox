@@ -46,7 +46,8 @@ cd ClipboxClient
 ```
 
 - `compose.desktop { nativeDistributions }` 锁定 `packageName = "Theca"`、`packageVersion = "1.0.0"`、DMG targetFormat 与 macOS bundleID；默认 jlink 运行时额外包含 `jdk.unsupported`（DataStore 的 protobuf 依赖 `sun.misc.Unsafe`，缺失时打包产物启动即失败）。
-- 学习版只交付 Android debug APK 与 macOS DMG：不配置 release 签名、不混淆、不缩小，DMG 未签名；不产出 Windows / Linux 包与 iOS 真机签名包。
+- 学习版默认只交付 Android debug APK 与 macOS DMG：不混淆、不缩小，DMG 未签名；不产出 Windows / Linux 包与 iOS 真机签名包。
+- Android 签名材料放在本地 `signing/` 目录（整目录已加入 `.gitignore`，不提交）：`keystore.properties` 提供 `storeFile` / `storePassword` / `keyAlias` / `keyPassword`；debug 与 release 共用同一签名，文件缺失时 debug 回落默认调试签名、release 保持未签名。keystore 与密码必须离线备份，丢失后无法以同一签名更新已安装应用。
 - 产物副本与 SHA-256 放在仓库根 `dist/`（已加入 `.gitignore`，不提交）：`composeApp-debug.apk`、`Theca-1.0.0.dmg`、`SHA256SUMS.txt`；哈希与验收证据见 `docs/tasks/release-artifacts.md`。
 - iOS 交付为模拟器构建记录：`linkDebugFrameworkIosSimulatorArm64` 与 `xcodebuild ... -sdk iphonesimulator` 均通过，完整输出在 `dist/ios-build.log`。
 

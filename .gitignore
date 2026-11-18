@@ -18,6 +18,7 @@ captures/
 *.keystore
 *.jks
 
+
 # Server runtime data
 *.db
 *.db-wal
