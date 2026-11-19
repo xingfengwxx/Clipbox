@@ -13,7 +13,13 @@ attempts="${GRADLE_RETRY_ATTEMPTS:-2}"
 delay="${GRADLE_RETRY_DELAY:-60}"
 
 for attempt in $(seq 1 "$attempts"); do
-  if ./gradlew "$@" --no-daemon; then
+  gradle_args=("$@" --no-daemon)
+  if [ "$attempt" -gt 1 ]; then
+    # 插件仓库短暂失败会把缺失结果缓存下来；重试前强制重新校验依赖元数据。
+    gradle_args+=(--refresh-dependencies)
+  fi
+
+  if ./gradlew "${gradle_args[@]}"; then
     exit 0
   fi
   if [ "$attempt" -lt "$attempts" ]; then
