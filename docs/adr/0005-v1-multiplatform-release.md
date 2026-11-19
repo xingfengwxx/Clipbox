@@ -1,6 +1,6 @@
 # v1.0.0 扩展桌面发布范围并破例引入 release-only CI
 
-**Status**: accepted
+**Status**: accepted（「服务器下载目录人工搬运 / 不把服务器凭据放进 CI」条款已被 [ADR-0009](0009-auto-publish-downloads.md) 取代；四平台产物矩阵、未签名策略与 release-only CI 边界不变）
 
 **Date**: 2026-11-18
 

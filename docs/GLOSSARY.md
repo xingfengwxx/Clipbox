@@ -125,5 +125,13 @@ jpackage 产出的免安装应用目录，不是单文件 `.AppImage` 格式。
 _Avoid_: AppImage、绿色版
 
 **发布流水线（Release Pipeline）**:
-由版本 tag 或手动触发、只负责构建与发布产物的自动化流程，不等同于常驻 CI。
+由版本 tag 或手动触发、负责构建、发布产物并可将产物上线官网下载区的自动化流程，不等同于常驻 CI。
 _Avoid_: CI、持续集成
+
+**下载清单（Download Manifest）**:
+由发布流水线从实际产物生成、描述当前版本的平台可用性与文件名、大小、SHA-256 的 JSON 文件；官网页面运行时读取，是页面校验数值的唯一来源。
+_Avoid_: 版本清单、releases.json、latest.json
+
+**部署账号（Deploy Account）**:
+发布流水线用于上传下载产物的服务器受限账户；只能写下载目录，无 sudo、无端口转发。
+_Avoid_: 部署用户、CI 账号

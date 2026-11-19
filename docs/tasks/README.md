@@ -14,7 +14,7 @@
 | 本地联调 | 服务端本机 `:8080`；Android 模拟器 / 真机用 `adb reverse tcp:8080 tcp:8080` 后访问 `http://localhost:8080` |
 | 交付物 | Android release APK、macOS arm64 DMG、Windows x64 MSI、Linux x86_64 DEB、iOS 模拟器构建；桌面安装包均未签名，不含 iOS 真机签名 |
 | 测试 | 每卡自带验收命令；服务端 Ktor `testApplication` 集成测试；客户端同步内核单元测试；UI 用 AVD `Medium_Phone_API_37` + Desktop 截图人工核对；不做全量 UI 自动化；仅 tag / 手动触发的 release-only GitHub Actions，不做 PR / 常驻 CI |
-| 发布 | 四平台产物由 release CI 构建并上传 GitHub Release；`downloads/` 仍人工搬运到服务器（[ADR-0005](../adr/0005-v1-multiplatform-release.md)） |
+| 发布 | 四平台产物由 release CI 构建并发布 GitHub Release，并自动上线官网下载区（[ADR-0009](../adr/0009-auto-publish-downloads.md)）；站点源码仍由 `deploy-web.sh` 人工部署 |
 | iOS | 从 M1 起交错参与（不是真正并行）；Xcode 安装是 M0 的用户动作卡 |
 | 范围排除 | 后台推送 / 通知、移动端后台剪贴板、片段收藏夹、托盘 / 全局快捷键、端到端加密、HTTPS |
 
@@ -39,7 +39,7 @@
 | [03-client-ui.md](03-client-ui.md) | Compose UI 与平台入口：主题、历史、配对、设置、分享、工具箱、Android / Desktop | T-UI-01…T-UI-21 |
 | [04-ios.md](04-ios.md) | iOS 宿主、生命周期、分享扩展、iPad、模拟器验收、真机发布前置 | T-IOS-01…T-IOS-11 |
 | [05-release.md](05-release.md) | 远程部署、打包、验收矩阵、安全复查、发版、多平台产物与 release CI | T-REL-01…T-REL-15 |
-| [06-web.md](06-web.md) | 官网：三语单页、下载矩阵、自建说明、Ktor 托管与远程部署 | T-WEB-01…T-WEB-10 |
+| [06-web.md](06-web.md) | 官网：三语单页、下载矩阵、自建说明、Ktor 托管、远程部署与产物自动上线 | T-WEB-01…T-WEB-11 |
 | [PROMPTS.md](PROMPTS.md) | 派单与返修提示词模板、停止条件、提交规范 | — |
 
 ## 4. 依赖关系
@@ -151,7 +151,8 @@ flowchart LR
         W06 --> W07[T-WEB-07 打磨]
         W07 --> W08[T-WEB-08 Ktor 托管]
         W08 --> W09[T-WEB-09 远程部署（首轮完成）]
-        W08 --> W10[T-WEB-10 下载矩阵]
+        W09 --> W11[T-WEB-11 自动上线]
+        W11 --> W10[T-WEB-10 下载矩阵]
         R12 --> W10
         W10 -.->|四平台补验收| W09
     end
@@ -242,19 +243,20 @@ T-WEB-09 首轮远程部署已于 2026-11-18 完成，范围仅 APK / DMG；T-WE
 75. T-WEB-07（M6）
 76. T-WEB-08（M6）
 77. T-WEB-09（M6，首轮部署已完成 `d2ad070`，仅 APK / DMG）
-78. T-WEB-10（M6，下载矩阵）
-79. T-WEB-09 补验收（M6，同步 MSI / DEB 并验证四平台 Range / SHA）→ **M6 Gate：官网与下载远程可用**
+78. T-WEB-11（M6，下载产物自动上线）
+79. T-WEB-10（M6，下载矩阵 + 运行时清单）
+80. T-WEB-09 补验收（M6，同步 MSI / DEB 并验证四平台 Range / SHA）→ **M6 Gate：官网与下载远程可用**
 
 ### 5.1 v1.0.0 收尾追加顺序（2026-11-18）
 
 以下 6 张卡来自 ADR-0006，必须在打 `v1.0.0` tag 前按顺序完成：
 
-80. T-REL-14（契约修订 + ADR-0006，纯文档）
-81. T-S-12（服务端设备自有配对码与空库初始化）
-82. T-CORE-16（共享层取码与初始化）
-83. T-UI-21（设置页配对新设备、配对页初始化）
-84. T-IOS-11（iOS UITest 取码链路）
-85. T-REL-15（本地产物重建与验收；远程升级需另行确认）→ 完成后才可 T-REL-08 打 tag
+81. T-REL-14（契约修订 + ADR-0006，纯文档）
+82. T-S-12（服务端设备自有配对码与空库初始化）
+83. T-CORE-16（共享层取码与初始化）
+84. T-UI-21（设置页配对新设备、配对页初始化）
+85. T-IOS-11（iOS UITest 取码链路）
+86. T-REL-15（本地产物重建与验收；远程升级需另行确认）→ 完成后才可 T-REL-08 打 tag
 
 > 若某卡验收失败，不要跳到下一卡；按 `PROMPTS.md` 的「验收失败修复」模板重新派同一张卡，最多两轮，仍失败则停下汇报。
 
@@ -282,6 +284,7 @@ T-WEB-09 首轮远程部署已于 2026-11-18 完成，范围仅 APK / DMG；T-WE
 | Web | T-WEB-01…T-WEB-08 | 已完成 | 最后一张 `57ab06c`（T-WEB-08） |
 | Web | T-WEB-09 | 进行中 | 首轮 `d2ad070`（仅 APK / DMG）；MSI / DEB 补验收待 T-WEB-10 后执行，证据见 [web-artifacts.md](web-artifacts.md) §7 |
 | Web | T-WEB-10 | 待开始 | — |
+| Web | T-WEB-11 | 待开始 | — |
 
 > M2 已于 2026-11-17 通过（证据见 [m2-gate.md](m2-gate.md)）；M3 于同日有条件通过，AC-11 全量分页冲突（D8）已于 2026-11-18 由 [BUG-001](bug-001-ac11-full-sync-floor.md) 修复关闭（证据见 [m3-gate.md](m3-gate.md)）；M4 于同日通过（证据见 [m4-gate.md](m4-gate.md)）；T-WEB-09 尚余四平台补验收，M6 未关闭。ADR-0006 追加的 6 张收尾卡已完成，T-REL-08 打 tag 与远程部署仍需用户另行授权。
 

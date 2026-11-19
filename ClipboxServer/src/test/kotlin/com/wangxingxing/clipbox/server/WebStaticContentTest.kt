@@ -3,8 +3,8 @@
  * date : 2026-11-18 14:57
  * email : 1099420259@qq.com
  * description : 官网静态托管与下载 Range 的集成测试：首页与资源缓存头、下载字节与 206、HEAD 复用 GET 语义、
- *               未知 API 与未知站点路径的统一 JSON 404、分享页 CSP/no-store 不被站点策略覆盖，
- *               以及静态目录缺失时仍可启动。
+ *               下载清单与校验文件的 no-store、未知 API 与未知站点路径的统一 JSON 404、
+ *               分享页 CSP/no-store 不被站点策略覆盖，以及静态目录缺失时仍可启动。
  *               注意：静态目录与下载包都建在临时目录内，不依赖仓库里的 dist/ 或 downloads/。
  */
 package com.wangxingxing.clipbox.server
@@ -81,6 +81,18 @@ class WebStaticContentTest {
         assertTrue(downloadBytes.contentEquals(response.bodyAsBytes()))
         assertEquals("public, max-age=86400", response.headers[HttpHeaders.CacheControl])
         assertEquals("bytes", response.headers[HttpHeaders.AcceptRanges])
+    }
+
+    @Test
+    fun `download manifest and checksums are no-store`() = withSite { client ->
+        val manifest = client.get("/downloads/downloads.json")
+        assertEquals(HttpStatusCode.OK, manifest.status)
+        assertEquals("application/json", manifest.headers[HttpHeaders.ContentType]?.substringBefore(';'))
+        assertEquals("no-store", manifest.headers[HttpHeaders.CacheControl])
+
+        val checksums = client.get("/downloads/SHA256SUMS.txt")
+        assertEquals(HttpStatusCode.OK, checksums.status)
+        assertEquals("no-store", checksums.headers[HttpHeaders.CacheControl])
     }
 
     @Test
@@ -171,6 +183,11 @@ class WebStaticContentTest {
         Files.writeString(webDir.resolve("assets/index-app.css"), "body{margin:0}")
         Files.createDirectories(downloadDir)
         Files.write(downloadDir.resolve("Theca-test.bin"), downloadBytes)
+        Files.writeString(
+            downloadDir.resolve("downloads.json"),
+            """{"schemaVersion":1,"version":"1.0.0","platforms":[]}""",
+        )
+        Files.writeString(downloadDir.resolve("SHA256SUMS.txt"), "0" + "  Theca-test.bin\n")
         val factory = DatabaseFactory.open(tempDir)
         factory.migrate()
         application { module(config(), factory) }

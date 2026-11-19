@@ -77,9 +77,14 @@ fun Application.configureSecurityHeaders() {
 private fun cacheControlFor(path: String): String = when {
     isNoStorePath(path) -> "no-store"
     path.startsWith("/assets/") -> "public, max-age=31536000, immutable"
-    path.startsWith("/downloads/") -> "public, max-age=86400"
+    path.startsWith("/downloads/") ->
+        if (isVolatileDownloadPath(path)) "no-store" else "public, max-age=86400"
     else -> "no-cache"
 }
+
+// 清单与校验文件随每次发版切换，必须让浏览器立刻拿到新版本；二进制产物内容不变，仍允许一天缓存。
+private fun isVolatileDownloadPath(path: String): Boolean =
+    path == "/downloads/downloads.json" || path == "/downloads/SHA256SUMS.txt"
 
 private fun isNoStorePath(path: String): Boolean =
     path == "/api" || path.startsWith("/api/") ||

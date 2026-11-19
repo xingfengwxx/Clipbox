@@ -19,8 +19,9 @@ services:
       JAVA_OPTS: "-Xmx256m"
     volumes:
       - ./data:/data
-      # 安装包由宿主提供，只读挂载，不进镜像；Range/断点续传由服务端 PartialContent 处理。
-      - ./downloads:/app/downloads:ro
+      # 安装包由宿主提供，只读挂载，不进镜像；服务器用 DOWNLOAD_HOST_DIR 指向 /srv/clipbox/downloads。
+      # Range/断点续传由服务端 PartialContent 处理。
+      - ${DOWNLOAD_HOST_DIR:-./downloads}:/app/downloads:ro
     restart: unless-stopped
     mem_limit: 512m
     read_only: true

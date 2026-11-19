@@ -510,3 +510,61 @@ npm run preview
 - 不要为 Windows / Linux 生成无效按钮或占位哈希。
 - 不要把未签名安装包描述为「已验证安全」。
 - 不要改动 T-WEB-05 已记录的 Android / macOS 首轮产物口径；以 tag CI 产物为准更新。
+
+---
+
+## T-WEB-11 发布产物自动上线官网下载区
+
+| 字段 | 值 |
+| --- | --- |
+| 里程碑 | M6 |
+| 前置 | T-REL-11、T-REL-15、T-WEB-09 首轮 |
+| 需求 | WEB-DL-001/005/006、WEB-HOST-001/005、ADR-0009 |
+| 预估 | 1 天 |
+
+**目标**：release CI 在 `v*` tag 后自动把四平台产物、`SHA256SUMS.txt` 与 `downloads.json` 上传到服务器下载区；`workflow_dispatch` 可用 `deploy_to_site=true` 无 tag 演练。下载区由 CI 独占写入，站点源码仍人工部署。
+
+**必读**：`docs/adr/0009-auto-publish-downloads.md`、`docs/adr/0005-v1-multiplatform-release.md`、`docs/web-架构.md` §7/§8/§10、`.github/workflows/release.yml`、`scripts/deploy-web.sh`。
+
+**涉及路径**：`.github/workflows/release.yml`、`scripts/generate-downloads-manifest.sh`（新增）、`scripts/deploy-web.sh`、`docker-compose.yml`、`.env.example`、`ClipboxServer/.../plugins/Security.kt`、`ClipboxServer/src/test/.../WebStaticContentTest.kt`、`docs/adr/0009-auto-publish-downloads.md`（新增）、`docs/adr/0005-v1-multiplatform-release.md`、`docs/GLOSSARY.md`、`docs/web-架构.md`、`docs/tasks/README.md`、`docs/tasks/web-artifacts.md`、服务器 `/srv/clipbox/downloads`（运行期）。
+
+**实现要点**
+
+- 新增 `scripts/generate-downloads-manifest.sh`：从实际产物生成 `downloads.json`（schemaVersion、version、generatedAt、五平台可用性与 file/sizeBytes/sha256），不依赖 jq，支持 `--check` 本地比对。
+- `release.yml` 增加 `deploy_to_site` 布尔输入与 `deploy-site` job：tag 自动或 dispatch 输入为 true 时执行；先下载 `release-dry-run`，生成清单，再按 产物 → `SHA256SUMS.txt` → `downloads.json` 顺序上传；失败恢复 `.prev` 并 exit 1。
+- SSH 使用 `DEPLOY_HOST`/`DEPLOY_USER`/`DEPLOY_SSH_KEY`/`DEPLOY_KNOWN_HOSTS` 四个 Secrets，固定 known_hosts，禁止 `StrictHostKeyChecking=no`；私钥只写 `$RUNNER_TEMP`。
+- 服务器迁移：新建 `deploy` 用户（无 sudo）与 `/srv/clipbox/downloads`，迁入现有文件与两个示例；`docker-compose.yml` 挂载改 `${DOWNLOAD_HOST_DIR:-./downloads}`，服务器 `.env` 设绝对路径。
+- `deploy-web.sh` 移除 `downloads/` 同步与本地产物检查；下载区只由 CI 写入。
+- `Security.kt` 对 `/downloads/downloads.json` 与 `/downloads/SHA256SUMS.txt` 返回 `no-store`；其余产物保持 `public, max-age=86400`。
+- 公网校验 best-effort（失败仅告警），远端 `sha256sum -c` 与 localhost 检查为硬性。
+
+**验收**
+
+```bash
+bash -n scripts/deploy-web.sh scripts/generate-downloads-manifest.sh
+cd ClipboxServer && ./gradlew test
+gh workflow run release.yml --ref main -f deploy_to_site=true
+gh run watch
+curl -fsSI http://<SERVER_IP>:8080/downloads/downloads.json   # 200、application/json、no-store
+curl -fsS -H 'Range: bytes=0-1023' -o /dev/null -w '%{http_code}\n' \
+  http://<SERVER_IP>:8080/downloads/Theca-v1.0.0-windows-amd64-release.msi   # 206
+ssh deploy@<SERVER_IP> 'cd /srv/clipbox/downloads && sha256sum -c SHA256SUMS.txt'
+curl -fsSI http://<SERVER_IP>:8080/downloads/theca.env.example   # 200
+```
+
+预期：演练 job 成功，四产物与清单落盘，清单版本/平台/SHA 与实际文件一致；示例文件与历史产物未被删除；站点源码未重建。
+
+**DoD**
+
+- [ ] tag 与 dispatch 两条触发路径的条件正确；dispatch 默认不部署。
+- [ ] 部署失败时 GitHub Release 保留、线上清单保持上一版。
+- [ ] 无凭据、IP 或令牌进入仓库与日志。
+- [ ] 证据（run 链接、summary、curl 输出）写入 `web-artifacts.md`。
+- [ ] 一卡一提交：`T-WEB-11: <一句话>`。
+
+**禁止**
+
+- 不把私钥、known_hosts 原文或服务器 IP 写入仓库。
+- 不使用 `--delete` 同步下载目录；不删除历史版本与示例文件。
+- 不在 CI 中重建站点容器或修改远端 `.env` 之外的部署配置。
+- 不为演练创建 tag 或正式 GitHub Release。

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# 官网与应用部署脚本：把仓库工作区与下载包同步到 <user@host>:/root/clipbox，远端 docker compose 重建容器。
+# 官网与服务端源码部署脚本：把仓库工作区同步到 <user@host>:/root/clipbox，远端 docker compose 重建容器。
 # 用法：scripts/deploy-web.sh <user@host>（脚本与仓库都不含服务器 IP）
 # 约束：
-#   - 远端 data/、.env、downloads/ 不参与 --delete，部署前另打回滚包（排除 data/）；
+#   - 下载区由 release CI 的 deploy-site job 独占写入（ADR-0009），本脚本不再同步 downloads/；
+#   - 远端 data/、.env、downloads/ 不参与 --delete，部署前另打回滚包（排除 data/，不含 /srv 下载区）；
 #   - 只同步构建所需内容，不传 .git、客户端工程、设计稿、文档与本地构建缓存；
 #   - 远端已预置镜像与 Gradle 发行版时，rsync 后重新应用构建补丁（公网到官方源较慢）；
 #   - 失败不自动覆盖远端目录，按输出提示用回滚包恢复。
@@ -19,23 +20,16 @@ if [ -z "$REMOTE" ]; then
 fi
 
 REPO_ROOT="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-DOWNLOADS_DIR="$REPO_ROOT/downloads"
 STAMP="$(date '+%Y%m%d-%H%M%S')"
 ROLLBACK_PACKAGE="$ROLLBACK_DIR/clipbox-rollback-$STAMP.tar.gz"
 
 log() { printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S%z')" "$*"; }
 fail() { log "ERROR $*" >&2; exit 1; }
 
-[ -d "$DOWNLOADS_DIR" ] || fail "缺少下载目录：$DOWNLOADS_DIR"
-# 交付文件名含版本号，统一从版本校验脚本取版本，避免脚本与产物命名再次漂移。
-VERSION="$("$REPO_ROOT/scripts/check-release-version.sh" --print-version)" || fail "版本校验失败"
-for required in SHA256SUMS.txt "Theca-v${VERSION}-android-release.apk" "Theca-v${VERSION}-macos-arm64-release.dmg"; do
-    [ -f "$DOWNLOADS_DIR/$required" ] || fail "缺少下载产物：$required"
-done
 command -v rsync >/dev/null 2>&1 || fail "未找到 rsync"
 command -v ssh >/dev/null 2>&1 || fail "未找到 ssh"
 
-log "1/5 远端前置检查与回滚包"
+log "1/4 远端前置检查与回滚包"
 ssh "$REMOTE" bash -s -- "$REMOTE_DIR" "$ROLLBACK_DIR" "$ROLLBACK_PACKAGE" <<'REMOTE_SCRIPT'
 set -euo pipefail
 REMOTE_DIR="$1"
@@ -56,7 +50,7 @@ echo "ROLLBACK_PACKAGE=$ROLLBACK_PACKAGE"
 echo "DISK_FREE=$(df -h / | awk 'NR==2 {print $4}')"
 REMOTE_SCRIPT
 
-log "2/5 同步工作区（保护 data/、.env、downloads/）"
+log "2/4 同步工作区（保护 data/、.env、downloads/）"
 # shellcheck disable=SC2034
 # 排除项必须带根锚点：不带 / 的 data/ 会连 ClipboxWeb/src/data/ 一起排除，容器内构建因缺模块失败。
 RSYNC_EXCLUDES=(
@@ -84,10 +78,7 @@ RSYNC_EXCLUDES=(
 )
 rsync -az --delete "${RSYNC_EXCLUDES[@]}" "$REPO_ROOT/" "$REMOTE:$REMOTE_DIR/"
 
-log "3/5 同步下载包"
-rsync -az --delete "$DOWNLOADS_DIR/" "$REMOTE:$REMOTE_DIR/downloads/"
-
-log "4/5 应用远端构建补丁（镜像与本地 Gradle 发行版）"
+log "3/4 应用远端构建补丁（镜像与本地 Gradle 发行版）"
 ssh "$REMOTE" bash -s -- "$REMOTE_DIR" <<'REMOTE_SCRIPT'
 set -euo pipefail
 cd "$1/ClipboxServer"
@@ -109,7 +100,7 @@ fi
 echo "remote build config ready"
 REMOTE_SCRIPT
 
-log "5/5 远端重建容器并自检"
+log "4/4 远端重建容器并自检"
 ssh "$REMOTE" bash -s -- "$REMOTE_DIR" <<'REMOTE_SCRIPT' \
     || fail "容器重建或健康检查失败；回滚包：$ROLLBACK_PACKAGE（远端执行 tar -xzf 覆盖 $REMOTE_DIR 后 docker compose up -d --build）"
 set -euo pipefail
@@ -129,4 +120,4 @@ docker compose logs --tail=50 >&2 || true
 exit 1
 REMOTE_SCRIPT
 
-log "完成：上线物料位于 $REMOTE:$REMOTE_DIR；回滚包 $ROLLBACK_PACKAGE"
+log "完成：站点源码已部署到 $REMOTE:$REMOTE_DIR；下载区由 release CI 管理（ADR-0009）；回滚包 $ROLLBACK_PACKAGE"

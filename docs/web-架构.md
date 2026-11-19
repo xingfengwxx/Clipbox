@@ -104,13 +104,16 @@ ClipboxWeb/
 | --- | --- | --- |
 | `Theca-v1.0.0-android-release.apk` | `ClipboxClient/composeApp/build/outputs/apk/release/composeApp-release.apk` | release 签名，debuggable=false |
 | `Theca-v1.0.0-macos-arm64-release.dmg` | `ClipboxClient/composeApp/build/compose/binaries/main/dmg/Theca-1.0.0.dmg` | macOS 12+，arm64，未签名 |
+| `Theca-v1.0.0-windows-amd64-release.msi` | release CI 的 `windows` job | Windows 10+，x64，未签名 |
+| `Theca-v1.0.0-linux-amd64-release.deb` | release CI 的 `linux` job | Linux x86_64，未签名 |
 | `SHA256SUMS.txt` | `sha256sum` 生成 | 与页面展示一致 |
-| `theca-docker-compose.example.yml` | 由根 `docker-compose.yml` 复制 | 自建参考 |
-| `theca.env.example` | 由根 `.env.example` 复制 | 自建参考 |
+| `downloads.json` | release CI 的 `scripts/generate-downloads-manifest.sh` | 运行时下载清单，页面数值的唯一来源 |
+| `theca-docker-compose.example.yml` | 由根 `docker-compose.yml` 复制 | 自建参考，手工维护 |
+| `theca.env.example` | 由根 `.env.example` 复制 | 自建参考，手工维护 |
 
 - 站点 URL：`/downloads/<file>`；不提供独立服务端二进制。
-- `src/data/downloads.ts` 记录每个文件的大小与 SHA-256，构建前人工核对；不得写占位值。
-- 平台状态：Android / macOS 可用；iOS、Windows、Linux 标注原因，不渲染下载按钮。
+- `downloads.json` 由 release CI 从实际产物生成（version 与五平台可用性、file、sizeBytes、sha256），页面运行时读取；内置 `src/data/downloads.ts` 仅作清单加载失败的回退种子，不再「构建前人工核对」。
+- 平台状态：Android / macOS / Windows / Linux 可用；iOS 标注「仅模拟器构建」，不渲染下载按钮。
 
 ### 7.2 页面不变量
 
@@ -163,7 +166,8 @@ routing {
 | --- | --- | --- |
 | `/assets/*` | `public, max-age=31536000, immutable` | 站点 CSP、nosniff、no-referrer |
 | 站点 HTML / 其他静态文件 | `no-cache` | 站点 CSP、nosniff、no-referrer |
-| `/downloads/*` | `public, max-age=86400` | nosniff、no-referrer |
+| `/downloads/downloads.json`、`/downloads/SHA256SUMS.txt` | `no-store` | nosniff、no-referrer；保证发版切换立即可见 |
+| `/downloads/<产物与示例文件>` | `public, max-age=86400` | nosniff、no-referrer |
 | `/api/*`、`/s/*`、`/healthz` | `no-store` | 原有头与分享页 CSP 不变 |
 
 站点 CSP：
@@ -235,10 +239,12 @@ ENV WEB_DIR=/app/web DOWNLOAD_DIR=/app/downloads
 
 ## 10. 部署与回滚
 
-- 部署脚本：`scripts/deploy-web.sh <user@host>`，不含 IP。
-- 步骤：远端数据备份检查 → rsync 工作区（保护 `data/`、`.env`、`downloads/`）→ rsync `downloads/` → `ssh '<host>' 'cd /root/clipbox && docker compose up -d --build'`。
-- 回滚：部署前在远端对 `/root/clipbox`（排除 `data/`）打 tar 包；失败时恢复目录并重建容器；数据库使用每日备份。
-- 部署后复验：`/`、`/healthz`、`/s/<token>`、配对/增量同步、`/downloads/*` 与 Range、日志无令牌与正文。
+- 站点源码：`scripts/deploy-web.sh <user@host>`（不含 IP）只同步站点与服务端源码。步骤：远端数据备份检查 → rsync 工作区（保护 `data/`、`.env`；不再同步 `downloads/`）→ 远端构建补丁 → `docker compose up -d --build` → `/healthz` 轮询。
+- 下载区（服务器 `/srv/clipbox/downloads`）：由 release CI 的 `deploy-site` job 独占写入（[ADR-0009](adr/0009-auto-publish-downloads.md)）。`v*` tag 推送自动执行；`workflow_dispatch` 可用 `deploy_to_site=true` 演练。上传顺序为产物 → `SHA256SUMS.txt` → `downloads.json`（清单最后切换）；失败保留上一版清单，`downloads.json.prev` 用于恢复。
+- 挂载：`docker-compose.yml` 使用 `${DOWNLOAD_HOST_DIR:-./downloads}:/app/downloads:ro`；服务器 `.env` 设 `DOWNLOAD_HOST_DIR=/srv/clipbox/downloads`，本地开发保持默认。
+- 自建示例文件（`theca-docker-compose.example.yml`、`theca.env.example`）不随部署同步，变更需手工维护；历史版本产物保留，不自动清理。
+- 回滚：源码部署回滚依赖部署前的 tar 包（排除 `data/`，不含 `/srv` 下载区）；下载区回滚恢复 `downloads.json.prev`；数据库使用每日备份。
+- 部署后复验：`/`、`/healthz`、`/s/<token>`、配对/增量同步、`/downloads/downloads.json`、`/downloads/*` 与 Range、日志无令牌与正文。
 
 ## 11. 安全与隐私
 
@@ -293,3 +299,4 @@ ENV WEB_DIR=/app/web DOWNLOAD_DIR=/app/downloads
 | 日期 | 变更 |
 | --- | --- |
 | 2026-11-18 | 首版：三语单页、同容器托管、Range 支持、Docker 三阶段构建与 rsync 部署 |
+| 2026-11-19 | 下载区改为 release CI 自动上线（ADR-0009）：运行时 `downloads.json`、清单与校验文件 no-store、CI 独占下载目录 |
