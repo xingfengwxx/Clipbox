@@ -2,7 +2,8 @@
  * author : 王星星
  * date : 2026-11-18 16:35
  * email : 1099420259@qq.com
- * description : 已配对设备取码：调用认证接口生成一次性 6 位码，只在内存中把明文交给 UI，不写设置、数据库或日志。
+ * description : 设备取码：已配对设备带令牌、未配对设备匿名，调用同一接口生成一次性 6 位码；
+ *               只在内存中把明文交给 UI，不写设置、数据库或日志。
  *               注意：本类刻意不依赖 SettingsRepository 与 Room，配对码生命周期完全由调用方内存状态管理。
  */
 package com.wangxingxing.clipbox.repository

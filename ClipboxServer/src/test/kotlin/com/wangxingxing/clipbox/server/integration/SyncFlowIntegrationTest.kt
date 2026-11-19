@@ -240,6 +240,16 @@ class SyncFlowIntegrationTest {
         assertTrue(resetPage.bool("resyncRequired"), "full 不得绕过 serverMaxSeq 重置保护")
     }
 
+    @Test
+    fun `unpaired device can generate a code and pair a new device`() = integrationApp(tempDir) {
+        val code = anonymousPairingCode()
+        val device = pairWithCode(code, "New Device")
+
+        assertTrue(ULID_PATTERN.matches(device.deviceId))
+        assertEquals(43, device.token.length)
+        assertTrue(DEVICE_TOKEN_PATTERN.matches(device.token))
+    }
+
     companion object {
         private val DEVICE_TOKEN_PATTERN = Regex("^[A-Za-z0-9_-]{43}$")
         private val SHARE_TOKEN_PATTERN = Regex("^[A-Za-z0-9_-]{43}$")

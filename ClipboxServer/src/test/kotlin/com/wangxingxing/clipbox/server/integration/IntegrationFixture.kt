@@ -120,12 +120,21 @@ internal class IntegrationContext(
         return json(response).str("code")
     }
 
+    suspend fun anonymousPairingCode(): String {
+        val response = client.post("/api/v1/devices/me/pairing-code")
+        check(response.status == HttpStatusCode.Created) { "匿名生成配对码失败：${response.status}" }
+        return json(response).str("code")
+    }
+
     suspend fun pairDevice(name: String = "Pixel 8"): DeviceSession {
         val anchor = anchorDevice ?: bootstrapDevice(name).also {
             anchorDevice = it
             return it
         }
-        val code = pairingCode(anchor.token)
+        return pairWithCode(pairingCode(anchor.token), name)
+    }
+
+    suspend fun pairWithCode(code: String, name: String): DeviceSession {
         val response = client.post("/api/v1/pair") {
             contentType(ContentType.Application.Json)
             setBody(buildJsonObject { put("code", code); put("deviceName", name) }.toString())

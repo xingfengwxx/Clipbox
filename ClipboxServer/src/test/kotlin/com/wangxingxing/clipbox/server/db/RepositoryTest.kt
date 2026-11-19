@@ -48,7 +48,7 @@ class RepositoryTest {
                     ),
                 )
                 PairingRepository.upsertCode(
-                    deviceId = "device-1",
+                    issuerId = "device-1",
                     codeHash = "pairing-hash",
                     createdAt = 3_000,
                     expiresAt = 3_600,
@@ -81,7 +81,7 @@ class RepositoryTest {
                 assertEquals(1, clip.serverSeq)
 
                 val pairing = assertNotNull(PairingRepository.findByCodeHash("pairing-hash"))
-                assertEquals("device-1", pairing.deviceId)
+                assertEquals("device-1", pairing.issuerId)
                 assertEquals(3_300, pairing.usedAt)
 
                 val share = assertNotNull(ShareRepository.findByTokenHash("share-hash"))

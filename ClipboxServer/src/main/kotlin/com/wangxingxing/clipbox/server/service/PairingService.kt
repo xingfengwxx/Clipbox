@@ -69,7 +69,7 @@ class PairingService(
                 throw PairingFailure(
                     HttpStatusCode.Conflict,
                     "ALREADY_INITIALIZED",
-                    "服务器已初始化，请输入已配对设备的配对码",
+                    "服务器已初始化，请输入任意设备生成的配对码",
                 )
             }
             issueDevice(normalizedName, now())

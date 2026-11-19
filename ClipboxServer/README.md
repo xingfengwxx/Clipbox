@@ -110,11 +110,12 @@ curl -sS -X POST http://127.0.0.1:8080/api/v1/bootstrap \
 # {"deviceId":"01J8...","token":"<43 字符>","deviceName":"Pixel 8"}
 ```
 
-之后由已配对设备生成 6 位配对码：
+之后由任意设备生成 6 位配对码；已配对设备带令牌，未配对设备直接匿名取码：
 
 ```bash
 curl -sS -X POST http://127.0.0.1:8080/api/v1/devices/me/pairing-code \
   -H "Authorization: Bearer $TOKEN"
+curl -sS -X POST http://127.0.0.1:8080/api/v1/devices/me/pairing-code
 # {"code":"654321","expiresAt":1730000600000}
 ```
 

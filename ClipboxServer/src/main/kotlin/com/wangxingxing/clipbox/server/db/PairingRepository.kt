@@ -2,7 +2,8 @@
  * author : 王星星
  * date : 2026-11-16 13:44
  * email : 1099420259@qq.com
- * description : 设备自有配对码仓储：按 device_id 单行覆盖实现“同一设备仅一个有效码”，只读写 SHA-256 摘要。
+ * description : 配对码仓储：按 issuer_id 单行覆盖实现“同一 issuer 仅一个有效码”，只读写 SHA-256 摘要。
+ *               issuer 可以是已配对设备 id，也可以是未配对设备共用的匿名槽位。
  *               注意：所有方法必须在事务内调用；覆盖旧码与标记使用都必须与设备创建处于同一写事务。
  */
 package com.wangxingxing.clipbox.server.db
@@ -18,7 +19,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 
 data class DevicePairingCodeRow(
-    val deviceId: String,
+    val issuerId: String,
     val codeHash: String,
     val createdAt: Long,
     val expiresAt: Long,
@@ -28,11 +29,11 @@ data class DevicePairingCodeRow(
 object PairingRepository {
 
     /**
-     * 写入设备码。同一设备已有记录时原位覆盖，旧码随 code_hash 更新立即失效；
+     * 写入 issuer 的配对码。同一 issuer 已有记录时原位覆盖，旧码随 code_hash 更新立即失效；
      * 主键不变，因此并发重新生成不会留下第二条有效码。
      */
-    fun upsertCode(deviceId: String, codeHash: String, createdAt: Long, expiresAt: Long) {
-        val updated = DevicePairingCodesTable.update({ DevicePairingCodesTable.deviceId eq deviceId }) {
+    fun upsertCode(issuerId: String, codeHash: String, createdAt: Long, expiresAt: Long) {
+        val updated = DevicePairingCodesTable.update({ DevicePairingCodesTable.issuerId eq issuerId }) {
             it[this.codeHash] = codeHash
             it[this.createdAt] = createdAt
             it[this.expiresAt] = expiresAt
@@ -40,7 +41,7 @@ object PairingRepository {
         }
         if (updated == 0) {
             DevicePairingCodesTable.insert {
-                it[this.deviceId] = deviceId
+                it[this.issuerId] = issuerId
                 it[this.codeHash] = codeHash
                 it[this.createdAt] = createdAt
                 it[this.expiresAt] = expiresAt
@@ -69,7 +70,7 @@ object PairingRepository {
         DevicePairingCodesTable.deleteWhere { DevicePairingCodesTable.expiresAt less cutoff }
 
     private fun ResultRow.toDevicePairingCodeRow() = DevicePairingCodeRow(
-        deviceId = this[DevicePairingCodesTable.deviceId],
+        issuerId = this[DevicePairingCodesTable.issuerId],
         codeHash = this[DevicePairingCodesTable.codeHash],
         createdAt = this[DevicePairingCodesTable.createdAt],
         expiresAt = this[DevicePairingCodesTable.expiresAt],

@@ -78,7 +78,7 @@ class PairingTest {
         }
         assertEquals(listOf(Hashing.sha256Hex("482915")), storedCodeHashes, "配对码只能以哈希形态落库")
         val codeRow = assertNotNull(factory.readTransaction { PairingRepository.findByCodeHash(Hashing.sha256Hex("482915")) })
-        assertEquals(deviceId, codeRow.deviceId, "取码设备与新设备在同一用户空间")
+        assertEquals(deviceId, codeRow.issuerId, "取码设备与新设备在同一用户空间")
         assertNotNull(codeRow.usedAt)
     }
 

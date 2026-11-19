@@ -2,8 +2,8 @@
  * author : 王星星
  * date : 2026-11-18 16:10
  * email : 1099420259@qq.com
- * description : 设备自有配对码接口测试：认证失败 401、6 位码与 10 分钟 TTL、只存哈希、重新生成立即作废旧码、
- *               过期码拒绝新设备、10 次/分钟 IP 限流。
+ * description : 取码接口测试：匿名与已配对设备均可取码、非法凭证 401、6 位码与 10 分钟 TTL、只存哈希、
+ *               重新生成立即作废旧码、过期码拒绝新设备、10 次/分钟 IP 限流。
  *               注意：明文码只存在于响应与断言内存中，不得写入日志；每个用例使用独立临时目录与真实 SQLite。
  */
 package com.wangxingxing.clipbox.server
@@ -16,6 +16,7 @@ import com.wangxingxing.clipbox.server.db.DeviceRow
 import com.wangxingxing.clipbox.server.db.DevicesTable
 import com.wangxingxing.clipbox.server.db.PairingRepository
 import com.wangxingxing.clipbox.server.plugins.RateLimitSettings
+import com.wangxingxing.clipbox.server.service.DevicePairingCodeService
 import com.wangxingxing.clipbox.server.util.Hashing
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -50,11 +51,23 @@ class DevicePairingCodeTest {
     lateinit var tempDir: Path
 
     @Test
-    fun `pairing code generation requires a valid device token`() = withApp { _, client ->
-        val missing = client.post(PAIRING_CODE_PATH)
-        assertEquals(HttpStatusCode.Unauthorized, missing.status)
-        assertEquals("UNAUTHORIZED", errorCode(missing.bodyAsText()))
+    fun `anonymous request generates a code without creating a device`() = withApp { factory, client ->
+        val response = client.createAnonymousCode()
 
+        assertEquals(HttpStatusCode.Created, response.status)
+        val body = json(response.bodyAsText())
+        assertEquals(setOf("code", "expiresAt"), body.keys)
+        val code = body.str("code")
+        assertTrue(SIX_DIGITS.matches(code), "code=$code")
+        val stored = assertNotNull(
+            factory.readTransaction { PairingRepository.findByCodeHash(Hashing.sha256Hex(code)) },
+        )
+        assertEquals(DevicePairingCodeService.ANONYMOUS_ISSUER, stored.issuerId)
+        assertEquals(0L, deviceCount(factory), "匿名取码不得创建任何设备")
+    }
+
+    @Test
+    fun `invalid credentials are rejected even though authentication is optional`() = withApp { _, client ->
         val unknown = client.post(PAIRING_CODE_PATH) {
             header(HttpHeaders.Authorization, "Bearer ${"d".repeat(43)}")
         }
@@ -66,6 +79,47 @@ class DevicePairingCodeTest {
         }
         assertEquals(HttpStatusCode.Unauthorized, basic.status)
         assertEquals("UNAUTHORIZED", errorCode(basic.bodyAsText()))
+    }
+
+    @Test
+    fun `anonymous code can pair a new device`() = withApp { factory, client ->
+        val code = json(client.createAnonymousCode().bodyAsText()).str("code")
+
+        assertEquals(HttpStatusCode.Created, client.pair(code, "New Device").status)
+        assertEquals(1L, deviceCount(factory))
+    }
+
+    @Test
+    fun `regenerating anonymous code invalidates the previous one`() = withApp { factory, client ->
+        val first = json(client.createAnonymousCode().bodyAsText()).str("code")
+        val second = json(client.createAnonymousCode().bodyAsText()).str("code")
+        assertNotEquals(first, second)
+
+        val rowCount = factory.readTransaction { DevicePairingCodesTable.selectAll().count() }
+        assertEquals(1L, rowCount, "匿名槽位只保留一行有效码")
+
+        val oldCode = client.pair(first, "New Device")
+        assertEquals(HttpStatusCode.BadRequest, oldCode.status)
+        assertEquals("INVALID_CODE", errorCode(oldCode.bodyAsText()))
+        assertEquals(HttpStatusCode.Created, client.pair(second, "New Device").status)
+    }
+
+    @Test
+    fun `anonymous and device codes coexist`() = withApp { factory, client ->
+        val device = seedDevice(factory)
+        val deviceCode = json(client.createCode(device.token).bodyAsText()).str("code")
+        val anonymousCode = json(client.createAnonymousCode().bodyAsText()).str("code")
+        assertNotEquals(deviceCode, anonymousCode)
+
+        val storedDevice = assertNotNull(
+            factory.readTransaction { PairingRepository.findByCodeHash(Hashing.sha256Hex(deviceCode)) },
+        )
+        val storedAnonymous = assertNotNull(
+            factory.readTransaction { PairingRepository.findByCodeHash(Hashing.sha256Hex(anonymousCode)) },
+        )
+        assertEquals(device.deviceId, storedDevice.issuerId)
+        assertEquals(DevicePairingCodeService.ANONYMOUS_ISSUER, storedAnonymous.issuerId)
+        assertEquals(2L, factory.readTransaction { DevicePairingCodesTable.selectAll().count() })
     }
 
     @Test
@@ -88,7 +142,7 @@ class DevicePairingCodeTest {
         val rows = factory.readTransaction {
             DevicePairingCodesTable.selectAll().map { row ->
                 listOf(
-                    row[DevicePairingCodesTable.deviceId],
+                    row[DevicePairingCodesTable.issuerId],
                     row[DevicePairingCodesTable.codeHash],
                 )
             }
@@ -98,7 +152,7 @@ class DevicePairingCodeTest {
         val stored = assertNotNull(
             factory.readTransaction { PairingRepository.findByCodeHash(Hashing.sha256Hex(code)) },
         )
-        assertEquals(device.deviceId, stored.deviceId)
+        assertEquals(device.deviceId, stored.issuerId)
         assertNull(stored.usedAt)
     }
 
@@ -143,7 +197,7 @@ class DevicePairingCodeTest {
         val device = seedDevice(factory)
         factory.writeTransaction {
             PairingRepository.upsertCode(
-                deviceId = device.deviceId,
+                issuerId = device.deviceId,
                 codeHash = Hashing.sha256Hex("111111"),
                 createdAt = 1_000,
                 expiresAt = System.currentTimeMillis() - 1,
@@ -168,6 +222,22 @@ class DevicePairingCodeTest {
         }
 
         val limited = client.createCode(device.token)
+        assertEquals(HttpStatusCode.TooManyRequests, limited.status)
+        assertEquals("RATE_LIMITED", errorCode(limited.bodyAsText()))
+        assertRetryAfter(limited)
+    }
+
+    @Test
+    fun `anonymous generation counts toward the same ip limit`() = withApp { _, client ->
+        repeat(10) { attempt ->
+            assertEquals(
+                HttpStatusCode.Created,
+                client.createAnonymousCode().status,
+                "第 ${attempt + 1} 次应放行",
+            )
+        }
+
+        val limited = client.createAnonymousCode()
         assertEquals(HttpStatusCode.TooManyRequests, limited.status)
         assertEquals("RATE_LIMITED", errorCode(limited.bodyAsText()))
         assertRetryAfter(limited)
@@ -210,6 +280,8 @@ class DevicePairingCodeTest {
         post(PAIRING_CODE_PATH) {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
+
+    private suspend fun HttpClient.createAnonymousCode(): HttpResponse = post(PAIRING_CODE_PATH)
 
     private suspend fun HttpClient.pair(code: String, deviceName: String): HttpResponse =
         post("/api/v1/pair") {

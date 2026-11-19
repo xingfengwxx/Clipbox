@@ -2,8 +2,8 @@
  * author : 王星星
  * date : 2026-11-18 16:45
  * email : 1099420259@qq.com
- * description : 设备取码仓库测试：认证请求路径与 Bearer 头、成功返回码与过期时间、401/429/离线映射，
- *               并验证配对码不会写入设置存储（本类也不依赖 Room）。
+ * description : 设备取码仓库测试：未配对匿名请求不带 Authorization、已配对请求带 Bearer 头、
+ *               成功返回码与过期时间、401/429/离线映射，并验证配对码不会写入设置存储（本类也不依赖 Room）。
  *               注意：断言中出现的码为测试固定值，不得来自真实服务端。
  */
 package com.wangxingxing.clipbox.repository
@@ -23,6 +23,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 
 class PairingCodeRepositoryTest {
 
@@ -52,6 +53,24 @@ class PairingCodeRepositoryTest {
         assertEquals(HttpMethod.Post, request.method)
         assertEquals("/api/v1/devices/me/pairing-code", request.url.encodedPath)
         assertEquals("Bearer $TEST_TOKEN", request.headers[HttpHeaders.Authorization])
+    }
+
+    @Test
+    fun `create without a device token omits authorization`() = runTest {
+        val requests = mutableListOf<HttpRequestData>()
+        val repo = repository(requests, token = null) {
+            respondJson(
+                """{"code":"$CODE","expiresAt":$EXPIRES_AT}""",
+                status = HttpStatusCode.Created,
+            )
+        }
+
+        assertEquals(PairingCodeResult.Success(PairingCode(code = CODE, expiresAt = EXPIRES_AT)), repo.create())
+
+        val request = requests.single()
+        assertEquals(HttpMethod.Post, request.method)
+        assertEquals("/api/v1/devices/me/pairing-code", request.url.encodedPath)
+        assertNull(request.headers[HttpHeaders.Authorization], "未配对设备取码不得携带 Authorization")
     }
 
     @Test

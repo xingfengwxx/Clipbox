@@ -114,6 +114,8 @@ cd ClipboxClient && ./gradlew :shared:allTests --rerun-tasks
 
 配对码改由已配对设备生成，服务端只存哈希且不再打印。AC-01 的“生成配对码”步骤改指设置页取码；AC-13 追加断言 `device_pairing_codes` 仅含 64 位小写 hex、日志中配对码出现 0 次。历史证据保留；T-REL-15 提供新证据。
 
+> 2026-11-19 更新（ADR-0007）：取码接口改为可选认证，未配对设备可匿名取码（`issuer_id=anonymous`），设置页「配对新设备」不再按配对状态隐藏。AC-01 的取码步骤不再限定已配对设备；上述历史证据保留。
+
 ### T-REL-15 新证据（2026-11-18）
 
 - AC-01：全新数据目录下 `POST /api/v1/bootstrap` 初始化首台设备 → 设备 A 取码 → 设备 B `POST /api/v1/pair` 201 → A/B 双向 REST 同步命中；Android 设置页取码与配对页初始化在 T-UI-21 实测。

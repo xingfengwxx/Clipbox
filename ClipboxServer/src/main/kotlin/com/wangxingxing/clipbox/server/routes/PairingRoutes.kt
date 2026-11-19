@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-16 14:56
  * email : 1099420259@qq.com
- * description : 配对相关路由：空库初始化、用设备码换取令牌、已配对设备生成新码，错误体统一走 plugins.respondError。
+ * description : 配对相关路由：空库初始化、用设备码换取令牌、任意设备（含未配对）生成新码，错误体统一走 plugins.respondError。
  *               注意：配对码与令牌不写任何日志，也不进入 URL；请求体解析必须原样放行 413/415，
  *                     否则请求体限制会被这里的兜底 catch 吞成 400。
  */
@@ -75,14 +75,12 @@ fun Route.pairingRoutes(
         }
     }
 
-    authenticate(DEVICE_AUTH_PROVIDER) {
+    // 取码不要求已配对：无令牌的设备走匿名槽位，带有效令牌则归属该设备。
+    authenticate(DEVICE_AUTH_PROVIDER, optional = true) {
         post("/api/v1/devices/me/pairing-code") {
-            val principal = call.principal<DevicePrincipal>()
-            if (principal == null) {
-                call.respondError(HttpStatusCode.Unauthorized, "UNAUTHORIZED", "设备令牌缺失或无效")
-                return@post
-            }
-            val issued = pairingCodeService.create(principal.deviceId)
+            val issuerId = call.principal<DevicePrincipal>()?.deviceId
+                ?: DevicePairingCodeService.ANONYMOUS_ISSUER
+            val issued = pairingCodeService.create(issuerId)
             call.respond(
                 HttpStatusCode.Created,
                 PairingCodeResponse(code = issued.code, expiresAt = issued.expiresAt),

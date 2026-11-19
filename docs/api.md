@@ -32,11 +32,12 @@
 | 范围 | 方式 |
 | --- | --- |
 | 设备接口 | `Authorization: Bearer <device-token>` |
+| 可选认证接口 | `POST /api/v1/devices/me/pairing-code`：携带有效令牌时归属该设备，未携带按匿名处理，无效令牌返回 401 |
 | 公开接口 | `POST /api/v1/pair`、`POST /api/v1/bootstrap`、`GET /s/{token}`、`GET /healthz` |
 
 - 设备令牌只返回一次，服务端只保存 `SHA-256(token)`；令牌泄露等价于设备身份泄露。
 - 设备令牌不得出现在 URL、查询参数、日志或错误信息中。
-- 配对码由已配对设备生成，服务端只保存 `SHA-256(code)`；配对码只允许出现在生成响应与配对请求体中，不得进入 URL、查询参数或日志。
+- 配对码由任意设备生成（未配对设备以匿名身份生成），服务端只保存 `SHA-256(code)`；配对码只允许出现在生成响应与配对请求体中，不得进入 URL、查询参数或日志。
 
 ### 1.3 标识、时间与变更序号
 
@@ -117,7 +118,7 @@
 
 ### 2.1 POST /api/v1/pair
 
-用已配对设备生成的配对码把新设备登记到唯一用户空间，并换取设备令牌。无需认证。
+用任意设备生成的配对码把新设备登记到唯一用户空间，并换取设备令牌。无需认证。
 
 请求：
 
@@ -166,7 +167,7 @@ curl -sS http://203.0.113.10:8080/api/v1/pair \
 
 ### 2.2 POST /api/v1/devices/me/pairing-code
 
-已配对设备为“配对新设备”生成一次性配对码。需要设备认证。
+任意设备（含未配对）为“配对新设备”生成一次性配对码。设备认证可选：未携带 `Authorization` 时以匿名身份签发；携带有效设备令牌时码归属该设备；携带无效或畸形凭证返回 401。
 
 请求体为空或 `{}`。
 
@@ -181,8 +182,9 @@ curl -sS http://203.0.113.10:8080/api/v1/pair \
 
 行为：
 
-- 每台设备同一时间最多一个有效码；再次生成会覆盖旧码，旧码立即失效。
+- 每个 issuer 同一时间最多一个有效码；再次生成会覆盖旧码，旧码立即失效。已配对设备按设备 ID 隔离；所有未配对设备共用匿名槽位，任一未配对设备重新生成会使前一个匿名码失效。
 - 有效期固定 600 秒，一次性使用。
+- 取码不创建设备，也不影响空库初始化（`/bootstrap`）的判断。
 - 服务端只保存 `SHA-256(code)`；明文只在本次响应返回，不写入日志，不进入 URL。
 - 客户端只在内存中保留明文，展示弹层关闭即销毁，不落盘。
 
@@ -190,7 +192,7 @@ curl -sS http://203.0.113.10:8080/api/v1/pair \
 
 | HTTP | code | 场景 |
 | --- | --- | --- |
-| 401 | `UNAUTHORIZED` | 设备令牌缺失或无效 |
+| 401 | `UNAUTHORIZED` | 携带了无效或畸形的设备凭证 |
 | 429 | `RATE_LIMITED` | 超过每 IP 每分钟 10 次 |
 
 ### 2.3 POST /api/v1/bootstrap
@@ -769,9 +771,10 @@ curl -sS -X POST http://203.0.113.10:8080/api/v1/bootstrap \
   -H 'Content-Type: application/json' \
   -d '{"deviceName":"Pixel 8"}'
 
-# 2. 已配对设备为新设备生成配对码
+# 2. 任意设备为新设备生成配对码：已配对设备带令牌，未配对设备直接匿名取码
 curl -sS -X POST http://203.0.113.10:8080/api/v1/devices/me/pairing-code \
   -H "Authorization: Bearer $TOKEN"
+curl -sS -X POST http://203.0.113.10:8080/api/v1/devices/me/pairing-code
 
 # 3. 新设备用该码配对
 curl -sS http://203.0.113.10:8080/api/v1/pair \
@@ -838,3 +841,4 @@ curl -sS http://203.0.113.10:8080/api/v1/shares \
 | v1.0.0 | 2026-11-13 | 初版：基于交接文档 v0.1、ADR-0001、ADR-0002 冻结 API 契约 |
 | v1.0.0 修订 | 2026-11-18 | GET /api/v1/clips 新增可选参数 `full`：全量分页跳过 syncFloor 判定，仍保留 serverMaxSeq 重置保护；修复 BUG-001 墓碑清理后全量分页中断 |
 | v1.0.0 修订 | 2026-11-18 | 配对码改由已配对设备生成（`POST /api/v1/devices/me/pairing-code`），服务端只存哈希；新增空库初始化 `POST /api/v1/bootstrap` 与 409 `ALREADY_INITIALIZED`；删除管理接口与 `X-Admin-Token`（ADR-0006） |
+| v1.0.0 修订 | 2026-11-19 | 取码接口改为可选认证：任意设备（含未配对）均可生成配对码，未携带令牌按匿名 issuer 处理；`device_pairing_codes.device_id` 改为 `issuer_id` 并移除设备外键（ADR-0007） |

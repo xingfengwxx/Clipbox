@@ -187,13 +187,13 @@ class RetentionJob(
         var total = 0
         while (true) {
             val deleted = databaseFactory.writeTransaction {
-                val deviceIds = DevicePairingCodesTable.select(DevicePairingCodesTable.deviceId)
+                val issuerIds = DevicePairingCodesTable.select(DevicePairingCodesTable.issuerId)
                     .where { DevicePairingCodesTable.expiresAt less cutoff }
                     .limit(EXPIRY_BATCH)
-                    .map { row -> row[DevicePairingCodesTable.deviceId] }
-                if (deviceIds.isEmpty()) return@writeTransaction 0
+                    .map { row -> row[DevicePairingCodesTable.issuerId] }
+                if (issuerIds.isEmpty()) return@writeTransaction 0
 
-                DevicePairingCodesTable.deleteWhere { DevicePairingCodesTable.deviceId inList deviceIds }
+                DevicePairingCodesTable.deleteWhere { DevicePairingCodesTable.issuerId inList issuerIds }
             }
             if (deleted == 0) break
             total += deleted

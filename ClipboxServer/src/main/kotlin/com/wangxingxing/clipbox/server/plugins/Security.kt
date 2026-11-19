@@ -5,6 +5,7 @@
  * description : 设备 Bearer 认证与按路径安全响应头：解析 Authorization、SHA-256 查设备令牌哈希、按设备限流、暴露 DevicePrincipal；
  *               响应头侧区分接口 / 分享页 / 健康检查、站点资源与下载包的缓存策略，并只给站点追加 CSP。
  *               注意：认证失败只返回统一的 401 JSON，不区分令牌缺失、格式错误与不存在；设备超限返回 429 且不注入 principal；
+ *                     未携带 Authorization 头时，可选认证路由放行为匿名请求；头存在但非法仍按无效凭证挑战；
  *                     令牌与哈希不得进入日志；未使用 Ktor bearer provider 的默认 challenge，因为其响应体固定为空，无法满足 api.md §1.5；
  *                     分享页的 CSP 由分享路由逐响应追加，本文件不得覆盖。
  */
@@ -98,6 +99,9 @@ class DeviceAuthenticationProvider(
 
     override suspend fun onAuthenticate(context: AuthenticationContext) {
         val call = context.call
+        // 只有头缺失才算“未携带凭证”；头存在但不是合法非空 Bearer 仍按无效凭证处理，
+        // 否则可选认证路由会把畸形头静默放行为匿名请求。
+        val authorizationPresent = call.request.headers[HttpHeaders.Authorization] != null
         val token = call.bearerToken()
         val device = token?.let { value ->
             databaseFactory.readTransaction {
@@ -107,7 +111,7 @@ class DeviceAuthenticationProvider(
 
         if (device == null) {
             val cause =
-                if (token == null) AuthenticationFailedCause.NoCredentials
+                if (!authorizationPresent) AuthenticationFailedCause.NoCredentials
                 else AuthenticationFailedCause.InvalidCredentials
             context.challenge(FAILURE_KEY, cause) { challenge, challengedCall ->
                 challengedCall.respondUnauthorized()

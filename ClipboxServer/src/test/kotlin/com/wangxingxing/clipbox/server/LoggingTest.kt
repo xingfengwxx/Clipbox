@@ -150,7 +150,7 @@ class LoggingTest {
         assertTrue(startup.contains("1.0.0"), startup)
         assertTrue(startup.contains("listen=http://0.0.0.0:8080"), startup)
         assertTrue(startup.contains("dataDir="), startup)
-        assertTrue(startup.contains("schemaVersion=2"), startup)
+        assertTrue(startup.contains("schemaVersion=3"), startup)
         assertEquals(0, messages.count { it.contains("[PAIRING-CODE]") }, "启动不得再打印任何配对码")
     }
 

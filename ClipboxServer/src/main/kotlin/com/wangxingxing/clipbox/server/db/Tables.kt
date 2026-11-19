@@ -32,13 +32,13 @@ object ClipsTable : Table("clips") {
 }
 
 object DevicePairingCodesTable : Table("device_pairing_codes") {
-    val deviceId = text("device_id")
+    val issuerId = text("issuer_id")
     val codeHash = text("code_hash")
     val createdAt = long("created_at")
     val expiresAt = long("expires_at")
     val usedAt = long("used_at").nullable()
 
-    override val primaryKey = PrimaryKey(deviceId)
+    override val primaryKey = PrimaryKey(issuerId)
 }
 
 object SharesTable : Table("shares") {

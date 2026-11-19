@@ -411,14 +411,13 @@ private fun SettingsScreen(
                     valueColor = if (state.paired) colors.ok else colors.ink3,
                 )
             }
-            if (state.paired) {
-                item {
-                    ChevronRow(
-                        label = stringResource(Res.string.settings_pair_new_device),
-                        value = null,
-                        onClick = onPairNewDevice,
-                    )
-                }
+            // 未配对设备也能生成配对码，入口不按配对状态隐藏。
+            item {
+                ChevronRow(
+                    label = stringResource(Res.string.settings_pair_new_device),
+                    value = null,
+                    onClick = onPairNewDevice,
+                )
             }
 
             if (state.isDesktop) {

@@ -325,6 +325,7 @@ T-WEB-09 首轮远程部署已于 2026-11-18 完成，范围仅 APK / DMG；T-WE
 - 官网托管决策：`docs/adr/0004-web-static-hosting.md`
 - 多平台发布与 release-only CI 决策：`docs/adr/0005-v1-multiplatform-release.md`
 - 设备自有配对码与空库初始化决策：`docs/adr/0006-device-issued-pairing-codes.md`
+- 配对码对所有设备开放决策：`docs/adr/0007-open-pairing-code-generation.md`
 - 领域术语：`docs/GLOSSARY.md`
 - 视觉与交互基准：`design/Clipbox 三端设计.html`、`design/README.md`、`design/brand-spec.md`
 - 执行协议与不变量：仓库根目录 `AGENTS.md`

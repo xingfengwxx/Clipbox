@@ -231,26 +231,26 @@ class RetentionTest {
                 )
             }
             PairingRepository.upsertCode(
-                deviceId = "DEVICE-0",
+                issuerId = "DEVICE-0",
                 codeHash = "hash-100000",
                 createdAt = NOW - 2 * DAY,
                 expiresAt = NOW - GRACE - 1,
             )
             PairingRepository.upsertCode(
-                deviceId = "DEVICE-1",
+                issuerId = "DEVICE-1",
                 codeHash = "hash-200000",
                 createdAt = NOW - DAY,
                 expiresAt = NOW - 60_000,
             )
             PairingRepository.upsertCode(
-                deviceId = "DEVICE-2",
+                issuerId = "DEVICE-2",
                 codeHash = "hash-300000",
                 createdAt = NOW,
                 expiresAt = NOW + 600_000,
             )
             PairingRepository.markUsedIfUnused("hash-300000", NOW - 1_000)
             PairingRepository.upsertCode(
-                deviceId = "DEVICE-3",
+                issuerId = "DEVICE-3",
                 codeHash = "hash-400000",
                 createdAt = NOW - 2 * DAY,
                 expiresAt = NOW - GRACE - 1,
