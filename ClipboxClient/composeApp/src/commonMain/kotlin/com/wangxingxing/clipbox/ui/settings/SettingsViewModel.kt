@@ -71,6 +71,7 @@ class SettingsViewModel(
                         deviceId = settings.deviceId.orEmpty(),
                         autoPaste = settings.autoPaste,
                         autoClipboardSend = settings.autoClipboardSend,
+                        autoUpdateCheck = settings.autoUpdateCheck,
                         themeMode = settings.themeMode,
                         language = settings.appLanguage,
                         diagnosticLoggingEnabled = settings.diagnosticLoggingEnabled,
@@ -144,6 +145,11 @@ class SettingsViewModel(
 
     fun setAutoClipboardSend(enabled: Boolean) {
         viewModelScope.launch { settingsRepository.setAutoClipboardSend(enabled) }
+    }
+
+    // 开关只影响下一次冷启动的自动检查；已完成的进程内检查不受影响
+    fun setAutoUpdateCheck(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.setAutoUpdateCheck(enabled) }
     }
 
     fun setDiagnosticLogging(enabled: Boolean) {

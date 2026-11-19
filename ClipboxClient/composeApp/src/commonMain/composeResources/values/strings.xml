@@ -186,6 +186,16 @@
     <string name="settings_about_storage_body">记录与设置保存在本机；同步内容在服务端以明文存储，v1.0.0 不含端到端加密。本地保留最近 200 条非置顶与全部置顶。</string>
     <string name="settings_about_transport">传输</string>
     <string name="settings_about_transport_body">未加密连接，仅用于学习</string>
+    <string name="settings_section_update">更新</string>
+    <string name="settings_update_current">当前</string>
+    <string name="settings_update_latest">最新</string>
+    <string name="settings_update_date">日期</string>
+    <string name="settings_check_update">检查更新</string>
+    <string name="settings_check_update_action">检查</string>
+    <string name="settings_check_update_busy">检查中</string>
+    <string name="settings_auto_update_check">自动检查更新</string>
+    <string name="settings_auto_update_check_note">每次冷启动检查一次，失败不打扰，不发送令牌。</string>
+    <string name="update_badge_description">有新版本</string>
     <string name="settings_section_danger">危险操作</string>
     <string name="settings_change_server">更换服务器</string>
     <string name="settings_unpair">解除配对</string>
@@ -269,4 +279,60 @@
     </plurals>
     <string name="update_download_notification_title">字匣更新</string>
     <string name="update_download_notification_description">正在下载安装包</string>
+
+    <string name="update_dialog_kicker">更新，v%1$s</string>
+    <string name="update_dialog_checking_title">正在检查</string>
+    <string name="update_dialog_checking_body">正在向官方发行服务器确认版本。</string>
+    <string name="update_dialog_latest_title">已是最新</string>
+    <string name="update_dialog_latest_body">当前 v%1$s 已是官方最新版本。</string>
+    <string name="update_dialog_available_title">有新版本</string>
+    <string name="update_dialog_version_line">当前 %1$s → 最新 %2$s</string>
+    <string name="update_dialog_meta_line">%1$s，%2$s，%3$s</string>
+    <string name="update_dialog_notes">发布说明</string>
+    <string name="update_dialog_later">稍后</string>
+    <string name="update_dialog_download">下载并安装</string>
+    <string name="update_dialog_install">安装</string>
+    <string name="update_dialog_close">关闭</string>
+    <string name="update_dialog_retry">重试</string>
+    <string name="update_dialog_know">知道了</string>
+
+    <string name="update_risk_title">下载前确认</string>
+    <string name="update_risk_tag_http">HTTP</string>
+    <string name="update_risk_tag_unsigned">未签名</string>
+    <string name="update_risk_http_title">连接未加密</string>
+    <string name="update_risk_http_body">当前使用 HTTP，同一网络中的其他人可能读取或替换下载内容。</string>
+    <string name="update_risk_unsigned_title">安装包未签名</string>
+    <string name="update_risk_unsigned_body">本学习版不提供代码签名，系统无法验证发布者身份。</string>
+    <string name="update_risk_footnote">SHA-256 只能确认文件与发布清单一致，不能证明来源，只应从官方发行服务器下载。</string>
+    <string name="update_risk_continue">继续下载</string>
+
+    <string name="update_dialog_downloading_title">正在下载</string>
+    <string name="update_dialog_cancel_download">取消下载</string>
+    <string name="update_dialog_download_progress">已下载 %1$s / %2$s</string>
+    <string name="update_dialog_verifying_title">正在校验</string>
+    <string name="update_dialog_verifying_body">文件已下载完成，正在比对 SHA-256。</string>
+    <string name="update_dialog_ready_title">可以安装</string>
+    <string name="update_dialog_ready_body">校验通过，安装包已保存在本机。</string>
+    <string name="update_dialog_ready_note">覆盖安装需要与当前版本使用同一签名。若系统提示未知来源，请允许本次安装。</string>
+    <string name="update_dialog_sha_match">SHA-256 匹配</string>
+    <string name="update_install_permission_required">请先允许安装未知应用，再返回点击安装。</string>
+    <string name="update_install_unavailable">无法拉起安装器，请稍后重试。</string>
+    <string name="update_dialog_failed_title">更新未完成</string>
+    <string name="update_dialog_unsupported_ios">当前平台暂不提供安装包：iOS 目前只有模拟器构建，不提供下载。</string>
+    <string name="update_dialog_unsupported_other">当前平台暂不提供安装包，请前往官网下载。</string>
+
+    <string name="update_platform_android">Android</string>
+    <string name="update_platform_ios">iOS</string>
+    <string name="update_platform_macos">macOS</string>
+    <string name="update_platform_windows">Windows</string>
+    <string name="update_platform_linux">Linux</string>
+
+    <string name="update_error_offline">网络不可用，请检查连接</string>
+    <string name="update_error_timeout">连接超时，请稍后重试</string>
+    <string name="update_error_rate_limited">请求过于频繁，请稍后重试</string>
+    <string name="update_error_service_unavailable">官方发行服务器暂时不可用</string>
+    <string name="update_error_invalid_response">更新描述格式无效</string>
+    <string name="update_error_download_failed">安装包下载失败</string>
+    <string name="update_error_checksum_mismatch">校验失败，安装包已删除</string>
+    <string name="update_error_install_failed">无法拉起安装器</string>
 </resources>

@@ -20,6 +20,7 @@ data class SettingsUiState(
     val deviceId: String = "",
     val autoPaste: Boolean = true,
     val autoClipboardSend: Boolean = false,
+    val autoUpdateCheck: Boolean = true,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val language: AppLanguage = AppLanguage.ZH_HANS,
     val diagnosticLoggingEnabled: Boolean = false,

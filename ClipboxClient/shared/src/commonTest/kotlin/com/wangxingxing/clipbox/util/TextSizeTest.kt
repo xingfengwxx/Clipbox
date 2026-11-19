@@ -63,4 +63,25 @@ class TextSizeTest {
         assertEquals(max, TextSize.utf8ByteCount("a".repeat(max)))
         assertTrue(warn < max)
     }
+
+    @Test
+    fun fileSizeUsesBinaryUnits() {
+        assertEquals("0 B", TextSize.formatFileSize(0))
+        assertEquals("0 B", TextSize.formatFileSize(-1))
+        assertEquals("1 B", TextSize.formatFileSize(1))
+        assertEquals("1023 B", TextSize.formatFileSize(1023))
+        assertEquals("1 KB", TextSize.formatFileSize(1024))
+        assertEquals("1000 KB", TextSize.formatFileSize(1024L * 1000))
+    }
+
+    @Test
+    fun fileSizeKeepsOneDecimalForMegabytes() {
+        val mega = 1024L * 1024
+
+        assertEquals("1 MB", TextSize.formatFileSize(mega))
+        assertEquals("16.1 MB", TextSize.formatFileSize(16_894_770))
+        assertEquals("1.5 MB", TextSize.formatFileSize(mega + mega / 2))
+        // 向下截断而不是四舍五入，避免显示比实际更大的体积
+        assertEquals("1.4 MB", TextSize.formatFileSize(mega + mega / 2 - 1))
+    }
 }

@@ -2,7 +2,7 @@
  * author : 王星星
  * date : 2026-11-17 15:36
  * email : 1099420259@qq.com
- * description : 设置页 S12 与解除配对 S14：服务器、设备、桌面剪贴板、外观、诊断、关于、危险区分组；
+ * description : 设置页 S12 与解除配对 S14：服务器、设备、桌面剪贴板、外观、诊断、关于、更新、危险区分组；
  *               改址与解绑都带二次确认，诊断开关在 release 开启前提示日志范围。注意：页面只发意图，数据改动全部经 SettingsViewModel
  */
 package com.wangxingxing.clipbox.ui.settings
@@ -54,6 +54,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wangxingxing.clipbox.app.AppContainer
 import com.wangxingxing.clipbox.repository.PairingCodeError
 import com.wangxingxing.clipbox.resources.Res
 import com.wangxingxing.clipbox.resources.app_name
@@ -83,7 +84,12 @@ import com.wangxingxing.clipbox.resources.settings_about_version
 import com.wangxingxing.clipbox.resources.settings_auto_paste
 import com.wangxingxing.clipbox.resources.settings_auto_send
 import com.wangxingxing.clipbox.resources.settings_auto_send_note
+import com.wangxingxing.clipbox.resources.settings_auto_update_check
+import com.wangxingxing.clipbox.resources.settings_auto_update_check_note
 import com.wangxingxing.clipbox.resources.settings_change_server
+import com.wangxingxing.clipbox.resources.settings_check_update
+import com.wangxingxing.clipbox.resources.settings_check_update_action
+import com.wangxingxing.clipbox.resources.settings_check_update_busy
 import com.wangxingxing.clipbox.resources.settings_confirm_enable
 import com.wangxingxing.clipbox.resources.settings_danger_change_body
 import com.wangxingxing.clipbox.resources.settings_danger_change_title
@@ -116,6 +122,7 @@ import com.wangxingxing.clipbox.resources.settings_section_danger
 import com.wangxingxing.clipbox.resources.settings_section_device
 import com.wangxingxing.clipbox.resources.settings_section_diagnostic
 import com.wangxingxing.clipbox.resources.settings_section_server
+import com.wangxingxing.clipbox.resources.settings_section_update
 import com.wangxingxing.clipbox.resources.settings_server_invalid
 import com.wangxingxing.clipbox.resources.settings_server_label
 import com.wangxingxing.clipbox.resources.settings_server_saved
@@ -133,6 +140,9 @@ import com.wangxingxing.clipbox.resources.settings_theme_system
 import com.wangxingxing.clipbox.resources.settings_title
 import com.wangxingxing.clipbox.resources.settings_unpair
 import com.wangxingxing.clipbox.resources.settings_unpaired
+import com.wangxingxing.clipbox.resources.settings_update_current
+import com.wangxingxing.clipbox.resources.settings_update_date
+import com.wangxingxing.clipbox.resources.settings_update_latest
 import com.wangxingxing.clipbox.settings.AppLanguage
 import com.wangxingxing.clipbox.settings.ServerUrlValidation
 import com.wangxingxing.clipbox.settings.ServerUrlValidator
@@ -142,12 +152,18 @@ import com.wangxingxing.clipbox.ui.components.ConfirmDialog
 import com.wangxingxing.clipbox.ui.components.SyncStatusBar
 import com.wangxingxing.clipbox.ui.i18n.LocalAppLanguage
 import com.wangxingxing.clipbox.ui.theme.ClipboxTokens
+import com.wangxingxing.clipbox.update.UpdateDescriptor
+import com.wangxingxing.clipbox.update.UpdateUiState
+import com.wangxingxing.clipbox.update.descriptorOrNull
+import com.wangxingxing.clipbox.update.hasUpdate
 import com.wangxingxing.clipbox.util.clipNowMillis
 import com.wangxingxing.clipbox.util.formatAbsoluteTime
+import com.wangxingxing.clipbox.util.formatPublishedDate
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 private sealed interface SettingsDialog {
@@ -167,7 +183,9 @@ fun SettingsRoute(
     modifier: Modifier = Modifier,
 ) {
     val viewModel: SettingsViewModel = koinViewModel()
+    val container = koinInject<AppContainer>()
     val state by viewModel.state.collectAsState()
+    val updateState by container.updateController.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var dialog by remember { mutableStateOf<SettingsDialog>(SettingsDialog.None) }
 
@@ -228,6 +246,17 @@ fun SettingsRoute(
             onPairNewDevice = {
                 dialog = SettingsDialog.PairingCode
                 viewModel.generatePairingCode()
+            },
+            updateDescriptor = updateState.descriptorOrNull(),
+            updateAvailable = updateState.hasUpdate(),
+            updateChecking = updateState is UpdateUiState.Checking,
+            onAutoUpdateCheckChange = viewModel::setAutoUpdateCheck,
+            onCheckUpdate = {
+                container.updateController.openDialog()
+                // 已有检查结果时只打开弹层，避免 Ready 文件被一次重新检查作废
+                if (updateState is UpdateUiState.Idle || updateState is UpdateUiState.Latest) {
+                    container.updateController.checkManually()
+                }
             },
         )
         SnackbarHost(
@@ -324,6 +353,11 @@ private fun SettingsScreen(
     onChangeServer: () -> Unit,
     onUnpair: () -> Unit,
     onPairNewDevice: () -> Unit,
+    updateDescriptor: UpdateDescriptor?,
+    updateAvailable: Boolean,
+    updateChecking: Boolean,
+    onAutoUpdateCheckChange: (Boolean) -> Unit,
+    onCheckUpdate: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = ClipboxTokens.colors
@@ -495,6 +529,50 @@ private fun SettingsScreen(
             }
             item { HintRow(stringResource(Res.string.settings_about_transport_body), warn = true) }
 
+            item { SectionLabel(stringResource(Res.string.settings_section_update)) }
+            item {
+                SettingRow(
+                    label = stringResource(Res.string.settings_update_current),
+                    value = state.versionName,
+                    mono = true,
+                )
+            }
+            item {
+                SettingRow(
+                    label = stringResource(Res.string.settings_update_latest),
+                    value = updateDescriptor?.version ?: "—",
+                    mono = true,
+                    valueColor = if (updateAvailable) colors.accent else colors.ink2,
+                )
+            }
+            item {
+                SettingRow(
+                    label = stringResource(Res.string.settings_update_date),
+                    value = updateDescriptor?.publishedAt
+                        ?.let { formatPublishedDate(it, LocalAppLanguage.current) }
+                        ?: "—",
+                    mono = true,
+                )
+            }
+            item {
+                SwitchRow(
+                    label = stringResource(Res.string.settings_auto_update_check),
+                    checked = state.autoUpdateCheck,
+                    onCheckedChange = onAutoUpdateCheckChange,
+                )
+            }
+            item { HintRow(stringResource(Res.string.settings_auto_update_check_note)) }
+            item {
+                ActionRow(
+                    label = stringResource(Res.string.settings_check_update),
+                    enabled = !updateChecking,
+                    loading = updateChecking,
+                    onClick = onCheckUpdate,
+                    actionLabel = Res.string.settings_check_update_action,
+                    busyLabel = Res.string.settings_check_update_busy,
+                )
+            }
+
             item { SectionLabel(stringResource(Res.string.settings_section_danger)) }
             item {
                 ChevronRow(
@@ -638,6 +716,8 @@ private fun ActionRow(
     enabled: Boolean,
     loading: Boolean,
     onClick: () -> Unit,
+    actionLabel: StringResource = Res.string.settings_sync_now,
+    busyLabel: StringResource = Res.string.settings_sync_busy,
 ) {
     val colors = ClipboxTokens.colors
     val spacing = ClipboxTokens.spacing
@@ -664,7 +744,7 @@ private fun ActionRow(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = stringResource(if (loading) Res.string.settings_sync_busy else Res.string.settings_sync_now),
+                text = stringResource(if (loading) busyLabel else actionLabel),
                 style = MaterialTheme.typography.labelMedium,
                 color = if (enabled) colors.ink else colors.ink3,
             )

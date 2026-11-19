@@ -11,6 +11,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,6 +35,9 @@ class UpdateController(
 
     private val _hasUnseenUpdate = MutableStateFlow(false)
     val hasUnseenUpdate: StateFlow<Boolean> = _hasUnseenUpdate.asStateFlow()
+
+    private val _dialogVisible = MutableStateFlow(false)
+    val dialogVisible: StateFlow<Boolean> = _dialogVisible.asStateFlow()
 
     private val checkLock = Mutex()
 
@@ -64,6 +69,16 @@ class UpdateController(
     /** 红点只存内存：打开弹窗即清除，检查结果本身保持不变 */
     fun onDialogOpened() {
         _hasUnseenUpdate.value = false
+    }
+
+    fun openDialog() {
+        _dialogVisible.value = true
+        onDialogOpened()
+    }
+
+    /** 只关闭弹层；下载、校验与 Ready 状态保持不变 */
+    fun closeDialog() {
+        _dialogVisible.value = false
     }
 
     /** 下载并校验当前 offer；已有下载在途时返回 null，不重复启动 */
@@ -100,10 +115,35 @@ class UpdateController(
             } catch (e: CancellationException) {
                 throw e
             } catch (t: Throwable) {
+                // 安装器可能把取消转成 IO 异常；协程已取消时不得再写 Failed
+                currentCoroutineContext().ensureActive()
                 _state.value = UpdateUiState.Failed(UpdateError.DOWNLOAD_FAILED, offer.descriptor)
             }
         }
         return downloadJob
+    }
+
+    /** 取消下载并回到可再次下载的状态；Ready、空闲或没有 offer 时为空操作 */
+    fun cancelDownload() {
+        val job = downloadJob ?: return
+        val current = offer ?: return
+        val snapshot = _state.value
+        if (snapshot !is UpdateUiState.Downloading && snapshot !is UpdateUiState.Verifying) return
+        scope.launch {
+            job.cancelAndJoin()
+            try {
+                installer?.cancel()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Throwable) {
+                // 清理残留失败不阻塞状态回退
+            }
+            // 下载可能在取消前一刻完成；已完成的结果不能降级
+            val latest = _state.value
+            if (latest is UpdateUiState.Downloading || latest is UpdateUiState.Verifying) {
+                _state.value = UpdateUiState.Available(current.descriptor, current.platform)
+            }
+        }
     }
 
     /** 用户点击安装后才调用；PermissionRequired / Unavailable 不改变 Ready 状态 */
@@ -180,7 +220,8 @@ class UpdateController(
             }
             is UpdateCheckResult.Available -> {
                 val platform = installablePlatform(descriptor)
-                _hasUnseenUpdate.value = true
+                // 弹窗已打开时检查结果直接可见，不再点亮红点
+                _hasUnseenUpdate.value = !_dialogVisible.value
                 if (platform == null) {
                     offer = null
                     _state.value = UpdateUiState.Unsupported(descriptor)

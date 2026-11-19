@@ -7,6 +7,7 @@
 package com.wangxingxing.clipbox.util
 
 import com.wangxingxing.clipbox.settings.AppLanguage
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
@@ -60,42 +61,45 @@ fun formatAbsoluteTime(
     val local = Instant.fromEpochMilliseconds(epochMillis).toLocalDateTime(timeZone)
     val hour = local.hour.toString().padStart(2, '0')
     val minute = local.minute.toString().padStart(2, '0')
-    return when (language) {
-        AppLanguage.ZH_HANS -> buildString {
-            append(local.year.toString().padStart(4, '0'))
-            append('-')
-            // kotlinx-datetime 0.7.1 的 Month 没有 number 属性，ordinal 以 JANUARY = 0 起始
-            append((local.month.ordinal + 1).toString().padStart(2, '0'))
-            append('-')
-            append(local.day.toString().padStart(2, '0'))
-            append(' ')
-            append(hour)
-            append(':')
-            append(minute)
-        }
+    return "${formatDate(local, language)} $hour:$minute"
+}
 
-        AppLanguage.ZH_TW -> buildString {
-            append(local.year.toString().padStart(4, '0'))
-            append('/')
-            append((local.month.ordinal + 1).toString().padStart(2, '0'))
-            append('/')
-            append(local.day.toString().padStart(2, '0'))
-            append(' ')
-            append(hour)
-            append(':')
-            append(minute)
-        }
+/** 更新发布时间的纯日期展示；描述里的 publishedAt 是 RFC 3339，解析失败返回 null 由 UI 显示占位符 */
+@OptIn(ExperimentalTime::class)
+fun formatPublishedDate(
+    publishedAt: String,
+    language: AppLanguage,
+    timeZone: TimeZone = TimeZone.currentSystemDefault(),
+): String? {
+    val local = runCatching { Instant.parse(publishedAt) }.getOrNull()
+        ?.toLocalDateTime(timeZone)
+        ?: return null
+    return formatDate(local, language)
+}
 
-        AppLanguage.EN -> buildString {
-            append(EN_MONTH_ABBREVIATIONS[local.month.ordinal])
-            append(' ')
-            append(local.day)
-            append(", ")
-            append(local.year.toString().padStart(4, '0'))
-            append(' ')
-            append(hour)
-            append(':')
-            append(minute)
-        }
+private fun formatDate(local: LocalDateTime, language: AppLanguage): String = when (language) {
+    AppLanguage.ZH_HANS -> buildString {
+        append(local.year.toString().padStart(4, '0'))
+        append('-')
+        // kotlinx-datetime 0.7.1 的 Month 没有 number 属性，ordinal 以 JANUARY = 0 起始
+        append((local.month.ordinal + 1).toString().padStart(2, '0'))
+        append('-')
+        append(local.day.toString().padStart(2, '0'))
+    }
+
+    AppLanguage.ZH_TW -> buildString {
+        append(local.year.toString().padStart(4, '0'))
+        append('/')
+        append((local.month.ordinal + 1).toString().padStart(2, '0'))
+        append('/')
+        append(local.day.toString().padStart(2, '0'))
+    }
+
+    AppLanguage.EN -> buildString {
+        append(EN_MONTH_ABBREVIATIONS[local.month.ordinal])
+        append(' ')
+        append(local.day)
+        append(", ")
+        append(local.year.toString().padStart(4, '0'))
     }
 }

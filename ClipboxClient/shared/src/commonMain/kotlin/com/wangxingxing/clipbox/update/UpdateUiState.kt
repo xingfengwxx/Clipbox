@@ -66,3 +66,32 @@ enum class UpdateError {
         }
     }
 }
+
+/** 设置页读数与弹窗共用的版本描述；检查中与无结果时为 null */
+fun UpdateUiState.descriptorOrNull(): UpdateDescriptor? = when (this) {
+    UpdateUiState.Idle, UpdateUiState.Checking -> null
+    is UpdateUiState.Latest -> descriptor
+    is UpdateUiState.Available -> descriptor
+    is UpdateUiState.Unsupported -> descriptor
+    is UpdateUiState.Downloading -> descriptor
+    is UpdateUiState.Verifying -> descriptor
+    is UpdateUiState.Ready -> descriptor
+    is UpdateUiState.Failed -> descriptor
+}
+
+/**
+ * 是否已经发现可处理的更新；只用于设置页读数着色。
+ * 注意：导航红点必须用 hasUnseenUpdate，否则 Latest 也会被误判成有新版本
+ */
+fun UpdateUiState.hasUpdate(): Boolean = when (this) {
+    is UpdateUiState.Available,
+    is UpdateUiState.Unsupported,
+    is UpdateUiState.Downloading,
+    is UpdateUiState.Verifying,
+    is UpdateUiState.Ready -> true
+
+    is UpdateUiState.Idle,
+    is UpdateUiState.Checking,
+    is UpdateUiState.Latest,
+    is UpdateUiState.Failed -> false
+}

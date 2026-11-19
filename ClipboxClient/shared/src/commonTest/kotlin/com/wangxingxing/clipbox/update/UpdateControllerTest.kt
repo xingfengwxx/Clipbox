@@ -14,7 +14,12 @@ import io.ktor.client.request.HttpResponseData
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.IOException
 import kotlin.test.Test
@@ -27,6 +32,7 @@ import kotlin.test.assertTrue
 private const val OFFICIAL_URL = "http://official.local:8080"
 private const val ZERO_SHA = "0000000000000000000000000000000000000000000000000000000000000000"
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class UpdateControllerTest {
 
     private fun api(
@@ -190,6 +196,17 @@ class UpdateControllerTest {
     }
 
     @Test
+    fun checkFinishingWhileDialogOpenDoesNotLightRedDot() = runTest {
+        val controller = controller(scope = this, api = api { jsonResponse(updateBody()) })
+
+        controller.openDialog()
+        controller.checkManually().join()
+
+        assertIs<UpdateUiState.Available>(controller.state.value)
+        assertFalse(controller.hasUnseenUpdate.value)
+    }
+
+    @Test
     fun sameVersionIsLatest() = runTest {
         val controller = controller(
             scope = this,
@@ -284,6 +301,71 @@ class UpdateControllerTest {
     }
 
     @Test
+    fun cancelDownloadReturnsToAvailableAndAllowsAnotherDownload() = runTest {
+        val installer = FakeInstaller()
+        val gate = CompletableDeferred<Unit>()
+        installer.downloadGate = gate
+        val controller = controller(scope = this, api = api { jsonResponse(updateBody()) }, installer = installer)
+        controller.checkManually().join()
+
+        controller.startDownload()
+        runCurrent()
+        assertIs<UpdateUiState.Downloading>(controller.state.value)
+
+        controller.cancelDownload()
+        advanceUntilIdle()
+
+        assertIs<UpdateUiState.Available>(controller.state.value)
+        assertEquals(1, installer.cancelCalls)
+
+        installer.downloadGate = null
+        controller.startDownload()?.join()
+        assertIs<UpdateUiState.Ready>(controller.state.value)
+        assertEquals(2, installer.downloadCalls)
+    }
+
+    @Test
+    fun cancellationConvertedToIOExceptionDoesNotBecomeFailed() = runTest {
+        val installer = FakeInstaller(throwOnCancellation = true)
+        installer.downloadGate = CompletableDeferred()
+        val controller = controller(scope = this, api = api { jsonResponse(updateBody()) }, installer = installer)
+        controller.checkManually().join()
+
+        controller.startDownload()
+        runCurrent()
+        controller.cancelDownload()
+        advanceUntilIdle()
+
+        assertIs<UpdateUiState.Available>(controller.state.value)
+    }
+
+    @Test
+    fun cancelDownloadWithoutDownloadIsNoOp() = runTest {
+        val installer = FakeInstaller()
+        val controller = controller(scope = this, api = api { jsonResponse(updateBody()) }, installer = installer)
+        controller.checkManually().join()
+
+        controller.cancelDownload()
+        advanceUntilIdle()
+
+        assertIs<UpdateUiState.Available>(controller.state.value)
+        assertEquals(0, installer.cancelCalls)
+    }
+
+    @Test
+    fun cancelDownloadKeepsReadyInstaller() = runTest {
+        val installer = FakeInstaller()
+        val controller = controller(scope = this, api = api { jsonResponse(updateBody()) }, installer = installer)
+        readyController(controller)
+
+        controller.cancelDownload()
+        advanceUntilIdle()
+
+        assertIs<UpdateUiState.Ready>(controller.state.value)
+        assertEquals(0, installer.cancelCalls)
+    }
+
+    @Test
     fun installStartsForReadyAndClearsState() = runTest {
         val installer = FakeInstaller()
         val controller = controller(scope = this, api = api { jsonResponse(updateBody()) }, installer = installer)
@@ -311,11 +393,14 @@ class UpdateControllerTest {
         var downloadSucceeds: Boolean = true,
         var verifySucceeds: Boolean = true,
         var installResult: UpdateInstallResult = UpdateInstallResult.Started,
+        var throwOnCancellation: Boolean = false,
     ) : UpdateInstaller {
 
         var downloadCalls = 0
         var verifyCalls = 0
         var installCalls = 0
+        var cancelCalls = 0
+        var downloadGate: CompletableDeferred<Unit>? = null
         var onDownloadProgress: (() -> Unit)? = null
         var onVerify: (() -> Unit)? = null
 
@@ -326,6 +411,14 @@ class UpdateControllerTest {
             downloadCalls++
             onDownloadProgress?.invoke()
             onProgress(50L, 100L)
+            // 挂起让测试有机会在下载中取消；安装器不得把取消吞成普通失败
+            downloadGate?.let { gate ->
+                try {
+                    gate.await()
+                } catch (e: CancellationException) {
+                    if (throwOnCancellation) throw IOException("cancelled") else throw e
+                }
+            }
             onDownloadProgress?.invoke()
             onProgress(100L, 100L)
             onDownloadProgress?.invoke()
@@ -343,7 +436,9 @@ class UpdateControllerTest {
             return installResult
         }
 
-        override suspend fun cancel() = Unit
+        override suspend fun cancel() {
+            cancelCalls++
+        }
 
         override suspend fun cleanup() = Unit
     }

@@ -34,6 +34,7 @@ import com.wangxingxing.clipbox.resources.startup_failed_title
 import com.wangxingxing.clipbox.resources.startup_loading
 import com.wangxingxing.clipbox.resources.startup_retry
 import com.wangxingxing.clipbox.ui.i18n.ProvideAppLanguage
+import com.wangxingxing.clipbox.ui.components.UpdateDialog
 import com.wangxingxing.clipbox.ui.navigation.ClipboxNavigationHost
 import com.wangxingxing.clipbox.ui.navigation.PAIRING_ROUTE
 import com.wangxingxing.clipbox.ui.navigation.TopLevelDestination
@@ -61,17 +62,28 @@ fun App(
                 AppStartupState.Ready -> {
                     // 会话版本变化意味着数据库与 ViewModel 已整体替换，导航必须重建，旧页面不能继续持有旧会话
                     val startAtPairing = remember(generation) { container.consumeStartAtPairing() }
-                    key(generation) {
-                        ClipboxNavigationHost(
-                            navController = rememberNavController(),
-                            startDestination = if (startAtPairing) {
-                                PAIRING_ROUTE
-                            } else {
-                                TopLevelDestination.History.route
-                            },
-                            incomingShareDraft = incomingShareDraft,
-                            onShareDraftConsumed = onShareDraftConsumed,
-                        )
+                    // 根组合只收集弹层可见性；下载进度在弹窗内部订阅，避免每帧重组导航
+                    val dialogVisible by container.updateController.dialogVisible.collectAsState()
+                    Box(Modifier.fillMaxSize()) {
+                        key(generation) {
+                            ClipboxNavigationHost(
+                                navController = rememberNavController(),
+                                startDestination = if (startAtPairing) {
+                                    PAIRING_ROUTE
+                                } else {
+                                    TopLevelDestination.History.route
+                                },
+                                incomingShareDraft = incomingShareDraft,
+                                onShareDraftConsumed = onShareDraftConsumed,
+                            )
+                        }
+                        if (dialogVisible) {
+                            UpdateDialog(
+                                controller = container.updateController,
+                                currentVersion = container.versionName,
+                                isIos = container.isIos,
+                            )
+                        }
                     }
                 }
             }

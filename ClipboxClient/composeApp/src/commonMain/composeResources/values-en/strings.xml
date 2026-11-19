@@ -194,6 +194,16 @@
     <string name="settings_about_storage_body">Clips and settings stay on this device. Synced clips are stored unencrypted on the server; v1.0.0 has no end-to-end encryption. The latest 200 unpinned clips and all pinned clips are kept locally.</string>
     <string name="settings_about_transport">Transport</string>
     <string name="settings_about_transport_body">Unencrypted connection, for learning only</string>
+    <string name="settings_section_update">Update</string>
+    <string name="settings_update_current">Current</string>
+    <string name="settings_update_latest">Latest</string>
+    <string name="settings_update_date">Date</string>
+    <string name="settings_check_update">Check for updates</string>
+    <string name="settings_check_update_action">Check</string>
+    <string name="settings_check_update_busy">Checking</string>
+    <string name="settings_auto_update_check">Check for updates automatically</string>
+    <string name="settings_auto_update_check_note">Checks once per cold start; failures stay silent and no device token is sent.</string>
+    <string name="update_badge_description">Update available</string>
     <string name="settings_section_danger">Danger zone</string>
     <string name="settings_change_server">Change server</string>
     <string name="settings_unpair">Unpair</string>
@@ -278,4 +288,60 @@
     </plurals>
     <string name="update_download_notification_title">Theca update</string>
     <string name="update_download_notification_description">Downloading installer</string>
+
+    <string name="update_dialog_kicker">Update, v%1$s</string>
+    <string name="update_dialog_checking_title">Checking for updates</string>
+    <string name="update_dialog_checking_body">Contacting the official release server.</string>
+    <string name="update_dialog_latest_title">You''re up to date</string>
+    <string name="update_dialog_latest_body">v%1$s is the latest official version.</string>
+    <string name="update_dialog_available_title">Update available</string>
+    <string name="update_dialog_version_line">Current %1$s → latest %2$s</string>
+    <string name="update_dialog_meta_line">%1$s · %2$s · %3$s</string>
+    <string name="update_dialog_notes">Release notes</string>
+    <string name="update_dialog_later">Later</string>
+    <string name="update_dialog_download">Download and install</string>
+    <string name="update_dialog_install">Install</string>
+    <string name="update_dialog_close">Close</string>
+    <string name="update_dialog_retry">Retry</string>
+    <string name="update_dialog_know">Got it</string>
+
+    <string name="update_risk_title">Before downloading</string>
+    <string name="update_risk_tag_http">HTTP</string>
+    <string name="update_risk_tag_unsigned">Unsigned</string>
+    <string name="update_risk_http_title">Unencrypted connection</string>
+    <string name="update_risk_http_body">This build uses HTTP; others on the same network may read or replace the download.</string>
+    <string name="update_risk_unsigned_title">Unsigned installer</string>
+    <string name="update_risk_unsigned_body">This learning build is not code-signed, so the system cannot verify the publisher.</string>
+    <string name="update_risk_footnote">SHA-256 only confirms the file matches the release manifest. It does not prove origin; download only from the official release server.</string>
+    <string name="update_risk_continue">Continue download</string>
+
+    <string name="update_dialog_downloading_title">Downloading</string>
+    <string name="update_dialog_cancel_download">Cancel download</string>
+    <string name="update_dialog_download_progress">Downloaded %1$s / %2$s</string>
+    <string name="update_dialog_verifying_title">Verifying</string>
+    <string name="update_dialog_verifying_body">Download complete; comparing SHA-256.</string>
+    <string name="update_dialog_ready_title">Ready to install</string>
+    <string name="update_dialog_ready_body">Verified. The installer is saved on this device.</string>
+    <string name="update_dialog_ready_note">Installing over the current version requires the same signing identity. If the system warns about unknown sources, allow this installation.</string>
+    <string name="update_dialog_sha_match">SHA-256 match</string>
+    <string name="update_install_permission_required">Allow installing unknown apps, then return and tap Install.</string>
+    <string name="update_install_unavailable">Could not open the installer. Try again later.</string>
+    <string name="update_dialog_failed_title">Update not completed</string>
+    <string name="update_dialog_unsupported_ios">Not available on this platform: iOS currently ships only simulator builds.</string>
+    <string name="update_dialog_unsupported_other">No installer is available for this platform. Download it from the website.</string>
+
+    <string name="update_platform_android">Android</string>
+    <string name="update_platform_ios">iOS</string>
+    <string name="update_platform_macos">macOS</string>
+    <string name="update_platform_windows">Windows</string>
+    <string name="update_platform_linux">Linux</string>
+
+    <string name="update_error_offline">No network connection. Check your connection.</string>
+    <string name="update_error_timeout">Connection timed out. Try again later.</string>
+    <string name="update_error_rate_limited">Too many requests. Try again later.</string>
+    <string name="update_error_service_unavailable">The official release server is temporarily unavailable.</string>
+    <string name="update_error_invalid_response">The update manifest is invalid.</string>
+    <string name="update_error_download_failed">Installer download failed.</string>
+    <string name="update_error_checksum_mismatch">Checksum mismatch. The installer was deleted.</string>
+    <string name="update_error_install_failed">Could not open the installer.</string>
 </resources>

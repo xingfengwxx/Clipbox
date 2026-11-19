@@ -9,6 +9,7 @@ package com.wangxingxing.clipbox.ui.navigation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -44,16 +47,20 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.wangxingxing.clipbox.app.AppContainer
 import com.wangxingxing.clipbox.model.SyncStatus
 import com.wangxingxing.clipbox.repository.ClipRepository
 import com.wangxingxing.clipbox.resources.Res
 import com.wangxingxing.clipbox.resources.history_received_new
 import com.wangxingxing.clipbox.resources.history_view_new
+import com.wangxingxing.clipbox.resources.update_badge_description
 import com.wangxingxing.clipbox.settings.SettingsRepository
 import com.wangxingxing.clipbox.sync.SyncStatusHolder
 import com.wangxingxing.clipbox.ui.history.HistoryViewportState
@@ -72,6 +79,8 @@ private val WideLayoutMinWidth = 600.dp
 // 宽屏只约束正文宽度，避免 iPad 横屏与桌面大窗口把列表和表单拉成整屏
 private val WideContentMaxWidth = 880.dp
 private val BottomBarHeight = 64.dp
+private val UpdateDotSize = 6.dp
+private val UpdateDotReserve = 8.dp
 
 // 同一批新记录在窗口内只提示一次；提示展示 3 秒后自动消失
 private const val HINT_BATCH_MILLIS = 500L
@@ -99,6 +108,8 @@ fun ClipboxNavigationHost(
     val syncStatusHolder = koinInject<SyncStatusHolder>()
     val clipRepository = koinInject<ClipRepository>()
     val settingsRepository = koinInject<SettingsRepository>()
+    val container = koinInject<AppContainer>()
+    val hasUnseenUpdate by container.updateController.hasUnseenUpdate.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val receivedNewLabel = stringResource(Res.string.history_received_new)
     val viewLabel = stringResource(Res.string.history_view_new)
@@ -181,6 +192,7 @@ fun ClipboxNavigationHost(
             Row(Modifier.fillMaxSize()) {
                 ClipboxNavigationRail(
                     selected = selected,
+                    showUpdateDot = hasUnseenUpdate,
                     onSelect = { navController.switchTo(it) },
                 )
                 Box(
@@ -213,6 +225,7 @@ fun ClipboxNavigationHost(
                 )
                 ClipboxBottomBar(
                     selected = selected,
+                    showUpdateDot = hasUnseenUpdate,
                     onSelect = { navController.switchTo(it) },
                 )
             }
@@ -246,6 +259,7 @@ internal fun NavHostController.switchTo(destination: TopLevelDestination) {
 @Composable
 private fun ClipboxBottomBar(
     selected: TopLevelDestination,
+    showUpdateDot: Boolean,
     onSelect: (TopLevelDestination) -> Unit,
 ) {
     val colors = ClipboxTokens.colors
@@ -271,6 +285,7 @@ private fun ClipboxBottomBar(
                 BottomBarItem(
                     destination = destination,
                     selected = destination == selected,
+                    showUpdateDot = showUpdateDot && destination == TopLevelDestination.Settings,
                     onSelect = onSelect,
                 )
             }
@@ -282,9 +297,11 @@ private fun ClipboxBottomBar(
 private fun RowScope.BottomBarItem(
     destination: TopLevelDestination,
     selected: Boolean,
+    showUpdateDot: Boolean,
     onSelect: (TopLevelDestination) -> Unit,
 ) {
     val colors = ClipboxTokens.colors
+    val label = stringResource(destination.label)
     Box(
         modifier = Modifier
             .weight(1f)
@@ -301,18 +318,41 @@ private fun RowScope.BottomBarItem(
             },
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = stringResource(destination.label),
-            style = MaterialTheme.typography.labelLarge,
-            color = if (selected) colors.ink else colors.ink3,
-            fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
-        )
+        Box {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (selected) colors.ink else colors.ink3,
+                    fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
+                )
+                // 所有项恒留占位，红点出现时文字不位移
+                Spacer(Modifier.width(UpdateDotReserve))
+            }
+            if (showUpdateDot) {
+                UpdateDot()
+            }
+        }
     }
+}
+
+/** 6dp 红点；contentDescription 并入可点击项的合并语义，读屏会读出「设置，有新版本」 */
+@Composable
+private fun BoxScope.UpdateDot() {
+    val badgeDescription = stringResource(Res.string.update_badge_description)
+    Box(
+        modifier = Modifier
+            .align(Alignment.TopEnd)
+            .size(UpdateDotSize)
+            .background(ClipboxTokens.colors.accent, CircleShape)
+            .semantics { contentDescription = badgeDescription },
+    )
 }
 
 @Composable
 private fun ClipboxNavigationRail(
     selected: TopLevelDestination,
+    showUpdateDot: Boolean,
     onSelect: (TopLevelDestination) -> Unit,
 ) {
     val colors = ClipboxTokens.colors
@@ -336,6 +376,7 @@ private fun ClipboxNavigationRail(
             RailItem(
                 destination = destination,
                 selected = destination == selected,
+                showUpdateDot = showUpdateDot && destination == TopLevelDestination.Settings,
                 onSelect = onSelect,
             )
         }
@@ -346,9 +387,11 @@ private fun ClipboxNavigationRail(
 private fun RailItem(
     destination: TopLevelDestination,
     selected: Boolean,
+    showUpdateDot: Boolean,
     onSelect: (TopLevelDestination) -> Unit,
 ) {
     val colors = ClipboxTokens.colors
+    val label = stringResource(destination.label)
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -373,10 +416,19 @@ private fun RailItem(
             modifier = Modifier.size(16.dp),
         )
         Spacer(Modifier.width(10.dp))
-        Text(
-            text = stringResource(destination.label),
-            style = MaterialTheme.typography.labelLarge,
-            color = if (selected) colors.ink else colors.ink2,
-        )
+        Box {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (selected) colors.ink else colors.ink2,
+                )
+                // 与底部栏一致：恒留红点位，避免文字在红点出现时跳动
+                Spacer(Modifier.width(UpdateDotReserve))
+            }
+            if (showUpdateDot) {
+                UpdateDot()
+            }
+        }
     }
 }
