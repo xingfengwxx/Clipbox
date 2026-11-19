@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>D1，仪器日志</title>
+<style>
+  :root {
+    --bg:#F3F0E8; --panel:#FBF9F3; --panel2:#EAE6DA; --ink:#191712; --ink2:#5B5446;
+    --ink3:#6B6455; --line:#D0CABA; --accent:#A8430F; --ok:#2F6B45; --warn:#7A4E0C;
+    --danger:#A03024; --on-accent:#FFF8F0; --dim:rgba(25,23,18,.34);
+    --sans:-apple-system,"PingFang SC","Noto Sans SC",Roboto,sans-serif;
+    --mono:Menlo,Consolas,"Courier New",monospace;
+  }
+  [data-theme="dark"] {
+    --bg:#17150F; --panel:#1E1B14; --panel2:#262218; --ink:#EDE9DC; --ink2:#B7B0A0;
+    --ink3:#9A9384; --line:#3A352B; --accent:#E8823F; --ok:#7ED6A4; --warn:#E0B05A;
+    --danger:#F08A75; --on-accent:#17150F; --dim:rgba(0,0,0,.58);
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:var(--bg); color:var(--ink); }
+  body { font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+  .board { padding:36px 40px 56px; }
+  .board-head { display:flex; justify-content:space-between; gap:32px; align-items:flex-end; border-bottom:1px solid var(--ink); padding-bottom:18px; }
+  h1 { margin:0; font-size:30px; line-height:1.15; font-weight:600; letter-spacing:-.02em; }
+  .board-head p { margin:8px 0 0; max-width:640px; color:var(--ink2); font-size:14px; line-height:1.65; }
+  .board-meta { font-family:var(--mono); font-size:12px; color:var(--ink3); text-align:right; line-height:1.8; white-space:nowrap; }
+  .frames { display:flex; flex-wrap:wrap; gap:28px; margin-top:30px; align-items:flex-start; }
+  .frame { width:390px; }
+  .frame.wide { width:1000px; }
+  .caption { display:flex; justify-content:space-between; gap:12px; font-family:var(--mono); font-size:12px; color:var(--ink3); padding:0 2px 8px; }
+  .caption b { font-weight:400; color:var(--ink2); }
+  .screen { width:100%; height:844px; background:var(--bg); border:1px solid var(--line); border-radius:20px; overflow:hidden; position:relative; display:flex; flex-direction:column; }
+  .wide .screen { height:700px; border-radius:10px; }
+  .status { height:26px; display:flex; justify-content:space-between; align-items:center; padding:0 18px; font-family:var(--mono); font-size:12px; color:var(--ink3); flex:none; }
+  .appbar { padding:12px 20px 12px; flex:none; }
+  .appbar h2 { margin:0; font-size:26px; line-height:1.1; font-weight:600; letter-spacing:-.02em; }
+  .appbar .kicker { margin-top:5px; font-family:var(--mono); font-size:12px; color:var(--ink3); }
+  .hair { height:1px; background:var(--ink); flex:none; }
+  .scroll { flex:1; overflow:hidden; padding-bottom:8px; }
+  .section-label { padding:18px 20px 7px; font-family:var(--mono); font-size:12px; color:var(--ink3); }
+  .row { min-height:48px; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:8px 20px; border-bottom:1px solid var(--line); }
+  .row:last-child { border-bottom:0; }
+  .row .label { font-size:15px; color:var(--ink); }
+  .row .value { font-size:14px; color:var(--ink2); text-align:right; }
+  .mono { font-family:var(--mono); font-size:14px; color:var(--ink3); }
+  .accent { color:var(--accent); }
+  .ok { color:var(--ok); }
+  .warn { color:var(--warn); }
+  .hint { padding:0 20px 10px; font-family:var(--mono); font-size:12px; line-height:1.6; color:var(--ink3); }
+  .switch { width:44px; height:26px; border-radius:13px; background:var(--accent); position:relative; flex:none; }
+  .switch::after { content:""; position:absolute; width:20px; height:20px; border-radius:50%; background:var(--on-accent); top:3px; right:3px; }
+  .switch.off { background:var(--panel2); border:1px solid var(--line); }
+  .switch.off::after { background:var(--ink2); right:auto; left:3px; }
+  .update-block { margin:0 20px 6px; border-top:1px solid var(--ink); border-bottom:1px solid var(--ink); }
+  .readout { display:grid; grid-template-columns:repeat(3,1fr); border-bottom:1px solid var(--line); }
+  .readout div { padding:10px 0 11px 12px; border-right:1px solid var(--line); }
+  .readout div:first-child { padding-left:0; }
+  .readout div:last-child { border-right:0; }
+  .readout .k { font-family:var(--mono); font-size:12px; color:var(--ink3); }
+  .readout .v { margin-top:4px; font-family:var(--mono); font-size:15px; color:var(--ink); }
+  .update-actions { display:flex; align-items:center; justify-content:space-between; padding:10px 0; }
+  .update-actions .label { font-size:15px; }
+  .btn-small { border:1px solid var(--line); background:var(--panel2); color:var(--ink); border-radius:3px; font-size:14px; padding:7px 12px; font-family:var(--sans); }
+  .nav { height:64px; border-top:1px solid var(--ink); display:grid; grid-template-columns:repeat(3,1fr); flex:none; }
+  .nav div { display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--ink3); position:relative; }
+  .nav div.active { color:var(--ink); font-weight:500; background:var(--panel); box-shadow:inset 0 2px 0 var(--accent); }
+  .nav .red-dot { position:absolute; width:6px; height:6px; border-radius:50%; background:var(--accent); top:17px; margin-left:38px; }
+  .overlay { position:absolute; inset:0; background:var(--dim); display:flex; align-items:flex-end; justify-content:center; padding:16px; }
+  .dialog { width:100%; background:var(--panel); border:1px solid var(--ink); border-radius:8px; padding:16px; position:relative; max-height:760px; overflow:hidden; }
+  .dialog-meta { display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:12px; color:var(--ink3); }
+  .dialog h3 { margin:8px 0 0; font-size:22px; line-height:1.25; font-weight:600; letter-spacing:-.01em; }
+  .lede { margin:6px 0 0; font-size:14px; line-height:1.55; color:var(--ink2); }
+  .meta-line { margin-top:9px; font-family:var(--mono); font-size:12px; line-height:1.65; color:var(--ink3); }
+  .rule { height:1px; background:var(--line); margin:13px 0; }
+  .rule.strong { background:var(--ink); }
+  .inline-label { font-family:var(--mono); font-size:12px; color:var(--ink3); }
+  .notes { margin-top:8px; display:grid; gap:7px; }
+  .notes p { margin:0; font-size:14px; line-height:1.55; color:var(--ink2); padding-left:10px; border-left:2px solid var(--line); }
+  .notes p:first-child { border-left-color:var(--accent); color:var(--ink); }
+  .risk-strip { margin-top:13px; border-top:1px solid var(--warn); border-bottom:1px solid var(--warn); padding:8px 0; display:flex; gap:10px; align-items:baseline; }
+  .risk-strip .tag { font-family:var(--mono); font-size:12px; color:var(--warn); white-space:nowrap; }
+  .risk-strip p { margin:0; font-size:14px; line-height:1.5; color:var(--ink2); }
+  .actions { display:flex; justify-content:flex-end; gap:8px; margin-top:15px; }
+  .primary { border:1px solid var(--accent); background:var(--accent); color:var(--on-accent); border-radius:3px; font-size:14px; padding:10px 13px; font-family:var(--sans); }
+  .ghost { border:1px solid var(--line); background:transparent; color:var(--ink2); border-radius:3px; font-size:14px; padding:9px 12px; font-family:var(--sans); }
+  .danger-ghost { border:1px solid var(--line); background:transparent; color:var(--danger); border-radius:3px; font-size:14px; padding:9px 12px; font-family:var(--sans); }
+  .risk-list { margin-top:12px; border-top:1px solid var(--ink); }
+  .risk-item { padding:11px 0 12px; border-bottom:1px solid var(--line); }
+  .risk-item .title { font-size:14px; font-weight:500; color:var(--ink); }
+  .risk-item p { margin:4px 0 0; font-size:14px; line-height:1.55; color:var(--ink2); }
+  .footnote { margin:11px 0 0; font-family:var(--mono); font-size:14px; line-height:1.6; color:var(--ink3); }
+  .progress-wrap { margin-top:14px; }
+  .progress-top { display:flex; justify-content:space-between; align-items:baseline; font-family:var(--mono); font-size:12px; color:var(--ink3); }
+  .progress-top strong { font-weight:400; color:var(--ink); }
+  .track { height:2px; background:var(--line); margin-top:9px; position:relative; }
+  .track i { position:absolute; left:0; top:0; bottom:0; width:50%; background:var(--accent); }
+  .steps { display:flex; gap:5px; margin-top:8px; }
+  .steps i { height:2px; flex:1; background:var(--line); }
+  .steps i.done { background:var(--accent); }
+  .steps i.now { background:var(--ink); }
+  .step-label { margin-top:7px; font-family:var(--mono); font-size:12px; color:var(--ink3); display:flex; justify-content:space-between; }
+  .state-line { margin-top:11px; display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:12px; color:var(--ink2); }
+  .state-line .mark { width:6px; height:6px; border-radius:50%; background:var(--ok); flex:none; }
+  .state-line .mark.spin { background:var(--accent); }
+  .file-line { margin-top:12px; padding:8px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); font-family:var(--mono); font-size:14px; line-height:1.65; color:var(--ink3); word-break:break-all; }
+  .desktop-shell { display:flex; height:100%; }
+  .rail { width:200px; border-right:1px solid var(--line); padding:20px 16px; flex:none; }
+  .rail .brand { font-size:15px; font-weight:600; margin-bottom:24px; }
+  .rail div.item { height:48px; display:flex; align-items:center; font-size:14px; color:var(--ink2); padding:0 10px; position:relative; }
+  .rail div.item.active { background:var(--panel); color:var(--ink); box-shadow:inset 2px 0 0 var(--accent); }
+  .rail .red-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); margin-left:8px; }
+  .desktop-main { flex:1; display:flex; flex-direction:column; min-width:0; }
+  .desktop-main .appbar { padding:14px 24px 12px; }
+  .desktop-main .appbar h2 { font-size:24px; }
+  .desktop-content { flex:1; display:flex; overflow:hidden; }
+  .desktop-col { width:100%; max-width:620px; border-right:1px solid var(--line); overflow:hidden; }
+  .desktop-side { flex:1; background:var(--panel); padding:18px 20px; }
+  .desktop-side .k { font-family:var(--mono); font-size:12px; color:var(--ink3); }
+  .desktop-side p { font-size:14px; line-height:1.65; color:var(--ink2); margin:7px 0 0; }
+  .wide .overlay { align-items:center; background:var(--dim); }
+  .wide .dialog { width:460px; }
+  .theme-btn { position:fixed; right:24px; bottom:24px; z-index:9; border:1px solid var(--line); background:var(--panel); color:var(--ink2); font-family:var(--mono); font-size:12px; padding:8px 10px; cursor:pointer; }
+  @media (max-width:1100px) { .frame.wide { width:100%; } }
+</style>
+</head>
+<body>
+<main class="board">
+  <header class="board-head">
+    <div>
+      <h1>D1，仪器日志</h1>
+      <p>更新状态被当作一行仪表读数：当前、最新、日期并排；弹窗是一份服务通告，进度用刻度与等宽字节数表达。它最接近现有设置页的“元数据像日志”语言。</p>
+    </div>
+    <div class="board-meta">字匣 1.1.0<br>390 / 1440<br>固定色板 / 浅深<br>2026-11-19</div>
+  </header>
+
+  <div class="frames">
+    <!-- 1 settings -->
+    <section class="frame">
+      <div class="caption"><b>390 / 设置</b><span>红点 / 更新读数</span></div>
+      <div class="screen">
+        <div class="status"><span>09:41</span><span>字匣</span></div>
+        <div class="appbar"><h2>设置</h2><div class="kicker">本机与同步</div></div>
+        <div class="hair"></div>
+        <div class="scroll">
+          <div class="section-label">服务器</div>
+          <div class="row"><span class="label">服务器地址</span><span class="value mono">http://10.0.0.8:8080</span></div>
+          <div class="section-label">设备</div>
+          <div class="row"><span class="label">配对状态</span><span class="value ok">已配对</span></div>
+          <div class="section-label">外观</div>
+          <div class="row"><span class="label">主题</span><span class="value">跟随系统</span></div>
+          <div class="section-label">关于</div>
+          <div class="row"><span class="label">版本</span><span class="value mono">1.0.0</span></div>
+
+          <div class="section-label">更新</div>
+          <div class="update-block">
+            <div class="readout">
+              <div><div class="k">当前</div><div class="v">1.0.0</div></div>
+              <div><div class="k">最新</div><div class="v accent">1.1.0</div></div>
+              <div><div class="k">日期</div><div class="v" style="font-size:14px">11-19</div></div>
+            </div>
+            <div class="update-actions">
+              <div>
+                <div class="label">自动检查更新</div>
+                <div class="mono" style="margin-top:3px">每次冷启动一次，不发送令牌</div>
+              </div>
+              <div class="switch" role="img" aria-label="自动检查更新已开启"></div>
+            </div>
+            <div style="height:1px;background:var(--line)"></div>
+            <div class="update-actions">
+              <div class="label">检查更新</div>
+              <button class="btn-small" type="button">检查</button>
+            </div>
+          </div>
+        </div>
+        <nav class="nav">
+          <div>历史</div><div>工具箱</div><div class="active">设置<span class="red-dot"></span></div>
+        </nav>
+      </div>
+    </section>
+
+    <!-- 2 available -->
+    <section class="frame">
+      <div class="caption"><b>390 / 有新版本</b><span>版本 / 说明 / 大小</span></div>
+      <div class="screen">
+        <div class="status"><span>09:41</span><span>字匣</span></div>
+        <div class="appbar"><h2>设置</h2><div class="kicker">本机与同步</div></div>
+        <div class="hair"></div>
+        <div class="scroll">
+          <div class="section-label">服务器</div>
+          <div class="row"><span class="label">服务器地址</span><span class="value mono">http://10.0.0.8:8080</span></div>
+          <div class="section-label">设备</div>
+          <div class="row"><span class="label">配对状态</span><span class="value ok">已配对</span></div>
+          <div class="section-label">外观</div>
+          <div class="row"><span class="label">主题</span><span class="value">跟随系统</span></div>
+          <div class="section-label">关于</div>
+          <div class="row"><span class="label">版本</span><span class="value mono">1.0.0</span></div>
+          <div class="section-label">更新</div>
+          <div class="row"><span class="label">检查更新</span><span class="value accent">1.1.0 可用</span></div>
+        </div>
+        <nav class="nav"><div>历史</div><div>工具箱</div><div class="active">设置</div></nav>
+        <div class="overlay">
+          <div class="dialog">
+            <div class="dialog-meta"><span>更新，1.1.0</span><span>×</span></div>
+            <h3>有新版本</h3>
+            <p class="lede">当前 1.0.0 → 最新 1.1.0</p>
+            <div class="meta-line">2026-11-19，Android APK，24.8 MB</div>
+            <div class="rule strong"></div>
+            <div class="inline-label">发布说明</div>
+            <div class="notes">
+              <p>新增检查更新与安装包下载。</p>
+              <p>设置页可查看版本说明与更新状态。</p>
+              <p>Android 下载后校验 SHA-256，再交给系统安装器。</p>
+              <p>修复同步状态与界面细节。</p>
+            </div>
+            <div class="risk-strip"><span class="tag">HTTP，未签名</span><p>下载前需要确认连接与签名风险。</p></div>
+            <div class="actions"><button class="ghost" type="button">稍后</button><button class="primary" type="button">下载并安装</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 risk -->
+    <section class="frame">
+      <div class="caption"><b>390 / 风险确认</b><span>HTTP / 未签名</span></div>
+      <div class="screen">
+        <div class="status"><span>09:41</span><span>字匣</span></div>
+        <div class="appbar"><h2>设置</h2><div class="kicker">本机与同步</div></div>
+        <div class="hair"></div>
+        <div class="scroll">
+          <div class="section-label">服务器</div>
+          <div class="row"><span class="label">服务器地址</span><span class="value mono">http://10.0.0.8:8080</span></div>
+          <div class="section-label">设备</div>
+          <div class="row"><span class="label">配对状态</span><span class="value ok">已配对</span></div>
+          <div class="section-label">外观</div>
+          <div class="row"><span class="label">主题</span><span class="value">跟随系统</span></div>
+          <div class="section-label">关于</div>
+          <div class="row"><span class="label">版本</span><span class="value mono">1.0.0</span></div>
+          <div class="section-label">更新</div>
+          <div class="row"><span class="label">检查更新</span><span class="value accent">1.1.0 可用</span></div>
+        </div>
+        <nav class="nav"><div>历史</div><div>工具箱</div><div class="active">设置</div></nav>
+        <div class="overlay">
+          <div class="dialog">
+            <div class="dialog-meta"><span>下载前确认</span><span>×</span></div>
+            <h3>连接与签名</h3>
+            <p class="lede">这份安装包可以下载，但存在两项已知风险。</p>
+            <div class="risk-list">
+              <div class="risk-item">
+                <div class="title">连接未加密</div>
+                <p>当前使用 HTTP。同一网络中的其他人可能读取或替换下载内容。</p>
+              </div>
+              <div class="risk-item">
+                <div class="title">安装包未签名</div>
+                <p>本学习版不提供代码签名，系统无法验证发布者身份。</p>
+              </div>
+            </div>
+            <p class="footnote">SHA-256 只能确认文件与发布清单一致，不能证明来源。只应从官方发行服务器下载。</p>
+            <div class="actions"><button class="ghost" type="button">取消</button><button class="primary" type="button">继续下载</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 downloading -->
+    <section class="frame">
+      <div class="caption"><b>390 / 下载中</b><span>进度 / 字节数 / 取消</span></div>
+      <div class="screen">
+        <div class="status"><span>09:41</span><span>字匣</span></div>
+        <div class="appbar"><h2>设置</h2><div class="kicker">本机与同步</div></div>
+        <div class="hair"></div>
+        <div class="scroll">
+          <div class="section-label">服务器</div>
+          <div class="row"><span class="label">服务器地址</span><span class="value mono">http://10.0.0.8:8080</span></div>
+          <div class="section-label">设备</div>
+          <div class="row"><span class="label">配对状态</span><span class="value ok">已配对</span></div>
+          <div class="section-label">外观</div>
+          <div class="row"><span class="label">主题</span><span class="value">跟随系统</span></div>
+          <div class="section-label">关于</div>
+          <div class="row"><span class="label">版本</span><span class="value mono">1.0.0</span></div>
+          <div class="section-label">更新</div>
+          <div class="row"><span class="label">检查更新</span><span class="value accent">1.1.0 可用</span></div>
+        </div>
+        <nav class="nav"><div>历史</div><div>工具箱</div><div class="active">设置</div></nav>
+        <div class="overlay">
+          <div class="dialog">
+            <div class="dialog-meta"><span>更新，1.1.0</span><span>×</span></div>
+            <h3>正在下载</h3>
+            <p class="lede">关闭弹窗后会继续下载。</p>
+            <div class="progress-wrap">
+              <div class="progress-top"><span>12.4 / 24.8 MB</span><strong>50%</strong></div>
+              <div class="track"><i></i></div>
+              <div class="steps"><i class="done"></i><i class="done"></i><i></i><i></i></div>
+              <div class="step-label"><span>下载</span><span>校验</span><span>安装</span></div>
+            </div>
+            <div class="file-line">Theca-v1.1.0-android-release.apk<br>来自官方发行服务器，HTTP</div>
+            <div class="actions"><button class="ghost" type="button">取消下载</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 verifying -->
+    <section class="frame">
+      <div class="caption"><b>390 / 校验中</b><span>SHA-256 / 无取消</span></div>
+      <div class="screen">
+        <div class="status"><span>09:41</span><span>字匣</span></div>
+        <div class="appbar"><h2>设置</h2><div class="kicker">本机与同步</div></div>
+        <div class="hair"></div>
+        <div class="scroll">
+          <div class="section-label">服务器</div>
+          <div class="row"><span class="label">服务器地址</span><span class="value mono">http://10.0.0.8:8080</span></div>
+          <div class="section-label">设备</div>
+          <div class="row"><span class="label">配对状态</span><span class="value ok">已配对</span></div>
+          <div class="section-label">外观</div>
+          <div class="row"><span class="label">主题</span><span class="value">跟随系统</span></div>
+          <div class="section-label">关于</div>
+          <div class="row"><span class="label">版本</span><span class="value mono">1.0.0</span></div>
+          <div class="section-label">更新</div>
+          <div class="row"><span class="label">检查更新</span><span class="value accent">1.1.0 可用</span></div>
+        </div>
+        <nav class="nav"><div>历史</div><div>工具箱</div><div class="active">设置</div></nav>
+        <div class="overlay">
+          <div class="dialog">
+            <div class="dialog-meta"><span>更新，1.1.0</span><span>×</span></div>
+            <h3>正在校验</h3>
+            <p class="lede">文件已下载完成，正在比对 SHA-256。</p>
+            <div class="state-line"><span class="mark spin"></span><span>SHA-256，24.8 MB，约 1 秒</span></div>
+            <div class="progress-wrap">
+              <div class="track"><i style="width:100%"></i></div>
+              <div class="steps"><i class="done"></i><i class="done"></i><i class="now"></i><i></i></div>
+              <div class="step-label"><span>下载</span><span>校验</span><span>安装</span></div>
+            </div>
+            <div class="file-line">Theca-v1.1.0-android-release.apk<br>校验失败会删除文件并提示原因</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 ready -->
+    <section class="frame">
+      <div class="caption"><b>390 / 已就绪</b><span>安装确认</span></div>
+      <div class="screen">
+        <div class="status"><span>09:41</span><span>字匣</span></div>
+        <div class="appbar"><h2>设置</h2><div class="kicker">本机与同步</div></div>
+        <div class="hair"></div>
+        <div class="scroll">
+          <div class="section-label">服务器</div>
+          <div class="row"><span class="label">服务器地址</span><span class="value mono">http://10.0.0.8:8080</span></div>
+          <div class="section-label">设备</div>
+          <div class="row"><span class="label">配对状态</span><span class="value ok">已配对</span></div>
+          <div class="section-label">外观</div>
+          <div class="row"><span class="label">主题</span><span class="value">跟随系统</span></div>
+          <div class="section-label">关于</div>
+          <div class="row"><span class="label">版本</span><span class="value mono">1.0.0</span></div>
+          <div class="section-label">更新</div>
+          <div class="row"><span class="label">检查更新</span><span class="value accent">1.1.0 可用</span></div>
+        </div>
+        <nav class="nav"><div>历史</div><div>工具箱</div><div class="active">设置</div></nav>
+        <div class="overlay">
+          <div class="dialog">
+            <div class="dialog-meta"><span>更新，1.1.0</span><span>×</span></div>
+            <h3>安装包已就绪</h3>
+            <p class="lede">SHA-256 匹配。安装将打开系统安装器。</p>
+            <div class="state-line"><span class="mark"></span><span class="ok">校验通过</span><span>·</span><span>24.8 MB</span></div>
+            <div class="file-line">Theca-v1.1.0-android-release.apk<br>系统安装器会再次请求你的确认</div>
+            <p class="footnote">覆盖安装需要与当前版本使用同一签名。若系统提示未知来源，请在设置中允许本次安装。</p>
+            <div class="actions"><button class="ghost" type="button">稍后</button><button class="primary" type="button">安装</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- desktop -->
+    <section class="frame wide">
+      <div class="caption"><b>1440，桌面</b><span>设置与更新弹窗同屏</span></div>
+      <div class="screen">
+        <div class="desktop-shell">
+          <aside class="rail">
+            <div class="brand">字匣</div>
+            <div class="item">历史</div>
+            <div class="item">工具箱</div>
+            <div class="item active">设置<span class="red-dot"></span></div>
+          </aside>
+          <div class="desktop-main">
+            <div class="appbar"><h2>设置</h2><div class="kicker">本机与同步</div></div>
+            <div class="hair"></div>
+            <div class="desktop-content">
+              <div class="desktop-col">
+                <div class="section-label">服务器</div>
+                <div class="row"><span class="label">服务器地址</span><span class="value mono">http://10.0.0.8:8080</span></div>
+                <div class="section-label">外观</div>
+                <div class="row"><span class="label">主题</span><span class="value">跟随系统</span></div>
+                <div class="section-label">关于</div>
+                <div class="row"><span class="label">版本</span><span class="value mono">1.0.0</span></div>
+                <div class="section-label">更新</div>
+                <div class="update-block" style="margin:0 20px">
+                  <div class="readout">
+                    <div><div class="k">当前</div><div class="v">1.0.0</div></div>
+                    <div><div class="k">最新</div><div class="v accent">1.1.0</div></div>
+                    <div><div class="k">日期</div><div class="v" style="font-size:14px">11-19</div></div>
+                  </div>
+                  <div class="update-actions"><div><div class="label">自动检查更新</div><div class="mono" style="margin-top:3px">每次冷启动一次</div></div><div class="switch"></div></div>
+                  <div style="height:1px;background:var(--line)"></div>
+                  <div class="update-actions"><div class="label">检查更新</div><button class="btn-small" type="button">检查</button></div>
+                </div>
+              </div>
+              <div class="desktop-side">
+                <div class="k">更新源</div>
+                <p>官方发行服务器<br>固定地址，不读取配对服务器，不带设备令牌。</p>
+                <div class="k" style="margin-top:18px">已知限制</div>
+                <p>HTTP 连接与未签名安装包仅用于本学习版；下载前会要求确认风险。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="overlay">
+          <div class="dialog">
+            <div class="dialog-meta"><span>更新，1.1.0</span><span>×</span></div>
+            <h3>有新版本</h3>
+            <p class="lede">当前 1.0.0 → 最新 1.1.0</p>
+            <div class="meta-line">2026-11-19，macOS DMG，31.2 MB</div>
+            <div class="rule strong"></div>
+            <div class="inline-label">发布说明</div>
+            <div class="notes">
+              <p>新增检查更新与安装包下载。</p>
+              <p>设置页可查看版本说明与更新状态。</p>
+              <p>下载后校验 SHA-256，再打开安装包。</p>
+            </div>
+            <div class="risk-strip"><span class="tag">HTTP，未签名</span><p>下载前需要确认连接与签名风险。</p></div>
+            <div class="actions"><button class="ghost" type="button">稍后</button><button class="primary" type="button">下载并安装</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+<button class="theme-btn" type="button" onclick="toggleTheme()">切换明暗</button>
+<script>
+  const params = new URLSearchParams(location.search);
+  if (params.get('theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+  function toggleTheme() {
+    document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? '' : 'dark';
+  }
+</script>
+</body>
+</html>

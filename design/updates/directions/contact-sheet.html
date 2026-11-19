@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>更新功能 · 六格候选</title>
+<style>
+  :root {
+    --bg:#F3F0E8; --panel:#FBF9F3; --panel2:#EAE6DA; --ink:#191712; --ink2:#5B5446;
+    --ink3:#6B6455; --line:#D0CABA; --accent:#A8430F; --ok:#2F6B45; --warn:#7A4E0C;
+    --danger:#A03024; --on-accent:#FFF8F0;
+    --sans:-apple-system,"PingFang SC","Noto Sans SC",Roboto,sans-serif;
+    --mono:Menlo,Consolas,"Courier New",monospace;
+  }
+  [data-theme="dark"] {
+    --bg:#17150F; --panel:#1E1B14; --panel2:#262218; --ink:#EDE9DC; --ink2:#B7B0A0;
+    --ink3:#9A9384; --line:#3A352B; --accent:#E8823F; --ok:#7ED6A4; --warn:#E0B05A;
+    --danger:#F08A75; --on-accent:#17150F;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); }
+  header { padding:32px 40px 8px; }
+  h1 { margin:0; font-size:28px; line-height:1.2; font-weight:600; letter-spacing:-.02em; }
+  .sub { margin:8px 0 0; color:var(--ink2); font-size:14px; }
+  .meta { margin-top:14px; font-family:var(--mono); font-size:12px; color:var(--ink3); display:flex; gap:16px; flex-wrap:wrap; }
+  .grid { padding:24px 40px 48px; display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .cand { border-top:1px solid var(--ink); padding-top:12px; min-height:300px; }
+  .cand-top { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+  .cand h2 { margin:0; font-size:16px; font-weight:600; }
+  .tag { font-family:var(--mono); font-size:11px; color:var(--ink3); }
+  .picked { color:var(--accent); }
+  .mock { margin-top:16px; border:1px solid var(--line); background:var(--panel); height:220px; position:relative; overflow:hidden; }
+  .mock .bar { height:34px; border-bottom:1px solid var(--line); padding:8px 10px; font-family:var(--mono); font-size:10px; color:var(--ink3); display:flex; justify-content:space-between; }
+  .row { display:flex; justify-content:space-between; align-items:center; padding:9px 10px; border-bottom:1px solid var(--line); font-size:11px; }
+  .row b { font-weight:500; }
+  .row span { font-family:var(--mono); font-size:9px; color:var(--ink3); }
+  .dot { width:6px; height:6px; border-radius:50%; background:var(--accent); display:inline-block; margin-left:5px; }
+  .dialog { position:absolute; left:18px; right:18px; bottom:14px; background:var(--panel); border:1px solid var(--line); padding:12px; }
+  .dialog .t { font-size:12px; font-weight:600; }
+  .dialog .m { margin-top:4px; font-family:var(--mono); font-size:9px; color:var(--ink3); }
+  .btn { margin-top:10px; display:inline-block; background:var(--accent); color:var(--on-accent); font-size:9px; padding:5px 8px; border-radius:3px; }
+  .ghost { display:inline-block; margin-left:6px; border:1px solid var(--line); color:var(--ink2); font-size:9px; padding:4px 7px; border-radius:3px; }
+  .split { display:flex; gap:10px; }
+  .split > div { flex:1; }
+  .k { font-family:var(--mono); font-size:8px; color:var(--ink3); }
+  .v { font-size:11px; margin-top:2px; }
+  .rule { height:1px; background:var(--line); margin:8px 0; }
+  .note { margin-top:14px; font-size:12px; line-height:1.6; color:var(--ink2); }
+  .note strong { color:var(--ink); font-weight:600; }
+  .mini-list { margin:8px 0 0; padding:0; list-style:none; display:grid; gap:5px; }
+  .mini-list li { font-size:9px; color:var(--ink2); }
+  .step { display:flex; gap:4px; margin-top:8px; }
+  .step i { flex:1; height:2px; background:var(--line); }
+  .step i.on { background:var(--accent); }
+  .stamp { position:absolute; right:12px; top:44px; border:1px solid var(--accent); color:var(--accent); font-family:var(--mono); font-size:8px; padding:2px 4px; }
+  .huge { font-size:24px; font-weight:600; line-height:1; letter-spacing:-.03em; }
+  .tiny { font-family:var(--mono); font-size:8px; color:var(--ink3); margin-top:4px; }
+  .two-col { position:absolute; inset:44px 12px 12px; display:flex; gap:10px; }
+  .two-col .side { width:38%; border-right:1px solid var(--line); padding-right:8px; }
+  .two-col .main { flex:1; }
+  .footer { padding:0 40px 40px; font-family:var(--mono); font-size:11px; color:var(--ink3); }
+  button.theme { position:fixed; right:24px; bottom:24px; border:1px solid var(--line); background:var(--panel); color:var(--ink2); font-family:var(--mono); font-size:11px; padding:8px 10px; cursor:pointer; }
+  @media (max-width:1000px) { .grid { grid-template-columns:repeat(2,1fr); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>更新功能 · 六格候选</h1>
+  <p class="sub">同一个设置页与同一个更新弹窗，六种组织方式；三版完整稿从 A / B / C 展开。</p>
+  <div class="meta"><span>字匣 1.1.0</span><span>390 / 1440</span><span>固定色板</span><span>2026-11-19</span></div>
+</header>
+
+<main class="grid">
+  <section class="cand">
+    <div class="cand-top"><h2>A · 仪器日志</h2><span class="tag picked">选用 → D1</span></div>
+    <div class="mock">
+      <div class="bar"><span>设置 / 本机与同步</span><span>1.0.0</span></div>
+      <div class="row"><b>自动检查更新</b><span>开 · 每次冷启动</span></div>
+      <div class="row"><b>检查更新</b><span style="color:var(--accent)">1.1.0 可用</span></div>
+      <div class="dialog">
+        <div class="t">有新版本</div>
+        <div class="m">CURRENT 1.0.0 → LATEST 1.1.0</div>
+        <div class="rule"></div>
+        <div class="k">发布说明</div>
+        <ul class="mini-list"><li>新增检查更新与安装包下载</li><li>同步与界面细节修复</li></ul>
+        <div class="btn">下载并安装</div><span class="ghost">稍后</span>
+      </div>
+    </div>
+    <p class="note"><strong>逻辑：</strong>版本与进度都像仪表读数，靠等宽字、刻度和发丝线建立秩序；最小化装饰。</p>
+  </section>
+
+  <section class="cand">
+    <div class="cand-top"><h2>B · 公告头版</h2><span class="tag picked">选用 → D2</span></div>
+    <div class="mock">
+      <div class="bar"><span>设置 / 本机与同步</span><span>1.0.0</span></div>
+      <div class="row"><b>检查更新</b><span>1.1.0</span></div>
+      <div class="dialog" style="left:12px;right:12px;bottom:10px;padding:14px">
+        <div class="huge">1.1.0</div>
+        <div class="tiny">2026-11-19 · 24.8 MB · 未签名</div>
+        <div class="rule"></div>
+        <div class="t">检查更新与安装包下载</div>
+        <p class="mini-list" style="margin-top:4px">设置页可查看版本说明与更新状态；Android 下载后校验并安装。</p>
+        <div class="btn">下载</div><span class="ghost">稍后</span>
+      </div>
+    </div>
+    <p class="note"><strong>逻辑：</strong>用字体尺度与留白做公告，版本号是版面主角；动作像报尾的落款，不依赖卡片。</p>
+  </section>
+
+  <section class="cand">
+    <div class="cand-top"><h2>C · 双栏工作台</h2><span class="tag picked">选用 → D3</span></div>
+    <div class="mock">
+      <div class="bar"><span>设置 / 更新</span><span>1.0.0 → 1.1.0</span></div>
+      <div class="two-col">
+        <div class="side">
+          <div class="k">当前</div><div class="v">1.0.0</div>
+          <div class="k" style="margin-top:8px">最新</div><div class="v">1.1.0</div>
+          <div class="k" style="margin-top:8px">文件</div><div class="v" style="font-size:9px">24.8 MB</div>
+        </div>
+        <div class="main">
+          <div class="k">发布说明</div>
+          <ul class="mini-list"><li>新增检查更新</li><li>安装包下载与校验</li><li>同步细节修复</li></ul>
+          <div class="step"><i class="on"></i><i></i><i></i></div>
+          <div class="tiny">下载 · 校验 · 安装</div>
+        </div>
+      </div>
+    </div>
+    <p class="note"><strong>逻辑：</strong>把版本、文件与说明拆成信息栏与操作栏；进度是流程本身，适合桌面和长说明。</p>
+  </section>
+
+  <section class="cand">
+    <div class="cand-top"><h2>D · 折叠清单</h2><span class="tag">备选</span></div>
+    <div class="mock">
+      <div class="bar"><span>设置</span><span></span></div>
+      <div class="row"><b>更新</b><span>1.1.0 可用 <i class="dot"></i></span></div>
+      <div class="row" style="color:var(--ink3)"><b>自动检查</b><span>开</span></div>
+      <div class="dialog">
+        <div class="t">更新</div>
+        <div class="m">1.0.0 → 1.1.0</div>
+        <div class="rule"></div>
+        <div class="k">变更</div>
+        <ul class="mini-list"><li>检查更新与下载安装</li></ul>
+        <div class="btn">查看</div>
+      </div>
+    </div>
+    <p class="note"><strong>问题：</strong>层级压得太扁，版本说明与风险确认容易被折叠吞掉，不适合首次更新。</p>
+  </section>
+
+  <section class="cand">
+    <div class="cand-top"><h2>E · 时间线</h2><span class="tag">备选</span></div>
+    <div class="mock">
+      <div class="bar"><span>设置</span><span></span></div>
+      <div class="row"><b>检查更新</b><span>1.1.0</span></div>
+      <div class="dialog">
+        <div class="t">版本 1.1.0</div>
+        <div class="m">今天 · 09:41</div>
+        <div class="rule"></div>
+        <div class="k">下载</div>
+        <div class="step"><i class="on"></i><i class="on"></i><i></i></div>
+        <div class="tiny">正在校验 · 12.4 / 24.8 MB</div>
+      </div>
+    </div>
+    <p class="note"><strong>问题：</strong>时间线强化了进度，但把“是否有新版本”与“下载到哪一步”混成同一层级，首次打开不够直接。</p>
+  </section>
+
+  <section class="cand">
+    <div class="cand-top"><h2>F · 底部抽屉</h2><span class="tag">备选</span></div>
+    <div class="mock">
+      <div class="bar"><span>设置</span><span></span></div>
+      <div class="row"><b>检查更新</b><span>1.1.0</span></div>
+      <div class="dialog" style="left:0;right:0;bottom:0;border-left:0;border-right:0;border-bottom:0">
+        <div class="t">新版本 1.1.0</div>
+        <div class="m">24.8 MB · 未签名</div>
+        <div class="btn">下载</div>
+      </div>
+    </div>
+    <p class="note"><strong>问题：</strong>抽屉把设置页压到背景，长发布说明与风险确认在手机上容易变成连续滚动，失去更新动作的主次。</p>
+  </section>
+</main>
+<div class="footer">三版完整稿：D1 仪器日志 / D2 公告头版 / D3 双栏工作台。未选三版保留为探索记录，不进入实现。</div>
+<button class="theme" type="button" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'':'dark'">切换明暗</button>
+</body>
+</html>
