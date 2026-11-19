@@ -526,13 +526,14 @@ npm run preview
 
 **必读**：`docs/adr/0009-auto-publish-downloads.md`、`docs/adr/0005-v1-multiplatform-release.md`、`docs/web-架构.md` §7/§8/§10、`.github/workflows/release.yml`、`scripts/deploy-web.sh`。
 
-**涉及路径**：`.github/workflows/release.yml`、`scripts/generate-downloads-manifest.sh`（新增）、`scripts/deploy-web.sh`、`docker-compose.yml`、`.env.example`、`ClipboxServer/.../plugins/Security.kt`、`ClipboxServer/src/test/.../WebStaticContentTest.kt`、`docs/adr/0009-auto-publish-downloads.md`（新增）、`docs/adr/0005-v1-multiplatform-release.md`、`docs/GLOSSARY.md`、`docs/web-架构.md`、`docs/tasks/README.md`、`docs/tasks/web-artifacts.md`、服务器 `/srv/clipbox/downloads`（运行期）。
+**涉及路径**：`.github/workflows/release.yml`、`scripts/gradle-retry.sh`（新增）、`scripts/generate-downloads-manifest.sh`（新增）、`scripts/deploy-web.sh`、`docker-compose.yml`、`.env.example`、`ClipboxServer/.../plugins/Security.kt`、`ClipboxServer/src/test/.../WebStaticContentTest.kt`、`docs/adr/0009-auto-publish-downloads.md`（新增）、`docs/adr/0005-v1-multiplatform-release.md`、`docs/GLOSSARY.md`、`docs/web-架构.md`、`docs/tasks/README.md`、`docs/tasks/web-artifacts.md`、服务器 `/srv/clipbox/downloads`（运行期）。
 
 **实现要点**
 
 - 新增 `scripts/generate-downloads-manifest.sh`：从实际产物生成 `downloads.json`（schemaVersion、version、generatedAt、五平台可用性与 file/sizeBytes/sha256），不依赖 jq，支持 `--check` 本地比对。
 - `release.yml` 增加 `deploy_to_site` 布尔输入与 `deploy-site` job：tag 自动或 dispatch 输入为 true 时执行；先下载 `release-dry-run`，生成清单，再按 产物 → `SHA256SUMS.txt` → `downloads.json` 顺序上传；失败恢复 `.prev` 并 exit 1。
 - SSH 使用 `DEPLOY_HOST`/`DEPLOY_USER`/`DEPLOY_SSH_KEY`/`DEPLOY_KNOWN_HOSTS` 四个 Secrets，固定 known_hosts，禁止 `StrictHostKeyChecking=no`；私钥只写 `$RUNNER_TEMP`。
+- 所有 Gradle 构建/测试步骤经 `scripts/gradle-retry.sh`（Windows 内联 pwsh）执行：失败后间隔 60 秒整步重试一次，缓解跨境拉取 Google Maven / Plugin Portal 偶发不可达（KSP 插件解析曾两次失败），不再依赖人工 rerun。
 - 服务器迁移：新建 `deploy` 用户（无 sudo）与 `/srv/clipbox/downloads`，迁入现有文件与两个示例；`docker-compose.yml` 挂载改 `${DOWNLOAD_HOST_DIR:-./downloads}`，服务器 `.env` 设绝对路径。
 - `deploy-web.sh` 移除 `downloads/` 同步与本地产物检查；下载区只由 CI 写入。
 - `Security.kt` 对 `/downloads/downloads.json` 与 `/downloads/SHA256SUMS.txt` 返回 `no-store`；其余产物保持 `public, max-age=86400`。
