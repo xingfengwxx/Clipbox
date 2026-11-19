@@ -1,11 +1,27 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { VERSION, formatSize, platforms, type PlatformId } from '../data/downloads'
+import {
+  VERSION,
+  formatSize,
+  loadDownloads,
+  seedPlatforms,
+  type PlatformDownload,
+  type PlatformId,
+} from '../data/downloads'
 
 const { t } = useI18n()
+const version = ref(VERSION)
+const platforms = ref<PlatformDownload[]>(seedPlatforms)
+
+onMounted(async () => {
+  const manifest = await loadDownloads()
+  version.value = manifest.version
+  platforms.value = manifest.platforms
+})
 
 function buttonLabel(id: PlatformId): string {
-  return id === 'android' ? t('download.apkButton') : t('download.dmgButton')
+  return t(`download.${id}Button`)
 }
 </script>
 
@@ -30,7 +46,7 @@ function buttonLabel(id: PlatformId): string {
             <p class="dl-row__note">{{ t(`download.${p.id}.note`) }}</p>
             <template v-if="p.available">
               <p class="mono dl-row__meta">
-                {{ t('download.versionLabel') }} v{{ VERSION }} ·
+                {{ t('download.versionLabel') }} v{{ version }} ·
                 {{ t('download.sizeLabel') }} {{ formatSize(p.sizeBytes ?? 0) }}
               </p>
               <p class="mono dl-row__sha">{{ t('download.shaLabel') }}<br />{{ p.sha256 }}</p>
