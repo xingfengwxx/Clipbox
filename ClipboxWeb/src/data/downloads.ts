@@ -1,4 +1,6 @@
-export const VERSION = '1.0.0'
+// 官网展示的最新版本；种子数据仍是上一个发布版本，回退时不得把旧文件标成新版本
+export const VERSION = '1.1.0'
+export const SEED_VERSION = '1.0.0'
 
 export type PlatformId = 'android' | 'ios' | 'macos' | 'windows' | 'linux'
 
@@ -98,7 +100,7 @@ export async function loadDownloads(): Promise<DownloadManifest> {
     return manifest
   } catch (error) {
     console.warn('downloads.json 不可用，使用内置回退种子', error)
-    return { schemaVersion: 1, version: VERSION, platforms: seedPlatforms }
+    return { schemaVersion: 1, version: SEED_VERSION, platforms: seedPlatforms }
   }
 }
 

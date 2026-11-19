@@ -12,10 +12,13 @@ plugins {
 // 默认服务器地址按构建模式声明：debug / 开发运行连本机，release / 打包产物连公网学习版
 val debugServerUrl = "http://127.0.0.1:8080"
 val releaseServerUrl = "http://117.72.121.6:8080"
+// 版本号在此单点声明：Android versionName、Desktop packageVersion、三端运行期兜底与官网清单都跟随它
+val appVersion = "1.1.0"
 val bundledConfigDir = layout.buildDirectory.dir("generated/bundledConfig/commonMain/kotlin")
 val generateBundledConfig = tasks.register("generateBundledConfig") {
     inputs.property("debugServerUrl", debugServerUrl)
     inputs.property("releaseServerUrl", releaseServerUrl)
+    inputs.property("appVersion", appVersion)
     outputs.dir(bundledConfigDir)
     doLast {
         val file = bundledConfigDir.get()
@@ -28,11 +31,13 @@ val generateBundledConfig = tasks.register("generateBundledConfig") {
             | * author : 王星星
             | * date : 2026-11-16 17:10
             | * email : 1099420259@qq.com
-            | * description : 构建期注入的默认服务器地址；debug 指向本机服务端，release 指向公网学习版；由 generateBundledConfig 生成，禁止手改
+            | * description : 构建期注入的默认服务器地址与版本号；debug 指向本机服务端，release 指向公网学习版；由 generateBundledConfig 生成，禁止手改
             | */
             |package com.wangxingxing.clipbox.config
             |
             |internal object BundledConfig {
+            |    const val appVersion = "$appVersion"
+            |
             |    fun serverUrl(isDebug: Boolean): String =
             |        if (isDebug) "$debugServerUrl" else "$releaseServerUrl"
             |}
@@ -115,8 +120,8 @@ android {
         applicationId = "com.wangxingxing.clipbox"
         minSdk = libs.versions.androidMinSdk.get().toInt()
         targetSdk = libs.versions.androidTargetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = appVersion
     }
 
     signingConfigs {
@@ -167,7 +172,7 @@ compose.desktop {
         nativeDistributions {
             // 对外品牌名与版本：DMG/应用包显示 Theca，版本与 Android versionName 对齐
             packageName = "Theca"
-            packageVersion = "1.0.0"
+            packageVersion = appVersion
             // 显式声明三种目标格式；本机只能在 macOS 构建 DMG，MSI / DEB 由 release CI 在对应系统构建
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             // 默认 jlink 运行时缺少 jdk.unsupported，DataStore 的 protobuf 反射会因 sun.misc.Unsafe 缺失启动失败

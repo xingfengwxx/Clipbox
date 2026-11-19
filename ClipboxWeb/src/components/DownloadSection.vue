@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
-  VERSION,
+  SEED_VERSION,
   formatSize,
   loadDownloads,
   seedPlatforms,
@@ -11,7 +11,8 @@ import {
 } from '../data/downloads'
 
 const { t } = useI18n()
-const version = ref(VERSION)
+// 首屏与种子数据同版本；清单加载成功后再切到清单版本
+const version = ref(SEED_VERSION)
 const platforms = ref<PlatformDownload[]>(seedPlatforms)
 
 onMounted(async () => {

@@ -28,7 +28,7 @@ import kotlinx.serialization.json.Json
 
 private const val API_PATH_SUFFIX = "/api/v1/"
 private const val LATEST_PATH = "app/latest"
-private const val USER_AGENT = "Clipbox/1.0.0"
+private const val USER_AGENT = "Clipbox/1.1.0"
 
 class UpdateApi(
     officialServerUrl: String,

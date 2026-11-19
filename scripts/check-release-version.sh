@@ -25,8 +25,10 @@ for arg in "$@"; do
     esac
 done
 
-android_version="$(sed -nE 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$BUILD_FILE")"
-desktop_version="$(sed -nE 's/^[[:space:]]*packageVersion[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$BUILD_FILE")"
+# Android versionName 与 Desktop packageVersion 都由 build 文件里的单一版本常量派生，取常量本身
+app_version="$(sed -nE 's/^[[:space:]]*val appVersion[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$BUILD_FILE")"
+android_version="$app_version"
+desktop_version="$app_version"
 ios_versions="$(sed -nE 's/^[[:space:]]*MARKETING_VERSION[[:space:]]*=[[:space:]]*([^;]+);.*/\1/p' "$IOS_PROJECT" | tr -d '[:blank:]' | sort -u)"
 web_version="$(sed -nE "s/^export const VERSION = '([^']+)'.*/\1/p" "$WEB_DATA")"
 

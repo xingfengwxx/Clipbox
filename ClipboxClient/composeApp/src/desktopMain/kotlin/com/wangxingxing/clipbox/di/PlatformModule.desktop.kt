@@ -40,7 +40,7 @@ private class DesktopPlatformServices : PlatformServices {
     override val isDesktop = true
     override val isDebugBuild = isDebug
     override val buildType = if (isDebug) "debug" else "release"
-    override val versionName = "1.0.0"
+    override val versionName = BundledConfig.appVersion
 
     override fun createDatabase(): ClipboxDatabase =
         createClipboxDatabase()

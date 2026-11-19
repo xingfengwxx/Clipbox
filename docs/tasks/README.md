@@ -323,15 +323,25 @@ T-WEB-09 首轮远程部署已于 2026-11-18 完成，范围仅 APK / DMG；T-WE
 | Release | T-REL-15 | 已完成 | 本卡提交 |
 | Web | T-WEB-01…T-WEB-08 | 已完成 | 最后一张 `57ab06c`（T-WEB-08） |
 | Web | T-WEB-09 | 进行中 | 首轮 `d2ad070`（仅 APK / DMG）；MSI / DEB 补验收待 T-WEB-10 后执行，证据见 [web-artifacts.md](web-artifacts.md) §7 |
-| Web | T-WEB-10 | 阻塞 | 运行时清单改动未提交；`deploy-site` 上传超时导致远端产物不一致，待授权修改 workflow 后重跑 |
+| Web | T-WEB-10 | 阻塞 | 运行时清单改动未提交；`deploy-site` 上传超时导致远端产物不一致，待授权修改 workflow 后重跑；Windows / Linux 的真实大小与 SHA 待 CI 产物 |
 | Web | T-WEB-11 | 已完成 | `09b65e0`、`d5ae3e2` |
-| Web | T-WEB-12 | 待开始 | — |
+| Web | T-WEB-12 | 已完成 | `e9ce158` |
 | Update | T-UPD-01 | 已完成 | `190196c` |
 | Update | T-UPD-02 | 已完成 | `f8edf10` |
-| Update | T-UPD-03 | 进行中 | — |
-| Update | T-UPD-04…T-UPD-14 | 待开始 | — |
+| Update | T-UPD-03 | 已完成 | `1b14297` |
+| Update | T-UPD-04 | 已完成 | `f69832c` |
+| Update | T-UPD-05 | 已完成 | `08a720d` |
+| Update | T-UPD-06 | 已完成 | `90f1088` |
+| Update | T-UPD-07 | 已完成 | `679ef91` |
+| Update | T-UPD-08 | 已完成 | `f0f912e` |
+| Update | T-UPD-09 | 已完成 | `3500396` |
+| Update | T-UPD-10 | 已完成 | `a8a0862` |
+| Update | T-UPD-11 | 已完成 | `544bc71` |
+| Update | T-UPD-12 | 已完成 | `03dfcdb` |
+| Update | T-UPD-13 | 进行中 | 本卡提交 |
+| Update | T-UPD-14 | 待开始 | — |
 
-> M2 已于 2026-11-17 通过（证据见 [m2-gate.md](m2-gate.md)）；M3 于同日有条件通过，AC-11 全量分页冲突（D8）已于 2026-11-18 由 [BUG-001](bug-001-ac11-full-sync-floor.md) 修复关闭（证据见 [m3-gate.md](m3-gate.md)）；M4 于同日通过（证据见 [m4-gate.md](m4-gate.md)）；T-WEB-09 尚余四平台补验收，M6 未关闭。ADR-0006 追加的 6 张收尾卡已完成，T-REL-08 打 tag 与远程部署仍需用户另行授权。v1.1.0 的 M7 从 T-UPD-01 起算，T-WEB-12 依赖 T-WEB-10 的远端四平台产物。
+> M2 已于 2026-11-17 通过（证据见 [m2-gate.md](m2-gate.md)）；M3 于同日有条件通过，AC-11 全量分页冲突（D8）已于 2026-11-18 由 [BUG-001](bug-001-ac11-full-sync-floor.md) 修复关闭（证据见 [m3-gate.md](m3-gate.md)）；M4 于同日通过（证据见 [m4-gate.md](m4-gate.md)）；T-WEB-09 尚余四平台补验收，M6 未关闭。ADR-0006 追加的 6 张收尾卡已完成，T-REL-08 打 tag 与远程部署仍需用户另行授权。v1.1.0 的 M7 从 T-UPD-01 起算；T-WEB-12 已先完成清单 schema 1/2 兼容，Windows / Linux 的清单数值仍待 T-WEB-10 的 CI 产物上线后补齐。
 
 ## 7. 统一 DoD
 

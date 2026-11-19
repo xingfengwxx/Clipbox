@@ -20,7 +20,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 
 private const val API_PATH_PREFIX = "/api/v1/"
-private const val USER_AGENT = "Clipbox/1.0.0"
+private const val USER_AGENT = "Clipbox/1.1.0"
 
 fun createApiHttpClient(
     serverUrl: String,

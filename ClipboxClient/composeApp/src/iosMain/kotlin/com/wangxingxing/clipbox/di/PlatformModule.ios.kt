@@ -47,7 +47,7 @@ private class IosPlatformServices : PlatformServices {
 
     override val versionName: String =
         NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleShortVersionString") as? String
-            ?: "1.0.0"
+            ?: BundledConfig.appVersion
 
     override fun createDatabase(): ClipboxDatabase =
         createClipboxDatabase()
