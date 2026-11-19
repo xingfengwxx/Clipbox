@@ -41,6 +41,7 @@ private class IosPlatformServices : PlatformServices {
     override val defaultServerUrl = BundledConfig.serverUrl(isDebug)
     override val defaultDeviceName = IosDeviceInfo.defaultDeviceName
     override val isDesktop = false
+    override val isIos = true
     override val isDebugBuild = isDebug
     override val buildType = if (isDebug) "debug" else "release"
 

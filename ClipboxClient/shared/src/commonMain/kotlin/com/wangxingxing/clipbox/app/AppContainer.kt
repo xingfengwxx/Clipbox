@@ -53,6 +53,8 @@ interface PlatformServices {
     val defaultServerUrl: String
     val defaultDeviceName: String
     val isDesktop: Boolean
+    /** iOS 只检查更新、不提供安装器；弹窗据此展示只读说明 */
+    val isIos: Boolean get() = false
     val isDebugBuild: Boolean
     val versionName: String
     val buildType: String
@@ -114,6 +116,7 @@ class AppContainer(private val services: PlatformServices) {
     val defaultServerUrl: String get() = services.defaultServerUrl
     val defaultDeviceName: String get() = services.defaultDeviceName
     val isDesktop: Boolean get() = services.isDesktop
+    val isIos: Boolean get() = services.isIos
     val isDebugBuild: Boolean get() = services.isDebugBuild
     val versionName: String get() = services.versionName
     val buildType: String get() = services.buildType
