@@ -19,6 +19,8 @@ import com.wangxingxing.clipbox.platform.AndroidClipboardService
 import com.wangxingxing.clipbox.platform.ClipboardService
 import com.wangxingxing.clipbox.settings.SettingsRepository
 import com.wangxingxing.clipbox.settings.createSettingsRepository
+import com.wangxingxing.clipbox.update.AndroidUpdateInstaller
+import com.wangxingxing.clipbox.update.UpdateInstaller
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -56,4 +58,6 @@ private class AndroidPlatformServices(private val context: Context) : PlatformSe
             scope = appScope,
             diagnosticLoggingDefault = isDebug,
         )
+
+    override fun createUpdateInstaller(): UpdateInstaller = AndroidUpdateInstaller(context)
 }

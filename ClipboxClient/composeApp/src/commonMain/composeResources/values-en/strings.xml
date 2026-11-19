@@ -276,4 +276,6 @@
         <item quantity="one">%1$d match</item>
         <item quantity="other">%1$d matches</item>
     </plurals>
+    <string name="update_download_notification_title">Theca update</string>
+    <string name="update_download_notification_description">Downloading installer</string>
 </resources>

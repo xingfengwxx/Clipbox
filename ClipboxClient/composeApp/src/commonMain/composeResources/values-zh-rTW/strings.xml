@@ -267,4 +267,6 @@
     <plurals name="tool_regex_matches">
         <item quantity="other">%1$d 處符合</item>
     </plurals>
+    <string name="update_download_notification_title">字匣更新</string>
+    <string name="update_download_notification_description">正在下載安裝檔</string>
 </resources>

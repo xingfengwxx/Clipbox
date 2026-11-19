@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 只暴露更新安装包目录；FileProvider authority 为 ${applicationId}.fileprovider -->
+<paths>
+    <external-files-path name="updates" path="Download/updates/" />
+</paths>
