@@ -842,3 +842,4 @@ curl -sS http://203.0.113.10:8080/api/v1/shares \
 | v1.0.0 修订 | 2026-11-18 | GET /api/v1/clips 新增可选参数 `full`：全量分页跳过 syncFloor 判定，仍保留 serverMaxSeq 重置保护；修复 BUG-001 墓碑清理后全量分页中断 |
 | v1.0.0 修订 | 2026-11-18 | 配对码改由已配对设备生成（`POST /api/v1/devices/me/pairing-code`），服务端只存哈希；新增空库初始化 `POST /api/v1/bootstrap` 与 409 `ALREADY_INITIALIZED`；删除管理接口与 `X-Admin-Token`（ADR-0006） |
 | v1.0.0 修订 | 2026-11-19 | 取码接口改为可选认证：任意设备（含未配对）均可生成配对码，未携带令牌按匿名 issuer 处理；`device_pairing_codes.device_id` 改为 `issuer_id` 并移除设备外键（ADR-0007） |
+| v1.0.0 修订 | 2026-11-19 | 仅客户端行为变化：配对页留空配对码时自动调用 `POST /api/v1/bootstrap`；路径、字段、错误码与限流均无变化（ADR-0008） |

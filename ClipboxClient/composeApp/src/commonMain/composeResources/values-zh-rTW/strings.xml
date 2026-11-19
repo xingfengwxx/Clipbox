@@ -18,7 +18,7 @@
         <item quantity="other">%1$d 秒後可重試</item>
     </plurals>
     <string name="pair_rate_hint">配對請求依來源 IP 限速，5 次／分鐘。</string>
-    <string name="pair_note">在任意裝置的設定頁產生配對碼，10 分鐘內有效，只能使用一次。</string>
+    <string name="pair_note">首次部署可留空配對碼：點擊「配對」即初始化伺服器，本機成為首台裝置。已有裝置時，請先在任意裝置的設定頁產生配對碼（10 分鐘內有效，只能使用一次）。</string>
     <string name="pair_insecure_warning">未加密連線，僅供學習</string>
     <string name="pair_error_invalid_code">配對碼無效，請檢查後重試</string>
     <string name="pair_error_code_expired">配對碼已過期，請重新取得</string>
@@ -29,11 +29,6 @@
     <string name="pair_error_server_url">伺服器位址無效，請檢查格式</string>
     <string name="pair_error_server">伺服器暫時無法使用，請稍後重試</string>
     <string name="pair_expired_hint">請在任意裝置的設定頁重新產生配對碼後再試</string>
-    <string name="pair_init_action">初始化此伺服器（首次部署）</string>
-    <string name="pair_init_title">初始化此伺服器？</string>
-    <string name="pair_init_body">僅當伺服器尚未加入任何裝置時可用。此裝置將成為首台裝置；之後任意裝置都可在設定頁產生配對碼。若伺服器已有裝置，請在任意裝置的設定頁產生配對碼後輸入。</string>
-    <string name="pair_init_confirm">初始化</string>
-    <string name="pair_init_submitting">初始化中…</string>
     <string name="pair_error_already_initialized">伺服器已初始化，請輸入任意裝置產生的配對碼</string>
     <string name="history_sync_paired">已配對</string>
     <string name="history_sync_unpaired">未配對</string>

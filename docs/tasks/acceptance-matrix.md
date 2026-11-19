@@ -116,6 +116,8 @@ cd ClipboxClient && ./gradlew :shared:allTests --rerun-tasks
 
 > 2026-11-19 更新（ADR-0007）：取码接口改为可选认证，未配对设备可匿名取码（`issuer_id=anonymous`），设置页「配对新设备」不再按配对状态隐藏。AC-01 的取码步骤不再限定已配对设备；上述历史证据保留。
 
+> 2026-11-19 更新（ADR-0008）：配对页删除「初始化此服务器」入口与二次确认，首台设备留空配对码点击配对即自动调用 `/api/v1/bootstrap`。AC-01 的初始化步骤以新交互为准；上述历史证据保留。
+
 ### T-REL-15 新证据（2026-11-18）
 
 - AC-01：全新数据目录下 `POST /api/v1/bootstrap` 初始化首台设备 → 设备 A 取码 → 设备 B `POST /api/v1/pair` 201 → A/B 双向 REST 同步命中；Android 设置页取码与配对页初始化在 T-UI-21 实测。

@@ -109,7 +109,7 @@ export default {
   'selfhost.step2.title': '建置並啟動',
   'selfhost.step2.desc': '在倉庫根目錄執行 docker compose up -d --build；首次建置需要下載基礎映像與相依套件。',
   'selfhost.step3.title': '配對裝置',
-  'selfhost.step3.desc': '部署後先用首台裝置在用戶端「初始化此伺服器」，再在已配對裝置的設定頁產生 6 位配對碼配對新裝置。',
+  'selfhost.step3.desc': '部署後用首台裝置在配對頁留空配對碼直接配對，即完成伺服器初始化；之後在任意裝置的設定頁產生 6 位配對碼配對新裝置。',
   'selfhost.step4.title': '驗證與備份',
   'selfhost.step4.desc': 'curl http://<SERVER_IP>:8080/healthz 應回傳 200；定期備份 ./data 目錄。',
   'selfhost.env.title': '.env 關鍵項',

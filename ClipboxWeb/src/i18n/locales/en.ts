@@ -109,7 +109,7 @@ export default {
   'selfhost.step2.title': 'Build and start',
   'selfhost.step2.desc': 'Run docker compose up -d --build at the repository root. The first build pulls base images and dependencies.',
   'selfhost.step3.title': 'Pair your devices',
-  'selfhost.step3.desc': 'After deployment, initialize the server from the first device, then generate a six-digit code in a paired device settings page to pair a new device.',
+  'selfhost.step3.desc': 'After deployment, pair from the first device with the code left empty to initialize the server; then generate a six-digit code in any device settings page to pair a new device.',
   'selfhost.step4.title': 'Verify and back up',
   'selfhost.step4.desc': 'curl http://<SERVER_IP>:8080/healthz should return 200; back up the ./data directory regularly.',
   'selfhost.env.title': 'Key .env entries',

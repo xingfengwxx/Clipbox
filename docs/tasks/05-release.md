@@ -128,8 +128,8 @@ docker compose -f ../docker-compose.yml config   # 若本机已安装 Docker
 - 将仓库同步到服务器（git clone 或 rsync，任选；不提交服务器信息）。
 - 创建 `.env`：仅 `PUBLIC_BASE_URL=http://<SERVER_IP>:8080`（ADR-0006 起不再需要 `ADMIN_TOKEN`）。
 - `docker compose up -d --build`；查看 `docker compose ps`、`docker compose logs --tail=100`。
-- 冒烟：`curl /healthz`；首台设备调用 `/api/v1/bootstrap` 初始化；已配对设备调用 `/api/v1/devices/me/pairing-code` 取码；`curl /api/v1/pair`；创建一条记录；增量拉取；分享创建并在浏览器打开。
-- 部署完成后立即初始化，缩短空库被抢先占用的窗口。
+- 冒烟：`curl /healthz`；首台设备在客户端配对页留空配对码完成初始化（ADR-0008；等价 `curl /api/v1/bootstrap` 可选）；已配对设备调用 `/api/v1/devices/me/pairing-code` 取码；`curl /api/v1/pair`；创建一条记录；增量拉取；分享创建并在浏览器打开。
+- 部署完成后立即用首台设备完成初始化，缩短空库被抢先占用的窗口。
 - 检查日志不包含正文、令牌、配对码、分享 token；容器内存 <512MB。
 - 检查端口：外部仅 `8080` 可访问。
 

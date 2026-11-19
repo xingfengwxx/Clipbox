@@ -1,6 +1,6 @@
 # 配对码改由已配对设备生成，并允许空库自助初始化
 
-**Status**: accepted（取码认证范围已被 `0007-open-pairing-code-generation.md` 部分取代）
+**Status**: accepted（取码认证范围已被 `0007-open-pairing-code-generation.md` 部分取代；配对页手动初始化入口已由 `0008-auto-bootstrap-on-empty-pairing-code.md` 改为留空配对码自动触发）
 
 **Date**: 2026-11-18
 

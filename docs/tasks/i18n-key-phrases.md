@@ -10,7 +10,8 @@
 
 - 首次启动固定简体中文，不跟随系统语言；选择写入 DataStore，重启保持。
 - 语言切换通过注入 `ComposeEnvironment` 实现，只重载资源，不修改系统 Locale，不重建导航。
-- 三套 `strings.xml` 均为 245 条 `<string>` + 9 组 `<plurals>`（共 254 个 key），key 集合完全一致；统计口径为 T-UI-21 复核。下表只列关键文案，不是全量清单。
+- 三套 `strings.xml` 均为 240 条 `<string>` + 9 组 `<plurals>`（共 249 个 key），key 集合完全一致；统计口径为 2026-11-19 ADR-0008 复核。下表只列关键文案，不是全量清单。
+- 2026-11-19 起移除 `pair_init_*` 5 条词条：配对页不再提供手动初始化入口，改为留空配对码自动触发（ADR-0008）。
 - 语言名称本身使用自称，不翻译：`简体中文` / `繁體中文` / `English`。
 - iOS 分享扩展的 `Localizable.strings` 在 T-IOS-08 补齐，本表只覆盖 Compose 端。
 
@@ -36,7 +37,7 @@
 | `pair_device_label` | 设备名称 | 裝置名稱 | Device name |
 | `pair_submit` | 配对 | 配對 | Pair |
 | `pair_rate_hint` | 配对请求按来源 IP 限速，5 次／分钟。 | 配對請求依來源 IP 限速，5 次／分鐘。 | Pairing is limited to 5 attempts per minute per IP. |
-| `pair_note` | 在任意设备的设置页生成配对码，10 分钟内有效，只能使用一次。 | 在任意裝置的設定頁產生配對碼，10 分鐘內有效，只能使用一次。 | Generate a pairing code from any device's settings, valid for 10 minutes and single-use. |
+| `pair_note` | 首次部署可留空配对码：点击「配对」即初始化服务器，本机成为首台设备。已有设备时，请先在任意设备的设置页生成配对码（10 分钟内有效，只能使用一次）。 | 首次部署可留空配對碼：點擊「配對」即初始化伺服器，本機成為首台裝置。已有裝置時，請先在任意裝置的設定頁產生配對碼（10 分鐘內有效，只能使用一次）。 | On a fresh server, leave the code empty and tap Pair to initialize it; this device becomes the first device. If the server already has devices, generate a code in any device's settings first (valid for 10 minutes, single-use). |
 | `pair_insecure_warning` | 未加密连接，仅用于学习 | 未加密連線，僅供學習 | Unencrypted connection, for learning only |
 | `pair_error_invalid_code` | 配对码无效，请检查后重试 | 配對碼無效，請檢查後重試 | That code is invalid. Check it and try again. |
 | `pair_error_code_expired` | 配对码已过期，请重新获取 | 配對碼已過期，請重新取得 | That code has expired. Get a new one. |
@@ -48,11 +49,8 @@
 | `pair_error_server` | 服务器暂时不可用，请稍后重试 | 伺服器暫時無法使用，請稍後重試 | The server is unavailable. Try again later. |
 | `pair_error_already_initialized` | 服务器已初始化，请输入任意设备生成的配对码 | 伺服器已初始化，請輸入任意裝置產生的配對碼 | The server is already initialized. Enter a pairing code generated from any device. |
 | `pair_expired_hint` | 请在任意设备的设置页重新生成配对码后再试 | 請在任意裝置的設定頁重新產生配對碼後再試 | Generate a new code from any device's settings and try again. |
-| `pair_init_action` | 初始化此服务器（首次部署） | 初始化此伺服器（首次部署） | Initialize this server (first deployment) |
-| `pair_init_title` | 初始化此服务器？ | 初始化此伺服器？ | Initialize this server? |
-| `pair_init_body` | 仅当服务器尚未添加任何设备时可用。此设备将成为首台设备；之后任意设备都可在设置页生成配对码。若服务器已有设备，请在任意设备的设置页生成配对码后输入。 | 僅當伺服器尚未加入任何裝置時可用。此裝置將成為首台裝置；之後任意裝置都可在設定頁產生配對碼。若伺服器已有裝置，請在任意裝置的設定頁產生配對碼後輸入。 | Only works while the server has no devices. This device becomes the first device; afterwards any device can generate codes from its settings. If the server already has devices, enter a code generated from any device. |
-| `pair_init_confirm` | 初始化 | 初始化 | Initialize |
-| `pair_init_submitting` | 初始化中… | 初始化中… | Initializing… |
+
+> 2026-11-19（ADR-0008）：`pair_init_action/title/body/confirm/submitting` 5 条词条已随手动初始化入口一并删除。
 
 ## 配对码弹层（设置页）
 
