@@ -16,6 +16,8 @@ import com.wangxingxing.clipbox.platform.ClipboardService
 import com.wangxingxing.clipbox.platform.DesktopClipboardService
 import com.wangxingxing.clipbox.settings.SettingsRepository
 import com.wangxingxing.clipbox.settings.createSettingsRepository
+import com.wangxingxing.clipbox.update.DesktopUpdateInstaller
+import com.wangxingxing.clipbox.update.UpdateInstaller
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -46,4 +48,6 @@ private class DesktopPlatformServices : PlatformServices {
     // REQ-SET-011：诊断日志 debug 默认开、release 默认关；打包产物不带 debugBuild 标记，按 release 处理
     override fun createSettingsRepository(): SettingsRepository =
         createSettingsRepository(appScope, diagnosticLoggingDefault = isDebug)
+
+    override fun createUpdateInstaller(): UpdateInstaller = DesktopUpdateInstaller()
 }
