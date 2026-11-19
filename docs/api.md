@@ -1,14 +1,14 @@
-# Clipbox API 契约 v1.0.0
+# Clipbox API 契约 v1.1.0
 
 | 字段 | 内容 |
 | --- | --- |
-| 文档版本 | v1.0.0 |
-| 更新日期 | 2026-11-18 |
-| 状态 | 设计冻结；客户端与服务端实现的唯一接口依据 |
+| 文档版本 | v1.1.0 |
+| 更新日期 | 2026-11-19 |
+| 状态 | 设计冻结；v1.1.0 按 [ADR-0010](./adr/0010-app-update-and-install.md) 追加应用更新接口 |
 | 部署基线 | 学习版 HTTP + IP 直连（`http://<SERVER_IP>:8080`），见 [ADR-0003](./adr/0003-http-ip-learning-deployment.md) |
 | 基线 | [Clipbox 项目交接文档](./Clipbox%20项目交接文档.md) v0.1 |
-| 相关 | [GLOSSARY.md](GLOSSARY.md)、[ADR-0001](./adr/0001-server-seq-change-feed.md)、[ADR-0002](./adr/0002-share-content-snapshot.md)、[ADR-0006](./adr/0006-device-issued-pairing-codes.md) |
-| 适用产品 | Clipbox v1.0.0 |
+| 相关 | [GLOSSARY.md](GLOSSARY.md)、[ADR-0001](./adr/0001-server-seq-change-feed.md)、[ADR-0002](./adr/0002-share-content-snapshot.md)、[ADR-0006](./adr/0006-device-issued-pairing-codes.md)、[ADR-0009](./adr/0009-auto-publish-downloads.md)、[ADR-0010](./adr/0010-app-update-and-install.md) |
+| 适用产品 | Clipbox v1.1.0 |
 | 工程路径 | 服务端 `/Users/wangxingxing/AndroidStudioProjects/MyProjects/ClipBox/ClipboxServer`<br>客户端 `/Users/wangxingxing/AndroidStudioProjects/MyProjects/ClipBox/ClipboxClient` |
 
 本文只定义客户端与服务端之间的接口契约。客户端内部实现见[客户端技术架构](./客户端技术架构.md)，服务端内部实现见[服务端技术架构](./服务端技术架构.md)，产品行为与验收见[功能需求文档](./功能需求文档.md)。
@@ -33,7 +33,7 @@
 | --- | --- |
 | 设备接口 | `Authorization: Bearer <device-token>` |
 | 可选认证接口 | `POST /api/v1/devices/me/pairing-code`：携带有效令牌时归属该设备，未携带按匿名处理，无效令牌返回 401 |
-| 公开接口 | `POST /api/v1/pair`、`POST /api/v1/bootstrap`、`GET /s/{token}`、`GET /healthz` |
+| 公开接口 | `POST /api/v1/pair`、`POST /api/v1/bootstrap`、`GET /api/v1/app/latest`、`GET /s/{token}`、`GET /healthz` |
 
 - 设备令牌只返回一次，服务端只保存 `SHA-256(token)`；令牌泄露等价于设备身份泄露。
 - 设备令牌不得出现在 URL、查询参数、日志或错误信息中。
@@ -700,7 +700,7 @@ Cache-Control: no-store
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | 内容类型不支持 | 非 JSON 请求体 |
 | 429 | `RATE_LIMITED` | 触发限流 | 配对尝试、设备请求、分享页访问 |
 | 500 | `INTERNAL_ERROR` | 服务端内部错误 | 未捕获异常、数据库故障 |
-| 503 | `SERVICE_UNAVAILABLE` | 服务不可用 | 健康检查失败 |
+| 503 | `SERVICE_UNAVAILABLE` | 服务不可用 | 健康检查失败、更新清单缺失或格式非法 |
 
 ## 8. 限流与配额
 
@@ -710,6 +710,7 @@ Cache-Control: no-store
 | `POST /api/v1/bootstrap` | 3 次/分钟 | IP | 429 |
 | `POST /api/v1/devices/me/pairing-code` | 10 次/分钟 | IP | 429 |
 | 设备接口 | 120 次/分钟 | 设备 ID | 429 |
+| `GET /api/v1/app/latest` | 60 次/分钟 | IP | 429 |
 | `GET /s/{token}` | 60 次/分钟 | IP | 429 |
 | `GET /healthz` | 120 次/分钟 | IP | 429 |
 | WebSocket 连接尝试 | 10 次/分钟 | 设备 ID | 关闭码 4429 |
@@ -843,3 +844,142 @@ curl -sS http://203.0.113.10:8080/api/v1/shares \
 | v1.0.0 修订 | 2026-11-18 | 配对码改由已配对设备生成（`POST /api/v1/devices/me/pairing-code`），服务端只存哈希；新增空库初始化 `POST /api/v1/bootstrap` 与 409 `ALREADY_INITIALIZED`；删除管理接口与 `X-Admin-Token`（ADR-0006） |
 | v1.0.0 修订 | 2026-11-19 | 取码接口改为可选认证：任意设备（含未配对）均可生成配对码，未携带令牌按匿名 issuer 处理；`device_pairing_codes.device_id` 改为 `issuer_id` 并移除设备外键（ADR-0007） |
 | v1.0.0 修订 | 2026-11-19 | 仅客户端行为变化：配对页留空配对码时自动调用 `POST /api/v1/bootstrap`；路径、字段、错误码与限流均无变化（ADR-0008） |
+| v1.1.0 | 2026-11-19 | 新增 §13 应用更新：公开 `GET /api/v1/app/latest`，由下载清单 schemaVersion 2 生成；无鉴权、不带设备令牌；清单增加三语发布说明；新增 60 次/分钟/IP 限流（ADR-0010） |
+
+## 13. 应用更新
+
+### 13.1 GET /api/v1/app/latest
+
+公开接口，无需认证。客户端只向**官方发行服务器**请求，不向用户配对服务器请求；请求不得携带 `Authorization`，服务端也不读取该头。
+
+成功响应 `200 OK`：
+
+```json
+{
+  "version": "1.1.0",
+  "publishedAt": "2026-11-19T08:00:00Z",
+  "notes": {
+    "zh-CN": "新增检查更新与安装包下载。\n修复若干同步问题。",
+    "zh-TW": "新增檢查更新與安裝包下載。\n修正若干同步問題。",
+    "en": "Added update checks and installer downloads.\nFixed several sync issues."
+  },
+  "platforms": [
+    {
+      "id": "android",
+      "available": true,
+      "file": "Theca-v1.1.0-android-release.apk",
+      "sizeBytes": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "downloadUrl": "http://203.0.113.10:8080/downloads/Theca-v1.1.0-android-release.apk"
+    },
+    {
+      "id": "ios",
+      "available": false
+    },
+    {
+      "id": "macos",
+      "available": true,
+      "file": "Theca-v1.1.0-macos-arm64-release.dmg",
+      "sizeBytes": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "downloadUrl": "http://203.0.113.10:8080/downloads/Theca-v1.1.0-macos-arm64-release.dmg"
+    },
+    {
+      "id": "windows",
+      "available": true,
+      "file": "Theca-v1.1.0-windows-amd64-release.msi",
+      "sizeBytes": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "downloadUrl": "http://203.0.113.10:8080/downloads/Theca-v1.1.0-windows-amd64-release.msi"
+    },
+    {
+      "id": "linux",
+      "available": true,
+      "file": "Theca-v1.1.0-linux-amd64-release.deb",
+      "sizeBytes": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "downloadUrl": "http://203.0.113.10:8080/downloads/Theca-v1.1.0-linux-amd64-release.deb"
+    }
+  ]
+}
+```
+
+示例中的 `sizeBytes` 与 `sha256` 为占位值，实际值以发布清单为准。
+
+字段：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `version` | string | 最新版本，严格 `MAJOR.MINOR.PATCH` 纯数字点分；客户端只做数值比较，不解析预发布标记 |
+| `publishedAt` | string | 清单生成时间，RFC 3339 UTC；不是人工承诺的发布时间 |
+| `notes` | object | 固定返回 `zh-CN`、`zh-TW`、`en` 三个键；单语言 UTF-8 ≤64 KiB；以纯文本展示并保留换行 |
+| `platforms` | array | 固定五项，顺序为 android、ios、macos、windows、linux |
+| `platforms[].id` | string | `android` / `ios` / `macos` / `windows` / `linux` |
+| `platforms[].available` | boolean | 该平台当前是否有可下载产物 |
+| `platforms[].file` | string | 仅 `available=true` 时存在；纯文件名，匹配 `^Theca-[0-9A-Za-z._-]+$` |
+| `platforms[].sizeBytes` | number | 仅 `available=true` 时存在；大于 0 的整数 |
+| `platforms[].sha256` | string | 仅 `available=true` 时存在；64 位小写十六进制 |
+| `platforms[].downloadUrl` | string | 仅 `available=true` 时存在；服务端由 `PUBLIC_BASE_URL + "/downloads/" + file` 生成，清单不存该字段 |
+
+- 服务端从下载清单 `downloads.json`（schemaVersion 2）读取并投影为上述响应，不维护第二份数据。
+- `notes` 缺失 `zh-TW` 或 `en` 时，服务端用 `zh-CN` 回填；`zh-CN` 缺失或为空视为清单非法。
+- 客户端必须忽略未知字段；服务端不得依赖客户端传来的任何参数。
+- `downloadUrl` 只指向下载区；服务端不返回本机路径、数据库路径或内部配置。
+
+响应头：
+
+| 头 | 值 |
+| --- | --- |
+| `Content-Type` | `application/json; charset=utf-8` |
+| `Cache-Control` | `no-store` |
+| `X-Request-Id` | 服务端生成的请求标识 |
+
+- 支持 `HEAD`，返回与 `GET` 相同的状态码与响应头，无响应体。
+- 不提供 `ETag` / `Last-Modified`，客户端每次检查都重新获取。
+
+失败响应 `503 Service Unavailable`：
+
+```json
+{
+  "error": {
+    "code": "SERVICE_UNAVAILABLE",
+    "message": "update manifest unavailable"
+  }
+}
+```
+
+以下任一情况返回 503，不新增错误码，不返回文件路径或解析细节：
+
+- 下载清单文件缺失、不可读或不是合法 JSON。
+- `schemaVersion` 不是 2（schema 1 不兼容，见 13.2）。
+- `version` 不是纯数字点分版本。
+- `platforms` 缺失、重复、数量不为 5 或包含未知 id。
+- `available=true` 的平台缺少 `file`、`sizeBytes` 或 `sha256`，或字段格式非法。
+- `zh-CN` 说明缺失或超过 64 KiB。
+
+限流与日志：
+
+- 按 IP 限制 60 次/分钟，`GET` 与 `HEAD` 均计数；超限返回 `429 RATE_LIMITED` 与 `Retry-After: 60`。
+- 日志只记录状态码与错误码；不记录 `notes`、`file`、`downloadUrl`、请求头、客户端 IP 或设备标识。
+- 不因客户端版本、设备令牌或配对状态改变响应。
+
+示例：
+
+```bash
+curl -sS http://203.0.113.10:8080/api/v1/app/latest
+curl -sS -I http://203.0.113.10:8080/api/v1/app/latest
+```
+
+### 13.2 与下载清单的关系
+
+- `GET /api/v1/app/latest` 是 `downloads.json` schemaVersion 2 的只读投影；清单仍是官网与更新接口的唯一事实源。
+- 清单 schemaVersion 1 不含 `notes`，服务端对其返回 503，避免客户端拿到不完整的更新描述。
+- 发布顺序必须先让官网解析器兼容 schema 1/2，再部署服务端，最后把线上清单切到 schema 2；切换前更新接口返回 503，客户端保持当前版本。
+- 清单切换失败时保留 `downloads.json.prev` 回滚；客户端遇到 503 只提示「暂时无法检查更新」，不视为强制下线。
+
+### 13.3 客户端行为约定
+
+- 自动检查每次冷启动最多一次，失败静默；手动检查才展示失败原因。
+- 更新请求只使用官方发行服务器地址，不携带设备令牌，不复用带鉴权的客户端实例。
+- 红点、弹窗与安装流程属于产品行为，见 `docs/功能需求文档.md` REQ-SET-012/013 与 AC-21…AC-26。
+- 安装包下载后必须按本响应中的 `sha256` 校验；不匹配时删除文件并提示失败。
