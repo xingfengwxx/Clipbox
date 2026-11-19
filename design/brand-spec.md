@@ -17,11 +17,12 @@
 | --- | --- | --- |
 | Android 桌面名 | 字匣 | Theca |
 | iOS 桌面名（T-04 落地） | 字匣 | Theca |
-| Desktop 窗口标题 | Theca | Theca |
+| Desktop 窗口标题 | 字匣 | Theca |
 | 分享页页脚字标 | 字匣 | Theca |
 
 - Android 用 `values/`、`values-zh-rTW/`、`values-en/` 三套 `app_name` 资源，跟随系统语言；不在代码里拼品牌名。
 - iOS 在 T-04 建工程时用 `InfoPlist.strings` 提供 `CFBundleDisplayName`，同样跟随系统语言。
+- Desktop 窗口标题使用 `window_title` 资源，跟随应用内语言设置（默认简中显示「字匣」，切到 English 显示 `Theca`）；macOS 菜单栏与 Dock 的应用名来自包名 `Theca`，不随语言变化。
 - 分享页页脚只放一行内联文本字标：不加载图片、外部字体或脚本，不出现图形母版。
 
 ## 字标

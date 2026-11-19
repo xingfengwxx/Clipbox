@@ -8,6 +8,8 @@
 package com.wangxingxing.clipbox
 
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -19,6 +21,7 @@ import com.wangxingxing.clipbox.di.desktopPlatformModule
 import com.wangxingxing.clipbox.resources.Res
 import com.wangxingxing.clipbox.resources.window_icon
 import com.wangxingxing.clipbox.resources.window_title
+import com.wangxingxing.clipbox.ui.i18n.ProvideAppLanguage
 import java.awt.Dimension
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
@@ -33,25 +36,28 @@ fun main() {
     runBlocking { container.preloadSettings() }
 
     application {
-        // brand-spec 规定 Desktop 窗口标题固定为 Theca，三语资源同值
-        val title = stringResource(Res.string.window_title)
-        Window(
-            onCloseRequest = {
-                runBlocking { withTimeoutOrNull(2_000) { container.close() } }
-                exitApplication()
-            },
-            title = title,
-            icon = painterResource(Res.drawable.window_icon),
-            state = rememberWindowState(size = DpSize(1000.dp, 700.dp))
-        ) {
-            LaunchedEffect(Unit) {
-                container.start()
+        // 窗口标题跟随应用内语言（简中/繁中「字匣」、英文 Theca），需先套用资源环境再取值，否则会按系统 Locale 解析
+        val language by container.language.collectAsState()
+        ProvideAppLanguage(language) {
+            val title = stringResource(Res.string.window_title)
+            Window(
+                onCloseRequest = {
+                    runBlocking { withTimeoutOrNull(2_000) { container.close() } }
+                    exitApplication()
+                },
+                title = title,
+                icon = painterResource(Res.drawable.window_icon),
+                state = rememberWindowState(size = DpSize(1000.dp, 700.dp))
+            ) {
+                LaunchedEffect(Unit) {
+                    container.start()
+                }
+                // 最小尺寸只能通过 AWT 窗口设置，Compose 的 rememberWindowState 不支持下限
+                LaunchedEffect(Unit) {
+                    window.minimumSize = Dimension(640, 480)
+                }
+                App()
             }
-            // 最小尺寸只能通过 AWT 窗口设置，Compose 的 rememberWindowState 不支持下限
-            LaunchedEffect(Unit) {
-                window.minimumSize = Dimension(640, 480)
-            }
-            App()
         }
     }
 }

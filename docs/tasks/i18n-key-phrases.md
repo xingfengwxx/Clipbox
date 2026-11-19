@@ -20,7 +20,7 @@
 | key | 简体中文 | 繁體中文 | English |
 | --- | --- | --- | --- |
 | `app_name` | 字匣 | 字匣 | Theca |
-| `window_title` | Theca | Theca | Theca |
+| `window_title` | 字匣 | 字匣 | Theca |
 | `nav_history` | 历史 | 歷史 | History |
 | `nav_toolbox` | 工具箱 | 工具箱 | Toolbox |
 | `nav_settings` | 设置 | 設定 | Settings |
@@ -232,5 +232,5 @@
 ## 已知说明
 
 - 英文复数分类与简繁中文不同（`one` / `other` 对 `other`），这是目标语言的语法差异，不是 key 缺失；三套资源的 key 集合仍然完全一致。
-- `window_title` 三语均为品牌名 `Theca`，属于有意保留，不参与翻译。
+- `window_title` 跟随应用内语言：简中 / 繁中显示「字匣」，英文显示 `Theca`；macOS 菜单栏与 Dock 应用名来自包名，不受影响。
 - 系统级弹窗（剪贴板权限、系统分享面板）跟随操作系统语言，不在应用内资源范围内，T-UI-10 不处理。
