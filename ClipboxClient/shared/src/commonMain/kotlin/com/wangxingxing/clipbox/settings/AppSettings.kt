@@ -38,6 +38,7 @@ data class AppSettings(
     val lastServerUrl: String? = null,
     val autoPaste: Boolean = DEFAULT_AUTO_PASTE,
     val autoClipboardSend: Boolean = DEFAULT_AUTO_CLIPBOARD_SEND,
+    val autoUpdateCheck: Boolean = DEFAULT_AUTO_UPDATE_CHECK,
     val themeMode: ThemeMode = DEFAULT_THEME_MODE,
     val appLanguage: AppLanguage = DEFAULT_APP_LANGUAGE,
     val diagnosticLoggingEnabled: Boolean,
@@ -45,5 +46,6 @@ data class AppSettings(
 
 const val DEFAULT_AUTO_PASTE = true
 const val DEFAULT_AUTO_CLIPBOARD_SEND = false
+const val DEFAULT_AUTO_UPDATE_CHECK = true
 val DEFAULT_THEME_MODE = ThemeMode.SYSTEM
 val DEFAULT_APP_LANGUAGE = AppLanguage.ZH_HANS

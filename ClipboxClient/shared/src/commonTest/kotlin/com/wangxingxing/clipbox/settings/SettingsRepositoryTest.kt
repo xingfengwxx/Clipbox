@@ -41,6 +41,7 @@ class SettingsRepositoryTest {
         assertNull(settings.lastServerUrl)
         assertTrue(settings.autoPaste)
         assertFalse(settings.autoClipboardSend)
+        assertTrue(settings.autoUpdateCheck)
         assertEquals(ThemeMode.SYSTEM, settings.themeMode)
         assertEquals(AppLanguage.ZH_HANS, settings.appLanguage)
         assertFalse(settings.diagnosticLoggingEnabled)
@@ -110,6 +111,7 @@ class SettingsRepositoryTest {
         repository.setAppLanguage(AppLanguage.ZH_TW)
         repository.setAutoPaste(false)
         repository.setAutoClipboardSend(true)
+        repository.setAutoUpdateCheck(false)
         repository.setDiagnosticLoggingEnabled(true)
 
         repository.clearPairingInfo()
@@ -123,7 +125,20 @@ class SettingsRepositoryTest {
         assertEquals(AppLanguage.ZH_TW, settings.appLanguage)
         assertFalse(settings.autoPaste)
         assertTrue(settings.autoClipboardSend)
+        assertFalse(settings.autoUpdateCheck)
         assertTrue(settings.diagnosticLoggingEnabled)
+    }
+
+    @Test
+    fun autoUpdateCheckPersistsAcrossRepositoryInstances() = runTest {
+        val store = FakePreferencesDataStore()
+        val repository = SettingsRepository(store, diagnosticLoggingDefault = false)
+        assertTrue(repository.current().autoUpdateCheck)
+
+        repository.setAutoUpdateCheck(false)
+
+        val reopened = SettingsRepository(store, diagnosticLoggingDefault = false)
+        assertFalse(reopened.current().autoUpdateCheck)
     }
 
     @Test

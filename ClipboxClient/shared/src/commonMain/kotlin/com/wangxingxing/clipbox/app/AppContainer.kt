@@ -29,6 +29,9 @@ import com.wangxingxing.clipbox.sync.SyncCoordinator
 import com.wangxingxing.clipbox.sync.SyncRuntime
 import com.wangxingxing.clipbox.sync.SyncStatusHolder
 import com.wangxingxing.clipbox.sync.buildSyncRuntime
+import com.wangxingxing.clipbox.update.UpdateApi
+import com.wangxingxing.clipbox.update.UpdateController
+import com.wangxingxing.clipbox.update.UpdateInstaller
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -57,6 +60,9 @@ interface PlatformServices {
     fun createDatabase(): ClipboxDatabase
 
     fun createSettingsRepository(): SettingsRepository
+
+    /** 平台更新安装器；未实现的平台返回 null，更新弹窗按只读展示 */
+    fun createUpdateInstaller(): UpdateInstaller? = null
 }
 
 sealed interface AppStartupState {
@@ -95,6 +101,15 @@ class AppContainer(private val services: PlatformServices) {
     val appLogger = AppLogger(services.logSink, isDebugBuild = services.isDebugBuild)
     val settingsRepository: SettingsRepository = services.createSettingsRepository()
     val pairingRepository = PairingRepository(settingsRepository)
+
+    // 更新能力与配对无关：只访问官方发行服务器，会话重建不替换本控制器
+    val updateController = UpdateController(
+        scope = services.appScope,
+        currentVersion = services.versionName,
+        installer = services.createUpdateInstaller(),
+        createApi = { UpdateApi(services.defaultServerUrl) },
+        autoCheckEnabled = { settingsRepository.current().autoUpdateCheck },
+    )
 
     val defaultServerUrl: String get() = services.defaultServerUrl
     val defaultDeviceName: String get() = services.defaultDeviceName
@@ -194,6 +209,8 @@ class AppContainer(private val services: PlatformServices) {
                 _language.value = settings.appLanguage
                 session = buildSession(settings)
                 _startupState.value = AppStartupState.Ready
+                // 首帧之后再触发自动检查；协程内部静默失败，不阻塞启动
+                updateController.onAppStart()
             } catch (e: CancellationException) {
                 throw e
             } catch (t: Throwable) {
@@ -290,5 +307,7 @@ class AppContainer(private val services: PlatformServices) {
         val current = session
         session = null
         current?.shutdown()
+        // 退出应用才取消更新下载并清理未完成文件；关闭弹窗不经过这里
+        updateController.close()
     }
 }

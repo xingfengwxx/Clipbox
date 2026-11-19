@@ -22,6 +22,7 @@ private val KEY_DEVICE_NAME = stringPreferencesKey("deviceName")
 private val KEY_LAST_SERVER_URL = stringPreferencesKey("lastServerUrl")
 private val KEY_AUTO_PASTE = booleanPreferencesKey("autoPaste")
 private val KEY_AUTO_CLIPBOARD_SEND = booleanPreferencesKey("autoClipboardSend")
+private val KEY_AUTO_UPDATE_CHECK = booleanPreferencesKey("autoUpdateCheck")
 private val KEY_THEME_MODE = stringPreferencesKey("themeMode")
 private val KEY_APP_LANGUAGE = stringPreferencesKey("appLanguage")
 private val KEY_DIAGNOSTIC_LOGGING = booleanPreferencesKey("diagnosticLoggingEnabled")
@@ -94,6 +95,10 @@ class SettingsRepository internal constructor(
         dataStore.edit { it[KEY_AUTO_CLIPBOARD_SEND] = enabled }
     }
 
+    suspend fun setAutoUpdateCheck(enabled: Boolean) {
+        dataStore.edit { it[KEY_AUTO_UPDATE_CHECK] = enabled }
+    }
+
     suspend fun setThemeMode(mode: ThemeMode) {
         dataStore.edit { it[KEY_THEME_MODE] = mode.value }
     }
@@ -114,6 +119,7 @@ class SettingsRepository internal constructor(
         lastServerUrl = this[KEY_LAST_SERVER_URL],
         autoPaste = this[KEY_AUTO_PASTE] ?: DEFAULT_AUTO_PASTE,
         autoClipboardSend = this[KEY_AUTO_CLIPBOARD_SEND] ?: DEFAULT_AUTO_CLIPBOARD_SEND,
+        autoUpdateCheck = this[KEY_AUTO_UPDATE_CHECK] ?: DEFAULT_AUTO_UPDATE_CHECK,
         themeMode = ThemeMode.fromValue(this[KEY_THEME_MODE]),
         appLanguage = AppLanguage.fromValue(this[KEY_APP_LANGUAGE]),
         diagnosticLoggingEnabled = this[KEY_DIAGNOSTIC_LOGGING] ?: diagnosticLoggingDefault,
