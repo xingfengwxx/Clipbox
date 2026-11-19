@@ -2,7 +2,7 @@
 
 - 日期：2026-11-17
 - 范围：T-IOS-08（iPad 宽屏、主题/三语、扩展三语）+ T-IOS-09（iOS 模拟器端到端验收）
-- 截图目录：`~/Documents/ClipboxM4/`（仓库外，37 个文件；不提交二进制）
+- 截图目录：`docs/evidence/ClipboxM4/`（仓库内，37 个文件；已在 `.gitignore` 忽略，不提交二进制）
 - 场景明细：[e2e-ios.md](e2e-ios.md)
 
 ## 1. 环境

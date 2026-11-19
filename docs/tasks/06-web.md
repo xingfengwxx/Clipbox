@@ -186,7 +186,7 @@ cd ClipboxWeb && npm run build && npm run preview
 
 **DoD**
 
-- [ ] 截图证据保存在 `~/Documents/ClipboxWeb/`（不入库）。
+- [ ] 截图证据保存在 `docs/evidence/ClipboxWeb/`（不入库）。
 - [ ] 页面文案与 `web-功能需求.md` 一致，不夸大能力。
 - [ ] 一卡一提交：`T-WEB-04: <一句话>`。
 

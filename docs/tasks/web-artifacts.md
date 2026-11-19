@@ -3,7 +3,7 @@
 - 日期：2026-11-18
 - 范围：官网 `/downloads` 目录的 release 签名 APK、macOS DMG 与 `SHA256SUMS.txt`
 - 产物目录：仓库根 `downloads/`（`.gitignore` 忽略，不提交）；macOS 包源文件来自 `dist/Theca-1.0.0.dmg`（T-REL-05）
-- 截图：`~/Documents/ClipboxWeb/shots/t-web-05-download-1440-light.png`、`t-web-05-download-390-light.png`
+- 截图：`docs/evidence/ClipboxWeb/shots/t-web-05-download-1440-light.png`、`t-web-05-download-390-light.png`
 
 ## 1. 构建命令与结果
 

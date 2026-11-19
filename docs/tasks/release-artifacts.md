@@ -2,7 +2,7 @@
 
 - 日期：2026-11-18
 - 范围：Android debug APK、macOS Desktop DMG（Theca 1.0.0）与 iOS 模拟器构建记录
-- 截图与临时输出：`~/Documents/ClipboxREL05/`（仓库外，不提交二进制）
+- 截图与临时输出：`docs/evidence/ClipboxREL05/`（仓库内，已在 `.gitignore` 忽略，不提交二进制）
 - 产物副本：仓库根 `dist/`（`.gitignore` 忽略，不提交）
 
 ## 1. 环境

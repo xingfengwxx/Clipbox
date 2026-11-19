@@ -35,3 +35,6 @@ captures/
 # 官网依赖与构建产物
 /ClipboxWeb/node_modules/
 /ClipboxWeb/dist/
+
+# 验收证据（截图 / 日志 / 解包产物），仓库内保存但不入库
+/docs/evidence/

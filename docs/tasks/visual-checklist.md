@@ -3,7 +3,7 @@
 日期：2026-11-17
 构建：`:composeApp:assembleDebug`（debug，版本 1.0.0）
 视口：Android 412×915（`wm size 412x915` + `wm density 160`，核对后已 reset 回 1080×2400 @420dpi）；Desktop 窗口 1000×700 与 640×480。
-截图目录：`~/Documents/ClipboxM3/`（不提交二进制）。设计基准：`design/README.md` 屏幕地图与 tokens。
+截图目录：`docs/evidence/ClipboxM3/`（不提交二进制）。设计基准：`design/README.md` 屏幕地图与 tokens。
 
 ## 1. 静态规则核对
 
@@ -153,7 +153,7 @@ adb exec-out screencap -p > /tmp/clipbox-history.png   # 已生成
 
 日期：2026-11-17
 环境：Xcode 27.2 / iOS 27.2 模拟器；iPhone 16（393×852 pt）、iPad (A16)（820×1180 pt）。两台模拟器均先卸载 App 再安装，保证首启为简体中文、跟随系统主题。
-截图目录：`~/Documents/ClipboxM4/`（`tios08-*.png`，不提交二进制）。
+截图目录：`docs/evidence/ClipboxM4/`（`tios08-*.png`，不提交二进制）。
 
 ### 8.1 布局与旋转
 

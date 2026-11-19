@@ -2,7 +2,7 @@
 
 - 日期：2026-11-17
 - 范围：T-CORE-11 → T-UI-19 十四张卡 + T-UI-20 本地端到端验收
-- 截图目录：`~/Documents/ClipboxM3/`（仓库外，99 个文件；不提交二进制）
+- 截图目录：`docs/evidence/ClipboxM3/`（仓库内，99 个文件；已在 `.gitignore` 忽略，不提交二进制）
 - 场景明细：[e2e-local.md](e2e-local.md)
 
 ## 1. 环境

@@ -2,7 +2,7 @@
 
 - 日期：2026-11-17
 - 范围：iOS 16+ 模拟器上的配对、发送、接收、复制/粘贴、前后台同步、分享草稿、主题/三语、iPhone/iPad 布局；真实本地服务端
-- 截图目录：`~/Documents/ClipboxM4/`（仓库外，T-IOS-09 新增 17 个文件；不提交二进制）
+- 截图目录：`docs/evidence/ClipboxM4/`（仓库内，T-IOS-09 新增 17 个文件；已在 `.gitignore` 忽略，不提交二进制）
 - 结果目录：`/tmp/tios09-iphone-main.xcresult`、`/tmp/tios09-draft-prefill.xcresult`、`/tmp/tios09-unpair.xcresult`、`/tmp/tios09-pair-after-draft.xcresult`、`/tmp/tios09-ipad-adaptive.xcresult`
 
 ## 1. 环境

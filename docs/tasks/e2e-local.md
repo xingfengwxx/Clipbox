@@ -2,7 +2,7 @@
 
 - 日期：2026-11-17
 - 范围：Android + Desktop + 真实本地服务端的 M1–M3 闭环；iOS 场景留给 M4
-- 截图目录：`~/Documents/ClipboxM3/`（仓库外，99 个文件；不提交二进制）
+- 截图目录：`docs/evidence/ClipboxM3/`（仓库内，99 个文件；已在 `.gitignore` 忽略，不提交二进制）
 - 临时输出：`/tmp/clipbox-m3-server*.log`、`/tmp/e2e-*`、`~/Library/Application Support/Theca/`
 
 ## 1. 环境

@@ -7,7 +7,7 @@
 | 执行 | 王星星 |
 | 基线提交 | `2d22580`（T-REL-05 收尾） |
 | 依据 | `docs/功能需求文档.md` §5（AC 编号、场景、步骤、判定标准逐字抄录，未改写） |
-| 证据根目录 | `/Users/wangxingxing/Documents/ClipboxREL06/`（仓库外，截图/日志/脚本不提交） |
+| 证据根目录 | `docs/evidence/ClipboxREL06/`（仓库内，已在 `.gitignore` 忽略，截图/日志/脚本不提交） |
 | 历史证据 | `docs/tasks/m2-gate.md`、`m3-gate.md`、`m4-gate.md`、`e2e-local.md`、`e2e-ios.md` |
 
 说明：本轮为 v1.0.0 发布前总验收，端点全部直连本机或远程学习版实例（HTTP / WS + IP，无 TLS，符合 ADR-0003）。每条 AC 均给出可复查的证据路径；「已知限制」条目均注明用户确认口径与替代证据。
@@ -97,7 +97,7 @@ cd ClipboxClient && ./gradlew :shared:allTests --rerun-tasks
 
 - 服务端：`BUILD SUCCESSFUL in 18s`，`tests=126 failures=0 errors=0 skipped=0`（`build/test-results/test/*.xml` 汇总）。
 - 客户端：`BUILD SUCCESSFUL in 39s`，`tests=745 failures=0 errors=0 skipped=0`（`shared/build/test-results/` 四个目标汇总：desktopTest / iosSimulatorArm64Test / testDebugUnitTest / testReleaseUnitTest）。
-- 原始输出：`/Users/wangxingxing/Documents/ClipboxREL06/logs/server-test.log`、`client-alltests.log`（含 `SERVER_EXIT=0`、`CLIENT_EXIT=0`）。
+- 原始输出：`docs/evidence/ClipboxREL06/logs/server-test.log`、`client-alltests.log`（含 `SERVER_EXIT=0`、`CLIENT_EXIT=0`）。
 
 ## 7. 结论
 
