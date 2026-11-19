@@ -228,7 +228,7 @@ ls design/updates/shots design/direction-approved.md
 **实现要点**
 
 - `schemaVersion` 升为 2，新增 `notes` 三键；其余平台字段不变。
-- 新增 `--notes-dir`，默认 `release-notes/<version>`；`zh-CN.md` 必需，`zh-TW.md` / `en.md` 缺失时回退 `zh-CN`。
+- 新增 `--notes-dir`，默认 `release-notes/v<version>`；`zh-CN.md` 必需，`zh-TW.md` / `en.md` 缺失时回退 `zh-CN`。
 - 单个说明文件 >64 KiB 直接失败；发布说明只接受纯文本与 `- ` 列表，不渲染 Markdown。
 - JSON 转义覆盖引号、反斜杠、制表符、CRLF 与换行；用包含这些字符的夹具生成后由 `python3 -m json.tool` 解析。
 - `--check` 忽略 `generatedAt`，其余字段含 `notes` 全量比对；`--notes-dir` 默认值使现有 release CI 无需改动即可生成 v2 清单。
@@ -240,7 +240,8 @@ cd /Users/wangxingxing/AndroidStudioProjects/MyProjects/Clipbox
 bash -n scripts/generate-downloads-manifest.sh
 tmp="$(mktemp -d)"
 mkdir -p "$tmp/dist" "$tmp/notes"
-for f in theca-android.apk theca-macos.dmg theca-windows.msi theca-linux.deb; do
+for f in Theca-v1.1.0-android-release.apk Theca-v1.1.0-macos-arm64-release.dmg \
+         Theca-v1.1.0-windows-amd64-release.msi Theca-v1.1.0-linux-amd64-release.deb; do
   printf 'x' > "$tmp/dist/$f"
 done
 printf '标题 "引号" 与 \\ 反斜杠\n- 第一项\n\n第二段\r\n' > "$tmp/notes/zh-CN.md"
