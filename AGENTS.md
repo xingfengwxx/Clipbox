@@ -7,7 +7,7 @@
 - 产品：Clipbox，离线优先的跨设备文本中转 + 本地开发者工具箱。
 - 三端：Android（minSdk 26）、iOS 16+、Desktop（Windows / macOS / Linux）；v1.0.0 桌面产物为 macOS arm64 DMG、Windows x64 MSI、Linux x86_64 DEB，均未签名（`docs/adr/0005-v1-multiplatform-release.md`）。
 - 服务端：Kotlin + Ktor + Exposed + SQLite WAL，单实例。
-- 当前状态：v1.0.0 功能与本地验收已完成；正在补齐 Windows / Linux 发布产物与官网下载矩阵。
+- 当前状态：v1.0.0 已发布；v1.1.0 开发中，补齐 Windows / Linux 发布产物、官网下载矩阵与三端检查更新。
 - 包名：客户端 `com.wangxingxing.clipbox`；服务端 `com.wangxingxing.clipbox.server`。
 
 ## 2. 权威文档
@@ -20,7 +20,7 @@
 4. `docs/功能需求文档.md`：产品行为与 Given/When/Then 验收。
 5. `docs/客户端技术架构.md` / `docs/服务端技术架构.md`：实现细节。
 6. `docs/GLOSSARY.md`：术语。
-7. `docs/adr/0001…0005`：已接受决策。
+7. `docs/adr/0001…0010`：已接受决策。
 8. `design/README.md`、`design/brand-spec.md`、`design/Clipbox 三端设计.html`：视觉与交互基准。
 
 发现文档之间不一致：**停下汇报**，不要自行选择或修改冻结文档。
@@ -45,7 +45,7 @@
 9. 设备令牌与分享令牌为 32 字节随机数的 base64url 无填充；服务端只存 SHA-256 哈希；令牌不进入 URL、日志、崩溃信息。
 10. 默认日志不记录正文、令牌、配对码、分享 token；诊断日志仅在用户开启时输出到本机系统日志，不上传、不落盘。
 11. 分享页必须严格 HTML 转义，带 CSP、`nosniff`、`no-referrer`、`no-store`，不加载外部资源、不执行 JS。
-12. 不集成第三方日志、崩溃、行为分析 SDK；不新增应用权限。
+12. 不集成第三方日志、崩溃、行为分析 SDK；不新增应用权限。唯一例外：Android `REQUEST_INSTALL_PACKAGES`，仅用于用户主动触发的安装包安装（[ADR-0010](docs/adr/0010-app-update-and-install.md)）。
 
 ### 部署基线
 
@@ -55,7 +55,7 @@
 
 ### 产品范围
 
-16. v1.0.0 不包含：后台推送 / 通知、移动端后台剪贴板、片段收藏夹、托盘 / 全局快捷键、端到端加密、透明复制页。
+16. v1.1.0 不包含：后台推送 / 通知、移动端后台剪贴板、片段收藏夹、托盘 / 全局快捷键、端到端加密、透明复制页。例外：Android DownloadManager 的系统下载通知由系统下载器发布，应用不申请通知权限；应用自建通知、前台服务、后台轮询仍禁止。
 17. 不新增文档未定义的功能、设置项、接口字段或页面。
 18. 三端共用固定色板，不做动态取色；UI 文案必须进入 Compose Resources，支持简中（默认）/ 繁中 / English。
 
@@ -64,6 +64,13 @@
 19. 不升级已锁定依赖；确需新增依赖时先停下说明理由并等待确认。
 20. 不做 PR / 常驻 CI，不写全量 UI 自动化；仅允许由版本 tag 或手动触发的 release-only GitHub Actions（`docs/adr/0005-v1-multiplatform-release.md`）；验收仍靠任务卡命令 + 手工截图。
 21. 一卡一提交；不 amend 已推送提交；不 push、不打 tag，除非用户明确要求。
+
+### 更新与安装
+
+22. 更新检查只访问官方发行服务器（`PlatformServices.defaultServerUrl`）的公开接口，不读取配对服务器地址，不带设备令牌，不复用带鉴权的 `ApiHttpClient`。
+23. 安装包必须来自官方下载区；下载完成后校验 SHA-256，不匹配立即删除并提示失败。
+24. 不静默安装、不自动重启；只有用户明确点击「安装」后才拉起系统安装器，未知来源授权由用户完成。
+25. 更新说明、下载 URL 与文件路径不写入日志；自动检查失败静默，不阻塞启动。
 
 ## 4. 工程路径与命令
 
