@@ -27,6 +27,7 @@ data class RateLimitSettings(
     val devicePerMinute: Int = 120,
     val sharePagePerMinute: Int = 60,
     val healthPerMinute: Int = 120,
+    val appLatestPerMinute: Int = 60,
     val webSocketAttemptsPerMinute: Int = 10,
     val windowMillis: Long = 60_000,
 )
@@ -77,7 +78,7 @@ class FixedWindowRateLimiter(
     }
 }
 
-/** 七类额度各用一个独立实例，key 之间互不影响。 */
+/** 八类额度各用一个独立实例，key 之间互不影响。 */
 class RateLimiters(
     settings: RateLimitSettings = RateLimitSettings(),
     now: () -> Long = System::currentTimeMillis,
@@ -88,6 +89,7 @@ class RateLimiters(
     val device = FixedWindowRateLimiter(settings.devicePerMinute, settings.windowMillis, now)
     val sharePage = FixedWindowRateLimiter(settings.sharePagePerMinute, settings.windowMillis, now)
     val health = FixedWindowRateLimiter(settings.healthPerMinute, settings.windowMillis, now)
+    val appLatest = FixedWindowRateLimiter(settings.appLatestPerMinute, settings.windowMillis, now)
     val webSocketAttempts =
         FixedWindowRateLimiter(settings.webSocketAttemptsPerMinute, settings.windowMillis, now)
 }
@@ -124,6 +126,9 @@ private fun limiterFor(
     method == HttpMethod.Post && path == "/api/v1/pair" -> limiters.pair
     method == HttpMethod.Post && path == "/api/v1/bootstrap" -> limiters.bootstrap
     method == HttpMethod.Post && path == "/api/v1/devices/me/pairing-code" -> limiters.pairingCode
+    // AutoHeadResponse 让 HEAD 复用 GET 路由；限流必须按同一实例合并计数。
+    (method == HttpMethod.Get || method == HttpMethod.Head) && path == "/api/v1/app/latest" ->
+        limiters.appLatest
     path == "/healthz" -> limiters.health
     path.startsWith("/s/") && path.length > 3 -> limiters.sharePage
     else -> null

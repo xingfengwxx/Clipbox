@@ -33,11 +33,13 @@ import com.wangxingxing.clipbox.server.routes.healthRoutes
 import com.wangxingxing.clipbox.server.routes.pairingRoutes
 import com.wangxingxing.clipbox.server.routes.publicShareRoutes
 import com.wangxingxing.clipbox.server.routes.shareRoutes
+import com.wangxingxing.clipbox.server.routes.updateRoutes
 import com.wangxingxing.clipbox.server.service.Broadcaster
 import com.wangxingxing.clipbox.server.service.ClipService
 import com.wangxingxing.clipbox.server.service.DevicePairingCodeService
 import com.wangxingxing.clipbox.server.service.PairingService
 import com.wangxingxing.clipbox.server.service.ShareService
+import com.wangxingxing.clipbox.server.service.UpdateManifestService
 import com.wangxingxing.clipbox.server.ws.ConnectionRegistry
 import com.wangxingxing.clipbox.server.ws.WebSocketSettings
 import com.wangxingxing.clipbox.server.ws.configureSyncWebSockets
@@ -146,6 +148,7 @@ fun Application.module(
         // 创建与访问共用同一服务实例，分享 URL 拼接口径保持一致。
         val shareService = ShareService(factory, config.publicBaseUrl)
         healthRoutes(factory::isHealthy)
+        updateRoutes(UpdateManifestService(config.downloadDir, config.publicBaseUrl))
         pairingRoutes(pairingService, pairingCodeService)
         clipRoutes(ClipService(factory, broadcaster))
         shareRoutes(shareService)

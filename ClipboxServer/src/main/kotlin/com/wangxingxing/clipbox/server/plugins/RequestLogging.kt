@@ -63,6 +63,7 @@ fun requestPathTemplate(path: String): String = when {
     CLIP_ID_PATH.matches(path) -> "/api/v1/clips/{id}"
     path == "/api/v1/shares" -> "/api/v1/shares"
     path == "/api/v1/sync" -> "/api/v1/sync"
+    path == "/api/v1/app/latest" -> "/api/v1/app/latest"
     path.startsWith("/s/") && path.length > 3 -> "/s/{token}"
     else -> "/{unmatched}"
 }
