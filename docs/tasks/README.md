@@ -1,8 +1,10 @@
-# Clipbox v1.0.0 任务拆解
+# Clipbox 任务拆解
 
-本文档把 `docs/` 中已冻结的需求与架构转换为**可逐张派发的任务卡**。每张卡是一个 0.5–1 天的独立工作单元，有单一可验证产出；按 `docs/tasks/` 中的工作流文件顺序执行即可交付 v1.0.0。
+本文档把 `docs/` 中已冻结的需求与架构转换为**可逐张派发的任务卡**。每张卡是一个 0.5–1 天的独立工作单元，有单一可验证产出；按 `docs/tasks/` 中的工作流文件顺序执行。
 
-> v1.0.0 功能已实现并通过 M4；当前处于 M5/M6 发布扩展阶段，补齐 Windows / Linux 桌面产物与官网下载矩阵。2026-11-18 追加配对模型改造（[ADR-0006](../adr/0006-device-issued-pairing-codes.md)），T-REL-14 / T-S-12 / T-CORE-16 / T-UI-21 / T-IOS-11 / T-REL-15 须在打 `v1.0.0` tag 前完成。
+> v1.0.0 功能已实现并通过 M4，M5/M6 补齐 Windows / Linux 桌面产物与官网下载矩阵。2026-11-18 追加配对模型改造（[ADR-0006](../adr/0006-device-issued-pairing-codes.md)），六张收尾卡已完成。
+>
+> 2026-11-19 起进入 v1.1.0：官网先补清单 schema 1/2 兼容（T-WEB-12），随后按 [07-update.md](07-update.md) 交付公开更新描述、清单 v2、三端检查更新与 Android / Desktop 下载安装（[ADR-0010](../adr/0010-app-update-and-install.md)）。
 
 ## 1. 执行基线
 
@@ -29,6 +31,7 @@
 | M4 | iOS 完成 | iOS 宿主、共享 UI、前后台同步、分享扩展、iPad 布局全部可用；模拟器构建通过 |
 | M5 | 发布与验收 | 远程服务器部署；APK / DMG / MSI / DEB 产出；AC-01…AC-20 全部有证据；v1.0.0 打 tag |
 | M6 | 官网 | 三语单页官网上线；五端下载矩阵（Windows / Linux 可下载、iOS 说明）与 Range 可用；同容器托管；远程验收通过 |
+| M7 | 检查更新（v1.1.0） | 公开更新描述与清单 v2 上线；三端设置页可检查；Android / Desktop 可下载、校验并交给系统安装；iOS 只展示；AC-21…AC-26 有证据；v1.1.0 发布 |
 
 ## 3. 工作流与文件索引
 
@@ -39,7 +42,8 @@
 | [03-client-ui.md](03-client-ui.md) | Compose UI 与平台入口：主题、历史、配对、设置、分享、工具箱、Android / Desktop | T-UI-01…T-UI-21 |
 | [04-ios.md](04-ios.md) | iOS 宿主、生命周期、分享扩展、iPad、模拟器验收、真机发布前置 | T-IOS-01…T-IOS-11 |
 | [05-release.md](05-release.md) | 远程部署、打包、验收矩阵、安全复查、发版、多平台产物与 release CI | T-REL-01…T-REL-15 |
-| [06-web.md](06-web.md) | 官网：三语单页、下载矩阵、自建说明、Ktor 托管、远程部署与产物自动上线 | T-WEB-01…T-WEB-11 |
+| [06-web.md](06-web.md) | 官网：三语单页、下载矩阵、自建说明、Ktor 托管、远程部署、产物自动上线与清单兼容 | T-WEB-01…T-WEB-12 |
+| [07-update.md](07-update.md) | 检查更新与安装：治理、契约、清单 v2、服务端接口、共享层、三端安装、UI、版本与发布 | T-UPD-01…T-UPD-14 |
 | [PROMPTS.md](PROMPTS.md) | 派单与返修提示词模板、停止条件、提交规范 | — |
 
 ## 4. 依赖关系
@@ -156,6 +160,24 @@ flowchart LR
         R12 --> W10
         W10 -.->|四平台补验收| W09
     end
+
+    subgraph M7[M7 检查更新 v1.1.0]
+        W10 --> W12[T-WEB-12 清单兼容]
+        UPD01[T-UPD-01 治理与 ADR] --> UPD02[T-UPD-02 接口契约]
+        UPD02 --> UPD03[T-UPD-03 文档与任务卡]
+        UPD03 --> UPD04[T-UPD-04 设计门]
+        UPD03 --> UPD05[T-UPD-05 清单 v2]
+        UPD05 --> UPD06[T-UPD-06 服务端接口]
+        UPD03 --> UPD07[T-UPD-07 共享更新层]
+        UPD07 --> UPD08[T-UPD-08 更新控制器]
+        UPD06 --> UPD09[T-UPD-09/10/11 三端能力]
+        UPD04 --> UPD12[T-UPD-12 设置与弹窗]
+        UPD08 --> UPD12
+        UPD06 --> UPD13[T-UPD-13/14 版本与发布]
+        UPD09 --> UPD13
+        UPD12 --> UPD13
+        W12 --> UPD13
+    end
 ```
 
 图只画主要依赖；卡内「前置」字段是派单的唯一依据。同层无依赖的卡可以按第 5 节顺序依次执行。
@@ -258,6 +280,24 @@ T-WEB-09 首轮远程部署已于 2026-11-18 完成，范围仅 APK / DMG；T-WE
 85. T-IOS-11（iOS UITest 取码链路）
 86. T-REL-15（本地产物重建与验收；远程升级需另行确认）→ 完成后才可 T-REL-08 打 tag
 
+### 5.2 v1.1.0 检查更新顺序（2026-11-19）
+
+87. T-WEB-12（M6/M7，清单 schema 1/2 兼容；须在 T-WEB-10 后）
+88. T-UPD-01（M7，AGENTS 与 ADR-0010）
+89. T-UPD-02（M7，接口契约 §13）
+90. T-UPD-03（M7，需求、架构、术语与任务卡同步）
+91. T-UPD-04（M7，三方向设计门；摆出截图后停等用户选择）
+92. T-UPD-05（M7，清单 v2 + 三语发布说明）
+93. T-UPD-06（M7，服务端更新描述接口；可与 07 并行）
+94. T-UPD-07（M7，共享 DTO / 版本比较 / SHA-256 / 无令牌 API）
+95. T-UPD-08（M7，更新控制器与设置开关）
+96. T-UPD-09（M7，Android 下载与安装；可与 10/11 并行）
+97. T-UPD-10（M7，Desktop 流式下载与打开安装包）
+98. T-UPD-11（M7，iOS 只读展示）
+99. T-UPD-12（M7，设置更新区、弹窗、导航红点、三语文案；须设计门批准）
+100. T-UPD-13（M7，版本线升到 1.1.0）
+101. T-UPD-14（M7，全链路验收与发布顺序；v1.1.0 收口）
+
 > 若某卡验收失败，不要跳到下一卡；按 `PROMPTS.md` 的「验收失败修复」模板重新派同一张卡，最多两轮，仍失败则停下汇报。
 
 ## 6. 卡的状态跟踪
@@ -283,10 +323,15 @@ T-WEB-09 首轮远程部署已于 2026-11-18 完成，范围仅 APK / DMG；T-WE
 | Release | T-REL-15 | 已完成 | 本卡提交 |
 | Web | T-WEB-01…T-WEB-08 | 已完成 | 最后一张 `57ab06c`（T-WEB-08） |
 | Web | T-WEB-09 | 进行中 | 首轮 `d2ad070`（仅 APK / DMG）；MSI / DEB 补验收待 T-WEB-10 后执行，证据见 [web-artifacts.md](web-artifacts.md) §7 |
-| Web | T-WEB-10 | 待开始 | — |
-| Web | T-WEB-11 | 待开始 | — |
+| Web | T-WEB-10 | 阻塞 | 运行时清单改动未提交；`deploy-site` 上传超时导致远端产物不一致，待授权修改 workflow 后重跑 |
+| Web | T-WEB-11 | 已完成 | `09b65e0`、`d5ae3e2` |
+| Web | T-WEB-12 | 待开始 | — |
+| Update | T-UPD-01 | 已完成 | `190196c` |
+| Update | T-UPD-02 | 已完成 | `f8edf10` |
+| Update | T-UPD-03 | 进行中 | — |
+| Update | T-UPD-04…T-UPD-14 | 待开始 | — |
 
-> M2 已于 2026-11-17 通过（证据见 [m2-gate.md](m2-gate.md)）；M3 于同日有条件通过，AC-11 全量分页冲突（D8）已于 2026-11-18 由 [BUG-001](bug-001-ac11-full-sync-floor.md) 修复关闭（证据见 [m3-gate.md](m3-gate.md)）；M4 于同日通过（证据见 [m4-gate.md](m4-gate.md)）；T-WEB-09 尚余四平台补验收，M6 未关闭。ADR-0006 追加的 6 张收尾卡已完成，T-REL-08 打 tag 与远程部署仍需用户另行授权。
+> M2 已于 2026-11-17 通过（证据见 [m2-gate.md](m2-gate.md)）；M3 于同日有条件通过，AC-11 全量分页冲突（D8）已于 2026-11-18 由 [BUG-001](bug-001-ac11-full-sync-floor.md) 修复关闭（证据见 [m3-gate.md](m3-gate.md)）；M4 于同日通过（证据见 [m4-gate.md](m4-gate.md)）；T-WEB-09 尚余四平台补验收，M6 未关闭。ADR-0006 追加的 6 张收尾卡已完成，T-REL-08 打 tag 与远程部署仍需用户另行授权。v1.1.0 的 M7 从 T-UPD-01 起算，T-WEB-12 依赖 T-WEB-10 的远端四平台产物。
 
 ## 7. 统一 DoD
 
@@ -310,12 +355,13 @@ T-WEB-09 首轮远程部署已于 2026-11-18 完成，范围仅 APK / DMG；T-WE
 | 同步 | SYNC-001…015 | T-S-04/06/08、T-CORE-06/07/08/09/10/11 |
 | 分享 | SHARE-001…010 | T-S-09/10、T-CORE-14、T-UI-06 |
 | 工具箱 | TOOL-001…009 | T-UI-11…16 |
-| 设置 | SET-001…011 | T-UI-08/09/10、T-CORE-03/12/13 |
+| 设置 | SET-001…013 | T-UI-08/09/10、T-CORE-03/12/13；SET-012/013 见 T-UPD 系列 |
+| 更新 | SET-012…013 | T-WEB-12、T-UPD-06/07/08/09/10/11/12 |
 | 平台 | PLAT-001…009 | 全部 UI / iOS / Release 卡 |
-| 官网 | WEB-CONTENT / I18N / DL / SELF / HOST / NFR | T-WEB-02…10 |
-| 非功能 | NFR-001…017 | T-S-07/11、T-REL-07、各卡验收 |
+| 官网 | WEB-CONTENT / I18N / DL / SELF / HOST / NFR | T-WEB-02…12 |
+| 非功能 | NFR-001…017 | T-S-07/11、T-REL-07、T-UPD-06/08、各卡验收 |
 
-最终 AC-01…AC-20 的逐条证据在 T-REL-06 汇总。
+最终 AC-01…AC-20 的逐条证据在 T-REL-06 汇总；AC-21…AC-26 的逐条证据在 T-UPD-14 汇总。
 
 ## 9. 与其他文档的关系
 
@@ -329,6 +375,9 @@ T-WEB-09 首轮远程部署已于 2026-11-18 完成，范围仅 APK / DMG；T-WE
 - 多平台发布与 release-only CI 决策：`docs/adr/0005-v1-multiplatform-release.md`
 - 设备自有配对码与空库初始化决策：`docs/adr/0006-device-issued-pairing-codes.md`
 - 配对码对所有设备开放决策：`docs/adr/0007-open-pairing-code-generation.md`
+- 发布产物自动上线决策：`docs/adr/0009-auto-publish-downloads.md`
+- 检查更新与安装决策：`docs/adr/0010-app-update-and-install.md`
+- 更新任务卡：`docs/tasks/07-update.md`
 - 领域术语：`docs/GLOSSARY.md`
 - 视觉与交互基准：`design/Clipbox 三端设计.html`、`design/README.md`、`design/brand-spec.md`
 - 执行协议与不变量：仓库根目录 `AGENTS.md`
