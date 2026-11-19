@@ -100,3 +100,59 @@ V2 Signer: certificate MD5 digest: dd18a7d5e68c83203556a850af56de81
 - **`.dockerignore` 修复归属**：根因在 T-WEB-08 引入的排除规则，但只有远端真实构建才会暴露，故随本卡提交，并在此登记。
 - **分享页验证方式**：为避免向生产库写入测试数据，用无效 token 验证路由与安全头，未新建真实分享记录；有效分享页行为此前已由 T-S 集成测试覆盖。
 - **配对/增量同步验证方式**：未新建测试设备（无设备撤销接口），用 401 + `INVALID_CODE` + 413 验证认证、路由与限额链路；数据库与备份完好。
+
+## 8. 下载区自动部署演练（2026-11-19）
+
+- 范围：T-WEB-11 的 `deploy_to_site=true` 演练路径；T-WEB-10 记录的「`deploy-site` 上传超时」阻塞项。
+- 触发：`gh workflow run release.yml --ref main -f deploy_to_site=true`，未打 tag、未创建 GitHub Release。
+
+### 8.1 超时根因与修复
+
+| 项 | 内容 |
+| --- | --- |
+| 失败 run | `44491575710`（`dd3b495`，2026-11-19T09:19:40Z–10:04:35Z） |
+| 现象 | `Deploy downloads to site` 在 45 分钟 job 上限被取消，停在 `Upload artifacts and checksums`；`Publish artifacts` 之前的构建全部成功 |
+| 数据量 | 四平台产物合计 238,229,846 B（APK 16.7 MB / DMG 83.5 MB / MSI 74.0 MB / DEB 68.6 MB） |
+| 根因 | 跨境并发上传实测约 44–88 KB/s，45 分钟传不完 238 MB；四次中断后无断点续传，重跑只能从零开始 |
+| 修复 | `e825742`：`timeout-minutes` 45 → 120；每个产物 rsync 增加 `--partial-dir=.rsync-partial`、`--timeout=600` 与单文件 3 次续传重试 |
+
+另注：`44491575710` 首次因 macOS arm64 托管 runner 容量不足导致 `macOS DMG` 被取消（`The job was not acquired by Runner of type hosted`），`gh run rerun --failed` 后 macOS 通过。
+
+### 8.2 成功运行（`44502554603`，`e825742`）
+
+| 资源 | 结果 |
+| --- | --- |
+| `Version consistency` / `Shared tests` / `Server tests` | success |
+| `Android release APK` / `macOS DMG` / `Windows MSI` / `Linux DEB` | success |
+| `Publish artifacts` | success |
+| `Deploy downloads to site` | success（整 job 约 30 分钟，未触及 120 分钟上限） |
+
+上传明细（rsync `--stats`）：
+
+| 产物 | literal 传输 | 复用已有数据 | 速率 |
+| --- | --- | --- | --- |
+| MSI（73,995,332 B） | 1,660,732 | 72,334,600 | 16.5 KB/s |
+| APK（16,750,039 B） | 3,756,872 | 12,993,167 | 16.2 KB/s |
+| DEB（68,623,358 B） | 5,653,958 | 62,969,400 | 16.3 KB/s |
+| DMG（83,477,239 B） | 83,477,239 | 0 | 44.2 KB/s |
+
+MSI / APK / DEB 的已完整落在服务器的部分由前次中断的上传保留，`--checksum` 判定后只补齐差异；DMG 为唯一全程实传的文件，也是耗时主因。
+
+### 8.3 远端与公网校验
+
+| 检查 | 结果 |
+| --- | --- |
+| 远端 `sha256sum -c SHA256SUMS.txt` | 四个产物均 `OK` |
+| 清单切换 | `downloads.json.tmp` 经 localhost 读到且版本为 1.1.0 后原子 `mv`，旧清单保留为 `downloads.json.prev` |
+| 远端 `verify()` | `content-type`、`no-store`、版本号、四产物 `Content-Length`、示例文件、`/healthz` 全部通过 |
+| 公网校验（best effort） | `公网校验通过` |
+| 未执行项 | 未打 tag、未创建 GitHub Release；`deploy-web.sh` 站点源码部署不在本链路 |
+
+`downloads.json`（schemaVersion 2，v1.1.0）四平台实际值与 SHA-256：
+
+| 平台 | 文件 | 字节数 | SHA-256 |
+| --- | --- | --- | --- |
+| android | `Theca-v1.1.0-android-release.apk` | 16,750,039 | `ef046e2c3554c3aa6f436d391b316412d0952e72e6e098796bd0bce8114543f9` |
+| macos | `Theca-v1.1.0-macos-arm64-release.dmg` | 83,548,091 | `5d3c57e9ef1b21b06f101c6a614558afddb59133011687e4b171236207cdce17` |
+| windows | `Theca-v1.1.0-windows-amd64-release.msi` | 73,995,332 | `c8dd5f47b6ac3d5595f0d3b3fa1ae8cdf98024d40ab761778f2ed6d55692eddb` |
+| linux | `Theca-v1.1.0-linux-amd64-release.deb` | 68,623,512 | `f5eea54f2360c661eafbf63038c0b5ff652a44e04cbe51492d475ec9dc619bec` |

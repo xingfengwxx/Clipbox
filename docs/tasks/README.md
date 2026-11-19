@@ -322,8 +322,8 @@ T-WEB-09 首轮远程部署已于 2026-11-18 完成，范围仅 APK / DMG；T-WE
 | Release | T-REL-14 | 已完成 | `1a7aa80` |
 | Release | T-REL-15 | 已完成 | 本卡提交 |
 | Web | T-WEB-01…T-WEB-08 | 已完成 | 最后一张 `57ab06c`（T-WEB-08） |
-| Web | T-WEB-09 | 进行中 | 首轮 `d2ad070`（仅 APK / DMG）；MSI / DEB 补验收待 T-WEB-10 后执行，证据见 [web-artifacts.md](web-artifacts.md) §7 |
-| Web | T-WEB-10 | 阻塞 | 运行时清单改动未提交；`deploy-site` 上传超时导致远端产物不一致，待授权修改 workflow 后重跑；Windows / Linux 的真实大小与 SHA 待 CI 产物 |
+| Web | T-WEB-09 | 进行中 | 首轮 `d2ad070`（仅 APK / DMG）；MSI / DEB 已随 `44502554603` 上线并通过远端 SHA 校验，四平台 Range 复验待补，证据见 [web-artifacts.md](web-artifacts.md) §8 |
+| Web | T-WEB-10 | 进行中 | `deploy-site` 上传超时已修复（`e825742`：断点续传 + 120 分钟）并演练通过（`44502554603`），四平台产物与清单一致；页面四平台数值与 390px 三语截图复核待补 |
 | Web | T-WEB-11 | 已完成 | `09b65e0`、`d5ae3e2` |
 | Web | T-WEB-12 | 已完成 | `e9ce158` |
 | Update | T-UPD-01 | 已完成 | `190196c` |
