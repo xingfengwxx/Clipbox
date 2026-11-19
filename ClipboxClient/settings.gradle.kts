@@ -29,6 +29,14 @@ pluginManagement {
             }
         }
         mavenCentral()
+        if (onCi) {
+            // Maven Central 的 CDN 边缘偶发对 com.google.devtools.ksp 的 marker 返回 404（制品实际存在），
+            // 而 Plugin Portal 把 KSP marker 302 回 Central，只有非 Fastly 的镜像能兜底。
+            // 使用 Google 官方维护的 Maven Central 全量镜像；本地网络通常不可达，仅 CI 启用。
+            maven("https://maven-central.storage-download.googleapis.com/maven2/") {
+                name = "MavenCentralGcsMirror"
+            }
+        }
         gradlePluginPortal()
     }
 }
@@ -57,6 +65,12 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
+        if (onCi) {
+            // 与 pluginManagement 同源兜底：Central 边缘 404 时改从镜像取产物。
+            maven("https://maven-central.storage-download.googleapis.com/maven2/") {
+                name = "MavenCentralGcsMirror"
+            }
+        }
     }
 }
 
