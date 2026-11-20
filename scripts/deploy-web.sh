@@ -120,4 +120,4 @@ docker compose logs --tail=50 >&2 || true
 exit 1
 REMOTE_SCRIPT
 
-log "完成：站点源码已部署到 $REMOTE:$REMOTE_DIR；下载区由 release CI 管理（ADR-0009）；回滚包 $ROLLBACK_PACKAGE"
+log "完成：站点源码已部署到 ${REMOTE}:${REMOTE_DIR}；下载区由 release CI 管理（ADR-0009）；回滚包 ${ROLLBACK_PACKAGE}"
