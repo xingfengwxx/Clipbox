@@ -7,7 +7,7 @@
 - 产品：Clipbox，离线优先的跨设备文本中转 + 本地开发者工具箱。
 - 三端：Android（minSdk 26）、iOS 16+、Desktop（Windows / macOS / Linux）；v1.0.0 桌面产物为 macOS arm64 DMG、Windows x64 MSI、Linux x86_64 DEB，均未签名（`docs/adr/0005-v1-multiplatform-release.md`）。
 - 服务端：Kotlin + Ktor + Exposed + SQLite WAL，单实例。
-- 当前状态：v1.0.0 已发布；v1.1.0 开发中，补齐 Windows / Linux 发布产物、官网下载矩阵与三端检查更新。
+- 当前状态：v1.0.0 已发布；v1.1.0 的 M6/M7 收尾暂缓；按已确认的 v1.2.0 范围开始 P0–P2 实施。v1.2.0 不覆盖或代替 v1.1.0 发布验收。
 - 包名：客户端 `com.wangxingxing.clipbox`；服务端 `com.wangxingxing.clipbox.server`。
 
 ## 2. 权威文档
@@ -20,7 +20,7 @@
 4. `docs/功能需求文档.md`：产品行为与 Given/When/Then 验收。
 5. `docs/客户端技术架构.md` / `docs/服务端技术架构.md`：实现细节。
 6. `docs/GLOSSARY.md`：术语。
-7. `docs/adr/0001…0010`：已接受决策。
+7. `docs/adr/0001…0011`：已接受决策。
 8. `design/README.md`、`design/brand-spec.md`、`design/Clipbox 三端设计.html`：视觉与交互基准。
 
 发现文档之间不一致：**停下汇报**，不要自行选择或修改冻结文档。
@@ -55,7 +55,7 @@
 
 ### 产品范围
 
-16. v1.1.0 不包含：后台推送 / 通知、移动端后台剪贴板、片段收藏夹、托盘 / 全局快捷键、端到端加密、透明复制页。例外：Android DownloadManager 的系统下载通知由系统下载器发布，应用不申请通知权限；应用自建通知、前台服务、后台轮询仍禁止。
+16. v1.1.0 不包含：后台推送 / 通知、移动端后台剪贴板、片段收藏夹、托盘 / 全局快捷键、端到端加密、透明复制页。v1.2.0 只增加已冻结的多空间、空间内设备/分享管理与三项离线工具，具体以 `docs/功能需求文档.md` 和任务卡为准。例外：Android DownloadManager 的系统下载通知由系统下载器发布，应用不申请通知权限；应用自建通知、前台服务、后台轮询仍禁止。
 17. 不新增文档未定义的功能、设置项、接口字段或页面。
 18. 三端共用固定色板，不做动态取色；UI 文案必须进入 Compose Resources，支持简中（默认）/ 繁中 / English。
 

@@ -1,14 +1,14 @@
-# Clipbox API 契约 v1.1.0
+# Clipbox API 契约 v1.2.0
 
 | 字段 | 内容 |
 | --- | --- |
-| 文档版本 | v1.1.0 |
-| 更新日期 | 2026-11-19 |
-| 状态 | 设计冻结；v1.1.0 按 [ADR-0010](./adr/0010-app-update-and-install.md) 追加应用更新接口 |
+| 文档版本 | v1.2.0 |
+| 更新日期 | 2026-11-20 |
+| 状态 | v1.1.0 契约作为兼容基线；v1.2.0 空间与管理接口已冻结（ADR-0011） |
 | 部署基线 | 学习版 HTTP + IP 直连（`http://<SERVER_IP>:8080`），见 [ADR-0003](./adr/0003-http-ip-learning-deployment.md) |
 | 基线 | [Clipbox 项目交接文档](./Clipbox%20项目交接文档.md) v0.1 |
-| 相关 | [GLOSSARY.md](GLOSSARY.md)、[ADR-0001](./adr/0001-server-seq-change-feed.md)、[ADR-0002](./adr/0002-share-content-snapshot.md)、[ADR-0006](./adr/0006-device-issued-pairing-codes.md)、[ADR-0009](./adr/0009-auto-publish-downloads.md)、[ADR-0010](./adr/0010-app-update-and-install.md) |
-| 适用产品 | Clipbox v1.1.0 |
+| 相关 | [GLOSSARY.md](GLOSSARY.md)、[ADR-0001](./adr/0001-server-seq-change-feed.md)、[ADR-0002](./adr/0002-share-content-snapshot.md)、[ADR-0006](./adr/0006-device-issued-pairing-codes.md)、[ADR-0009](./adr/0009-auto-publish-downloads.md)、[ADR-0010](./adr/0010-app-update-and-install.md)、[ADR-0011](./adr/0011-multi-space-and-device-identity.md) |
+| 适用产品 | Clipbox v1.2.0；旧客户端继续兼容默认旧空间 |
 | 工程路径 | 服务端 `/Users/wangxingxing/AndroidStudioProjects/MyProjects/ClipBox/ClipboxServer`<br>客户端 `/Users/wangxingxing/AndroidStudioProjects/MyProjects/ClipBox/ClipboxClient` |
 
 本文只定义客户端与服务端之间的接口契约。客户端内部实现见[客户端技术架构](./客户端技术架构.md)，服务端内部实现见[服务端技术架构](./服务端技术架构.md)，产品行为与验收见[功能需求文档](./功能需求文档.md)。
@@ -32,12 +32,12 @@
 | 范围 | 方式 |
 | --- | --- |
 | 设备接口 | `Authorization: Bearer <device-token>` |
-| 可选认证接口 | `POST /api/v1/devices/me/pairing-code`：携带有效令牌时归属该设备，未携带按匿名处理，无效令牌返回 401 |
-| 公开接口 | `POST /api/v1/pair`、`POST /api/v1/bootstrap`、`GET /api/v1/app/latest`、`GET /s/{token}`、`GET /healthz` |
+| 可选认证接口 | `POST /api/v1/devices/me/pairing-code`：新客户端必须携带有效令牌；未认证匿名签发仅为旧客户端兼容并限定默认旧空间；无效令牌返回 401 |
+| 公开接口 | `POST /api/v1/pair`、`POST /api/v1/bootstrap`、`POST /api/v1/spaces`、`GET /api/v1/app/latest`、`GET /s/{token}`、`GET /healthz` |
 
 - 设备令牌只返回一次，服务端只保存 `SHA-256(token)`；令牌泄露等价于设备身份泄露。
 - 设备令牌不得出现在 URL、查询参数、日志或错误信息中。
-- 配对码由任意设备生成（未配对设备以匿名身份生成），服务端只保存 `SHA-256(code)`；配对码只允许出现在生成响应与配对请求体中，不得进入 URL、查询参数或日志。
+- v1.2 配对码由空间成员设备签发并绑定其空间；旧客户端匿名码只归属默认旧空间。服务端只保存 `SHA-256(code)`；配对码只允许出现在生成响应与配对请求体中，不得进入 URL、查询参数或日志。
 
 ### 1.3 标识、时间与变更序号
 
@@ -118,14 +118,15 @@
 
 ### 2.1 POST /api/v1/pair
 
-用任意设备生成的配对码把新设备登记到唯一用户空间，并换取设备令牌。无需认证。
+用空间成员设备生成的一次性配对码把新设备登记到该设备所属空间，并换取设备令牌。无需认证。
 
 请求：
 
 ```json
 {
   "code": "123456",
-  "deviceName": "Pixel 8"
+  "deviceName": "Pixel 8",
+  "installationId": "a1b2c3d4e5f60708"
 }
 ```
 
@@ -142,9 +143,9 @@
 行为：
 
 1. 对配对码做 SHA-256 后查找设备码记录，校验存在、未使用、未过期；任何一项不满足都返回对应错误码。
-2. 在同一个事务内把配对码标记为已使用、创建设备记录、写入令牌哈希。
+2. 在同一个事务内把配对码标记为已使用，并创建设备或按同空间 `installationId` 复用设备行；随后写入新令牌哈希。
 3. 令牌只在本响应返回一次；服务端之后无法还原明文令牌。
-4. 每个设备独立令牌；同一用户可配对多台设备，互不影响。
+4. 每个设备独立令牌；同空间同 `installationId` 再次成功配对时复用设备 ID、更新名称并轮换令牌，旧令牌立即失效。缺少 `installationId` 的旧客户端由服务端生成随机值。
 5. 配对码为一次性，成功或过期后不可再次使用；来源设备重新生成码时旧码立即失效。
 
 错误：
@@ -167,7 +168,7 @@ curl -sS http://203.0.113.10:8080/api/v1/pair \
 
 ### 2.2 POST /api/v1/devices/me/pairing-code
 
-任意设备（含未配对）为“配对新设备”生成一次性配对码。设备认证可选：未携带 `Authorization` 时以匿名身份签发；携带有效设备令牌时码归属该设备；携带无效或畸形凭证返回 401。
+空间成员设备为“加入现有空间”生成一次性配对码。新客户端必须携带有效设备令牌，配对码归属该设备所在空间；为兼容旧客户端，未携带令牌的请求仍可匿名签发，但只能归属默认旧空间。携带无效或畸形凭证返回 401。
 
 请求体为空或 `{}`。
 
@@ -182,7 +183,7 @@ curl -sS http://203.0.113.10:8080/api/v1/pair \
 
 行为：
 
-- 每个 issuer 同一时间最多一个有效码；再次生成会覆盖旧码，旧码立即失效。已配对设备按设备 ID 隔离；所有未配对设备共用匿名槽位，任一未配对设备重新生成会使前一个匿名码失效。
+- 已认证设备签发的配对码归属其空间；重新生成覆盖同一设备旧码。未携带令牌的旧客户端兼容请求只可在默认旧空间创建匿名码，新客户端不使用匿名取码。
 - 有效期固定 600 秒，一次性使用。
 - 取码不创建设备，也不影响空库初始化（`/bootstrap`）的判断。
 - 服务端只保存 `SHA-256(code)`；明文只在本次响应返回，不写入日志，不进入 URL。
@@ -197,15 +198,16 @@ curl -sS http://203.0.113.10:8080/api/v1/pair \
 
 ### 2.3 POST /api/v1/bootstrap
 
-空数据库首次初始化：创建首台设备并返回设备令牌。无需认证。
+仅供旧客户端在全新空数据库首次初始化：创建默认旧空间与首台设备并返回设备令牌。无需认证。v1.2 客户端显式创建新空间时使用 `POST /api/v1/spaces`。
 
-仅当 `devices` 表为空时可用；已有任何设备时返回 409 `ALREADY_INITIALIZED`。
+仅当服务端尚无任何空间或设备时可用；已有任意空间或设备时返回 409 `ALREADY_INITIALIZED`。
 
 请求：
 
 ```json
 {
-  "deviceName": "Pixel 8"
+  "deviceName": "Pixel 8",
+  "installationId": "a1b2c3d4e5f60708"
 }
 ```
 
@@ -604,7 +606,8 @@ curl -sS 'http://203.0.113.10:8080/api/v1/clips?since=42&limit=200' \
 {
   "token": "9mN4pQrS6tUvWxYzA1bC2dE3fG4hJ5kL6M7nO8pQ",
   "url": "http://203.0.113.10:8080/s/9mN4pQrS6tUvWxYzA1bC2dE3fG4hJ5kL6M7nO8pQ",
-  "expiresAt": 1730086400000
+  "expiresAt": 1730086400000,
+  "shareId": "f0e1d2c3b4a5968778695a4b3c2d1e0f"
 }
 ```
 
@@ -613,7 +616,7 @@ curl -sS 'http://203.0.113.10:8080/api/v1/clips?since=42&limit=200' \
 - 服务端在创建时把剪贴正文快照写入分享记录；之后剪贴记录被删除或清理，不影响分享页（ADR-0002）。
 - 分享令牌 32 字节随机；服务端只保存 `SHA-256(token)`，令牌只在本响应出现。
 - `url` 由服务端配置的 `PUBLIC_BASE_URL` 拼接，客户端必须原样展示，不得自行拼接。
-- v1.0.0 不提供分享列表、撤销或续期接口；过期后重新创建。
+- v1.2.0 增加空间内分享列表与撤销；既有令牌、URL 与一次性访问语义不变。
 - 剪贴记录不存在或已软删除：404 `NOT_FOUND`。
 
 错误：
@@ -708,6 +711,7 @@ Cache-Control: no-store
 | --- | --- | --- | --- |
 | `POST /api/v1/pair` | 5 次/分钟 | IP | 429，`Retry-After: 60` |
 | `POST /api/v1/bootstrap` | 3 次/分钟 | IP | 429 |
+| `POST /api/v1/spaces` | 3 次/分钟 | IP | 429 |
 | `POST /api/v1/devices/me/pairing-code` | 10 次/分钟 | IP | 429 |
 | 设备接口 | 120 次/分钟 | 设备 ID | 429 |
 | `GET /api/v1/app/latest` | 60 次/分钟 | IP | 429 |
@@ -756,9 +760,11 @@ ULID 适合做主键与展示排序，但不适合做变更游标：离线设备
 - 置顶与删除重复提交不重复推进序号。
 - WebSocket 只做实时通知，任何“是否漏消息”的判断都以 REST `since` 补拉为准。
 
-### 9.6 多设备
+### 9.6 空间与多设备
 
-- 每个设备独立令牌；所有设备共享同一个用户空间。
+- 每个设备独立令牌；每个客户端当前只关联一个空间。同一空间内设备共享记录与管理能力，不同空间相互隔离。
+- 服务端从设备令牌解析设备及其所属空间；剪贴记录、设备、分享、配对码、序号、同步下界、保留策略与 WebSocket 广播全部受该空间约束。
+- 所有 v1.2 数据接口均不接受客户端提交的空间 ID。旧令牌迁移到默认旧空间，不能访问新空间。
 - 一个设备写入后，其他在线设备通过 WebSocket 实时收到；离线设备下次打开时通过 `since` 补拉。
 - 来源设备名由服务端联查返回，客户端按 `sourceDeviceId == 本机 deviceId` 显示“本机”。
 
@@ -772,7 +778,7 @@ curl -sS -X POST http://203.0.113.10:8080/api/v1/bootstrap \
   -H 'Content-Type: application/json' \
   -d '{"deviceName":"Pixel 8"}'
 
-# 2. 任意设备为新设备生成配对码：已配对设备带令牌，未配对设备直接匿名取码
+# 2. 为新设备生成配对码：v1.2 客户端由空间成员设备签发
 curl -sS -X POST http://203.0.113.10:8080/api/v1/devices/me/pairing-code \
   -H "Authorization: Bearer $TOKEN"
 curl -sS -X POST http://203.0.113.10:8080/api/v1/devices/me/pairing-code
@@ -845,6 +851,7 @@ curl -sS http://203.0.113.10:8080/api/v1/shares \
 | v1.0.0 修订 | 2026-11-19 | 取码接口改为可选认证：任意设备（含未配对）均可生成配对码，未携带令牌按匿名 issuer 处理；`device_pairing_codes.device_id` 改为 `issuer_id` 并移除设备外键（ADR-0007） |
 | v1.0.0 修订 | 2026-11-19 | 仅客户端行为变化：配对页留空配对码时自动调用 `POST /api/v1/bootstrap`；路径、字段、错误码与限流均无变化（ADR-0008） |
 | v1.1.0 | 2026-11-19 | 新增 §13 应用更新：公开 `GET /api/v1/app/latest`，由下载清单 schemaVersion 2 生成；无鉴权、不带设备令牌；清单增加三语发布说明；新增 60 次/分钟/IP 限流（ADR-0010） |
+| v1.2.0 | 2026-11-20 | 新增空间创建、空间隔离、安装标识、设备/分享管理契约；旧数据迁入默认旧空间，旧令牌保持兼容（ADR-0011） |
 
 ## 13. 应用更新
 
@@ -983,3 +990,82 @@ curl -sS -I http://203.0.113.10:8080/api/v1/app/latest
 - 更新请求只使用官方发行服务器地址，不携带设备令牌，不复用带鉴权的客户端实例。
 - 红点、弹窗与安装流程属于产品行为，见 `docs/功能需求文档.md` REQ-SET-012/013 与 AC-21…AC-26。
 - 安装包下载后必须按本响应中的 `sha256` 校验；不匹配时删除文件并提示失败。
+
+## 14. 用户空间、安装标识与空间内管理
+
+### 14.1 `POST /api/v1/spaces`
+
+无需认证，显式创建一个新空间并在同一事务中登记首台设备。每 IP 每分钟最多 3 次。
+
+请求：
+
+```json
+{
+  "deviceName": "Pixel 8",
+  "installationId": "a1b2c3d4e5f60708"
+}
+```
+
+响应 `201 Created`，与配对响应同形：`deviceId`、`token`、`deviceName`。不返回空间 ID。
+
+空间 ID 只由服务端管理；客户端不得在请求中指定空间。创建空间和首台设备的写入必须原子提交。设备名沿用 1–64 字符校验；`installationId` 为 1–128 个 ASCII 字符，仅允许字母、数字、点、下划线、冒号和连字符。
+
+### 14.2 安装标识与配对兼容
+
+- v1.2 客户端在 `POST /api/v1/spaces`、`POST /api/v1/pair` 和兼容的 `/bootstrap` 请求中发送 `installationId`。
+- 为兼容旧客户端，该字段在 `/pair` 与 `/bootstrap` 可缺省；服务端为缺省设备生成随机安装标识。`deviceId` 仍由服务端生成，继续作为 API 主键和来源设备引用。
+- 安装标识只用于识别同一空间内的设备，不参与认证、令牌恢复或空间选择；服务端和客户端日志均不得记录。
+- 同空间内已有相同安装标识时，成功消费有效配对码后复用原 `deviceId`，更新设备名与令牌哈希，保留创建时间并关闭该设备旧 WebSocket。旧令牌立即失效。
+- 不同空间可出现相同安装标识。默认旧空间从 v1.1 数据库迁移而来；旧设备 ID、令牌哈希和数据保持不变。
+- 配对码签发设备的空间绑定在服务端事务内完成。新客户端的取码必须经过成员设备认证；未认证匿名取码仅为旧客户端保留并限定到默认旧空间。
+
+### 14.3 `GET /api/v1/devices` 与 `DELETE /api/v1/devices/{deviceId}`
+
+均需设备认证，空间由认证设备解析。列表只返回当前空间设备：
+
+```json
+{
+  "items": [
+    {
+      "deviceId": "01J8Y6Z3K4M5N6P7Q8R9S0T1V2",
+      "deviceName": "Pixel 8",
+      "createdAt": 1730000000000,
+      "lastSeenAt": 1730000100000,
+      "isCurrent": true
+    }
+  ]
+}
+```
+
+列表不返回安装标识或令牌。撤销成功返回 `204 No Content`；跨空间或不存在的设备统一返回 `404 NOT_FOUND`。撤销后令牌认证立即失败并关闭目标设备的 WebSocket。删除末台设备会在同一事务内删除该空间的设备、剪贴记录、分享、配对码和同步状态；设备列表接口允许撤销当前设备。
+
+末台设备撤销会删除该空间设备、剪贴记录、分享、配对码与同步状态，但保留空间注册行，避免兼容 `/bootstrap` 将服务器重新视为空库。
+
+### 14.4 `GET /api/v1/shares` 与 `DELETE /api/v1/shares/{shareId}`
+
+均需设备认证。列表只返回当前空间未过期且仍可访问的分享：非一次性分享在到期前仍可访问；一次性分享仅在尚未消费时列出。
+
+```json
+{
+  "items": [
+    {
+      "shareId": "f0e1d2c3b4a5968778695a4b3c2d1e0f",
+      "contentPreview": "只读预览",
+      "createdAt": 1730000000000,
+      "expiresAt": 1730086400000,
+      "oneTime": false,
+      "openedAt": null
+    }
+  ]
+}
+```
+
+`shareId` 是独立随机管理 ID，不是分享访问令牌。列表不得返回 token、token hash 或分享 URL。`contentPreview` 最多 120 个 Unicode 码点。撤销成功返回 `204 No Content`，跨空间或不存在的管理 ID 返回 `404 NOT_FOUND`；撤销后原分享 URL 返回 404。创建分享的响应可附加 `shareId`，既有字段语义不变。
+
+### 14.5 空间隔离、序号与兼容性
+
+- 所有已认证 REST 读写从认证设备解析 `spaceId`；剪贴、设备、分享、配对码等资源查询必须同时限定空间。客户端提交的未知 `spaceId` 字段忽略，不得据此授权或切换空间。
+- 剪贴记录 ID 和 `serverSeq` 均在空间内唯一；`serverSeq` 与 `sync_floor` 按空间保存。WebSocket 认证后固定绑定设备所属空间，只向该空间广播。
+- 资源不存在与跨空间访问统一表现为 `404 NOT_FOUND`，不区分资源是否存在于其他空间。
+- `POST /api/v1/bootstrap` 仅在没有任何空间的全新数据库上创建默认旧空间；原有 v1.1 数据库迁移后已有默认旧空间，调用仍返回 `409 ALREADY_INITIALIZED`。
+- 以上为 v1 API 的追加接口与可选请求字段；旧客户端可以继续访问默认旧空间，不可见或访问后续创建的空间。
