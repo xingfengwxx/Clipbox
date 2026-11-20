@@ -143,7 +143,11 @@ android {
             }
         }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
             if (releaseSigningPropsFile.exists()) {
                 signingConfig = signingConfigs.getByName("release")
             }
