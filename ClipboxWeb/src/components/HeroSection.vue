@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { VERSION } from '../data/downloads'
 import desktop500 from '../assets/shots/desktop-history-500.webp'
 import desktop750 from '../assets/shots/desktop-history-750.webp'
 import desktop1000 from '../assets/shots/desktop-history-1000.webp'
@@ -29,10 +30,10 @@ const phoneSrcset = `${phone216} 216w, ${phone432} 432w`
         <h1 class="hero__title">{{ t('hero.title') }}</h1>
         <p class="hero__subtitle">{{ t('hero.subtitle') }}</p>
         <div class="hero__actions">
-          <a class="button-primary" href="#download">{{ t('hero.primary') }}</a>
+          <a class="button-primary" href="#download">{{ t('hero.primary', { version: VERSION }) }}</a>
           <a class="button-secondary" href="#features">{{ t('hero.secondary') }}</a>
         </div>
-        <p class="mono hero__meta">{{ t('hero.meta') }}</p>
+        <p class="mono hero__meta">{{ t('hero.meta', { version: VERSION }) }}</p>
       </div>
 
       <figure class="relay">

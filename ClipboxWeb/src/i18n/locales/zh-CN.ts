@@ -19,9 +19,9 @@ export default {
   'hero.title': '文本中转，像把一张纸条递过去。',
   'hero.subtitle':
     '一部手机、一扇桌面窗口、一张只读分享页。字匣把剪贴板里那点东西稳稳送到另一台设备；断网时先排队，恢复后自动补上。',
-  'hero.primary': '下载 v1.0.0',
+  'hero.primary': '下载 v{version}',
   'hero.secondary': '看看能做什么',
-  'hero.meta': 'v1.0.0 · 5 端 · 单条 64 KiB · 分享 1h / 24h / 7d',
+  'hero.meta': 'v{version} · 5 端 · 单条 64 KiB · 分享 1h / 24h / 7d',
   'hero.status': '已送达 · 2 秒前 · 1.2 KiB',
   'hero.desktopAlt': '桌面端历史窗口：左侧导航，顶部同步状态，中间是发送器与记录列表。',
   'hero.phoneAlt': '手机端历史页：发送器、UTF-8 字节数与置顶、最近的记录。',
@@ -62,8 +62,8 @@ export default {
   'privacy.sdk.desc': '没有统计、崩溃上报与广告组件；官网与客户端都不使用 Cookie。',
   'privacy.plain.title': '未加密连接',
   'privacy.plain.desc':
-    'v1.0.0 学习版走 HTTP / WS 与 IP 直连，正文与令牌在公网上是明文；不要在不可信网络传输敏感内容。',
-  'privacy.notDoing.title': 'v1.0.0 刻意不做',
+    'v{version} 学习版走 HTTP / WS 与 IP 直连，正文与令牌在公网上是明文；不要在不可信网络传输敏感内容。',
+  'privacy.notDoing.title': 'v{version} 刻意不做',
   'privacy.notDoing.push': '后台推送与通知',
   'privacy.notDoing.bgClipboard': '移动端后台剪贴板',
   'privacy.notDoing.favorites': '片段收藏夹',
@@ -132,7 +132,7 @@ export default {
     '服务端 SQLite 数据库在你自己部署的机器上；每台设备另有一份本地数据库，界面只读本地数据。分享链接由服务端生成，到期或阅后即焚后失效。',
   'faq.q3': '为什么是 HTTP，不加密吗？',
   'faq.a3':
-    'v1.0.0 是学习版：IP 直连、没有域名与证书，传输层不加密。应用层的令牌哈希、限流与日志脱敏仍然生效，但不要在不可信网络传输敏感内容。',
+    'v{version} 是学习版：IP 直连、没有域名与证书，传输层不加密。应用层的令牌哈希、限流与日志脱敏仍然生效，但不要在不可信网络传输敏感内容。',
   'faq.q4': '为什么单条只有 64 KiB？',
   'faq.a4':
     '文本中转不是网盘。64 KiB 足以覆盖代码片段、日志与长文本，同时让同步与分享保持轻量；超限时客户端会提示并禁用发送。',
@@ -140,7 +140,7 @@ export default {
   'faq.a5':
     'Android、macOS、Windows 与 Linux 均已提供安装包；iOS 目前只有模拟器构建，未做真机签名与分发。',
   'footer.tagline': '离线优先的跨设备文本中转，附本地开发者工具箱。',
-  'footer.version': '字匣 Theca · v1.0.0',
+  'footer.version': '字匣 Theca · v{version}',
   'footer.notice': '未加密连接，仅用于学习。',
   'footer.copyright': '© 2026 字匣 Theca',
 }

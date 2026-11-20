@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { VERSION } from '../data/downloads'
 
 const { t } = useI18n()
 
@@ -22,12 +23,12 @@ const notDoing = ['push', 'bgClipboard', 'favorites', 'tray', 'e2ee', 'transpare
         </li>
         <li class="privacy__item privacy__item--wide privacy__item--warn">
           <h3 class="privacy__title">{{ t('privacy.plain.title') }}</h3>
-          <p class="privacy__desc">{{ t('privacy.plain.desc') }}</p>
+          <p class="privacy__desc">{{ t('privacy.plain.desc', { version: VERSION }) }}</p>
         </li>
       </ul>
 
       <div class="not-doing">
-        <h3 class="not-doing__title">{{ t('privacy.notDoing.title') }}</h3>
+        <h3 class="not-doing__title">{{ t('privacy.notDoing.title', { version: VERSION }) }}</h3>
         <ul class="not-doing__list">
           <li v-for="key in notDoing" :key="key">{{ t(`privacy.notDoing.${key}`) }}</li>
         </ul>

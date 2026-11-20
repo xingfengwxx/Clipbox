@@ -19,9 +19,9 @@ export default {
   'hero.title': 'Passing text around, like handing over a note.',
   'hero.subtitle':
     'A phone, a desktop window, and a read-only share page. Theca moves what you just copied to your other device; when the network drops it queues, and catches up by itself.',
-  'hero.primary': 'Download v1.0.0',
+  'hero.primary': 'Download v{version}',
   'hero.secondary': 'See what it does',
-  'hero.meta': 'v1.0.0 · 5 platforms · 64 KiB per clip · shares 1h / 24h / 7d',
+  'hero.meta': 'v{version} · 5 platforms · 64 KiB per clip · shares 1h / 24h / 7d',
   'hero.status': 'Delivered · 2s ago · 1.2 KiB',
   'hero.desktopAlt': 'Desktop history window: navigation on the left, sync status on top, composer and record list in the middle.',
   'hero.phoneAlt': 'Phone history screen: composer with UTF-8 byte count, pinned items and recent records.',
@@ -62,8 +62,8 @@ export default {
   'privacy.sdk.desc': 'No analytics, crash reporting or ad components. Neither the site nor the apps use cookies.',
   'privacy.plain.title': 'Unencrypted connection',
   'privacy.plain.desc':
-    'The v1.0.0 learning build uses HTTP / WS over a bare IP. Clips and tokens travel in plaintext on the network; do not send anything sensitive over untrusted networks.',
-  'privacy.notDoing.title': 'Deliberately left out of v1.0.0',
+    'The v{version} learning build uses HTTP / WS over a bare IP. Clips and tokens travel in plaintext on the network; do not send anything sensitive over untrusted networks.',
+  'privacy.notDoing.title': 'Deliberately left out of v{version}',
   'privacy.notDoing.push': 'Background push and notifications',
   'privacy.notDoing.bgClipboard': 'Background clipboard on mobile',
   'privacy.notDoing.favorites': 'Snippet favorites',
@@ -132,7 +132,7 @@ export default {
     'The SQLite database runs on the machine you deploy. Each device also keeps a local database, and the UI only reads local data. Share links are issued by the server and stop working when they expire or are burned after one view.',
   'faq.q3': 'Why HTTP? Is it encrypted?',
   'faq.a3':
-    'v1.0.0 is a learning build: bare IP, no domain or certificate, and no transport encryption. Token hashing, rate limits and log redaction still apply, but do not send sensitive content over untrusted networks.',
+    'v{version} is a learning build: bare IP, no domain or certificate, and no transport encryption. Token hashing, rate limits and log redaction still apply, but do not send sensitive content over untrusted networks.',
   'faq.q4': 'Why is a clip capped at 64 KiB?',
   'faq.a4':
     'Text relay is not cloud storage. 64 KiB covers code snippets, logs and long messages while keeping sync and shares light. The client warns you and disables sending past the limit.',
@@ -140,7 +140,7 @@ export default {
   'faq.a5':
     'Android, macOS, Windows and Linux all have installers. iOS remains a simulator build only, without device signing or distribution.',
   'footer.tagline': 'Offline-first text relay with a local developer toolbox.',
-  'footer.version': 'Theca · v1.0.0',
+  'footer.version': 'Theca · v{version}',
   'footer.notice': 'Unencrypted connection, for personal learning only.',
   'footer.copyright': '© 2026 Theca',
 }

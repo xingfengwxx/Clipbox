@@ -617,7 +617,7 @@ cd /Users/wangxingxing/AndroidStudioProjects/MyProjects/Clipbox/ClipboxClient
 
 **必读**：`scripts/check-release-version.sh`、`ClipboxClient/composeApp/build.gradle.kts`、iOS 工程文件、`ClipboxWeb/src/data/downloads.ts`。
 
-**涉及路径**：`ClipboxClient/composeApp/build.gradle.kts`、Desktop `BundledConfig` / `PlatformModule.desktop.kt`、iOS `project.pbxproj`、`ClipboxWeb/src/data/downloads.ts`、`scripts/check-release-version.sh`（如需同步清单口径）。
+**涉及路径**：`ClipboxClient/composeApp/build.gradle.kts`、Desktop `BundledConfig` / `PlatformModule.desktop.kt`、iOS `project.pbxproj`、`ClipboxWeb/src/data/downloads.ts`、`ClipboxWeb/src/components/{HeroSection,PrivacySection,FaqSection,SiteFooter}.vue`、`ClipboxWeb/src/i18n/locales/{zh-CN,zh-TW,en}.ts`、`scripts/check-release-version.sh`（如需同步清单口径）。首页、隐私说明、FAQ 与页脚的当前版本展示统一读取 `downloads.ts` 中的 `VERSION`。
 
 **实现要点**
 

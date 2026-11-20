@@ -338,7 +338,7 @@ T-WEB-09 首轮远程部署已于 2026-11-18 完成，范围仅 APK / DMG；T-WE
 | Update | T-UPD-10 | 已完成 | `a8a0862` |
 | Update | T-UPD-11 | 已完成 | `544bc71` |
 | Update | T-UPD-12 | 已完成 | `03dfcdb` |
-| Update | T-UPD-13 | 进行中 | 本卡提交 |
+| Update | T-UPD-13 | 已完成 | 本卡提交 |
 | Update | T-UPD-14 | 待开始 | — |
 
 > M2 已于 2026-11-17 通过（证据见 [m2-gate.md](m2-gate.md)）；M3 于同日有条件通过，AC-11 全量分页冲突（D8）已于 2026-11-18 由 [BUG-001](bug-001-ac11-full-sync-floor.md) 修复关闭（证据见 [m3-gate.md](m3-gate.md)）；M4 于同日通过（证据见 [m4-gate.md](m4-gate.md)）；T-WEB-09 尚余四平台补验收，M6 未关闭。ADR-0006 追加的 6 张收尾卡已完成，T-REL-08 打 tag 与远程部署仍需用户另行授权。v1.1.0 的 M7 从 T-UPD-01 起算；T-WEB-12 已先完成清单 schema 1/2 兼容，Windows / Linux 的清单数值仍待 T-WEB-10 的 CI 产物上线后补齐。
